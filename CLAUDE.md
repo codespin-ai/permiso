@@ -155,10 +155,10 @@ function mapUserFromDb(row: UserDbRow): User {
   };
 }
 
-// ✅ Good - Type-safe queries with explicit type parameters
+// ✅ Good - Type-safe queries with explicit type parameters and named parameters
 const result = await db.one<UserDbRow>(
-  `SELECT * FROM "user" WHERE id = $1`,
-  [id]
+  `SELECT * FROM "user" WHERE id = $(id)`,
+  { id }
 );
 return mapUserFromDb(result);
 ```
@@ -203,6 +203,23 @@ import { Result } from "@codespin/permiso-core";
 
 // ❌ Bad - Missing extension
 import { createUser } from "./users";
+```
+
+### Database Query Pattern
+```typescript
+// ✅ Good - Named parameters
+await db.none(
+  `INSERT INTO organization_property (org_id, name, value, hidden) 
+   VALUES ($(orgId), $(name), $(value), $(hidden))`,
+  { orgId: input.id, name: p.name, value: p.value, hidden: p.hidden ?? false }
+);
+
+// ❌ Bad - Positional parameters
+await db.none(
+  `INSERT INTO organization_property (org_id, name, value, hidden) 
+   VALUES ($1, $2, $3, $4)`,
+  [input.id, p.name, p.value, p.hidden ?? false]
+);
 ```
 
 ## RBAC Concepts

@@ -26,8 +26,8 @@ export async function createOrganization(
   try {
     const org = await db.tx(async (t) => {
       const orgRow = await t.one<OrganizationDbRow>(
-        `INSERT INTO organization (id, data) VALUES ($1, $2) RETURNING *`,
-        [input.id, input.data ?? null]
+        `INSERT INTO organization (id, data) VALUES ($(id), $(data)) RETURNING *`,
+        { id: input.id, data: input.data ?? null }
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -40,8 +40,8 @@ export async function createOrganization(
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO organization_property (org_id, name, value, hidden) VALUES ($1, $2, $3, $4)`,
-            [prop.org_id, prop.name, prop.value, prop.hidden]
+            `INSERT INTO organization_property (org_id, name, value, hidden) VALUES ($(org_id), $(name), $(value), $(hidden))`,
+            { org_id: prop.org_id, name: prop.name, value: prop.value, hidden: prop.hidden }
           );
         }
       }
@@ -62,8 +62,8 @@ export async function getOrganization(
 ): Promise<Result<OrganizationWithProperties | null>> {
   try {
     const orgRow = await db.oneOrNone<OrganizationDbRow>(
-      `SELECT * FROM organization WHERE id = $1`,
-      [id]
+      `SELECT * FROM organization WHERE id = $(id)`,
+      { id }
     );
 
     if (!orgRow) {
@@ -101,8 +101,7 @@ export async function getOrganizations(
       SELECT DISTINCT o.* 
       FROM organization o
     `;
-    const params: any[] = [];
-    let paramCount = 0;
+    const params: Record<string, any> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
       query += ` LEFT JOIN organization_property op ON o.id = op.org_id`;
@@ -111,14 +110,15 @@ export async function getOrganizations(
     const conditions: string[] = [];
 
     if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`o.id = ANY($${++paramCount})`);
-      params.push(filters.ids);
+      conditions.push(`o.id = ANY($(ids))`);
+      params.ids = filters.ids;
     }
 
     if (filters?.properties && filters.properties.length > 0) {
-      filters.properties.forEach(prop => {
-        conditions.push(`(op.name = $${++paramCount} AND op.value = $${++paramCount})`);
-        params.push(prop.name, prop.value);
+      filters.properties.forEach((prop, index) => {
+        conditions.push(`(op.name = $(propName${index}) AND op.value = $(propValue${index}))`);
+        params[`propName${index}`] = prop.name;
+        params[`propValue${index}`] = prop.value;
       });
     }
 
@@ -129,13 +129,13 @@ export async function getOrganizations(
     query += ` ORDER BY o.created_at DESC`;
 
     if (pagination?.limit) {
-      query += ` LIMIT $${++paramCount}`;
-      params.push(pagination.limit);
+      query += ` LIMIT $(limit)`;
+      params.limit = pagination.limit;
     }
 
     if (pagination?.offset) {
-      query += ` OFFSET $${++paramCount}`;
-      params.push(pagination.offset);
+      query += ` OFFSET $(offset)`;
+      params.offset = pagination.offset;
     }
 
     const rows = await db.manyOrNone<OrganizationDbRow>(query, params);
@@ -168,12 +168,11 @@ export async function updateOrganization(
 ): Promise<Result<Organization>> {
   try {
     const updates: string[] = [];
-    const params: any[] = [id];
-    let paramCount = 1;
+    const params: Record<string, any> = { id };
 
     if (input.data !== undefined) {
-      updates.push(`data = $${++paramCount}`);
-      params.push(input.data);
+      updates.push(`data = $(data)`);
+      params.data = input.data;
     }
 
     updates.push(`updated_at = NOW()`);
@@ -181,7 +180,7 @@ export async function updateOrganization(
     const query = `
       UPDATE organization 
       SET ${updates.join(', ')}
-      WHERE id = $1
+      WHERE id = $(id)
       RETURNING *
     `;
 
@@ -198,7 +197,7 @@ export async function deleteOrganization(
   id: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(`DELETE FROM organization WHERE id = $1`, [id]);
+    await db.none(`DELETE FROM organization WHERE id = $(id)`, { id });
     return { success: true, data: true };
   } catch (error) {
     logger.error('Failed to delete organization', { error, id });
@@ -212,10 +211,10 @@ async function getOrganizationProperties(
   includeHidden: boolean
 ): Promise<OrganizationProperty[]> {
   const query = includeHidden
-    ? `SELECT * FROM organization_property WHERE org_id = $1`
-    : `SELECT * FROM organization_property WHERE org_id = $1 AND hidden = false`;
+    ? `SELECT * FROM organization_property WHERE org_id = $(orgId)`
+    : `SELECT * FROM organization_property WHERE org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<OrganizationPropertyDbRow>(query, [orgId]);
+  const rows = await db.manyOrNone<OrganizationPropertyDbRow>(query, { orgId });
   return rows.map(mapOrganizationPropertyFromDb);
 }
 
@@ -229,11 +228,11 @@ export async function setOrganizationProperty(
   try {
     const row = await db.one<OrganizationPropertyDbRow>(
       `INSERT INTO organization_property (org_id, name, value, hidden) 
-       VALUES ($1, $2, $3, $4) 
+       VALUES ($(orgId), $(name), $(value), $(hidden)) 
        ON CONFLICT (org_id, name) 
-       DO UPDATE SET value = $3, hidden = $4, created_at = NOW()
+       DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = NOW()
        RETURNING *`,
-      [orgId, name, value, hidden]
+      { orgId, name, value, hidden }
     );
 
     return { success: true, data: mapOrganizationPropertyFromDb(row) };
@@ -250,8 +249,8 @@ export async function getOrganizationProperty(
 ): Promise<Result<OrganizationProperty | null>> {
   try {
     const row = await db.oneOrNone<OrganizationPropertyDbRow>(
-      `SELECT * FROM organization_property WHERE org_id = $1 AND name = $2`,
-      [orgId, name]
+      `SELECT * FROM organization_property WHERE org_id = $(orgId) AND name = $(name)`,
+      { orgId, name }
     );
 
     return {
@@ -271,8 +270,8 @@ export async function deleteOrganizationProperty(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM organization_property WHERE org_id = $1 AND name = $2`,
-      [orgId, name]
+      `DELETE FROM organization_property WHERE org_id = $(orgId) AND name = $(name)`,
+      { orgId, name }
     );
     return { success: true, data: true };
   } catch (error) {

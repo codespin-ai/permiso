@@ -102,10 +102,16 @@ export function mapUserToDb(user: Partial<User>): Partial<UserDbRow> {
 ```
 
 #### Type-safe Queries
-Always specify the type parameter for database queries:
+Always specify the type parameter for database queries and use named parameters:
 
 ```typescript
-// ✅ Good - Type parameter specified
+// ✅ Good - Type parameter specified with named parameters
+const row = await db.one<UserDbRow>(
+  `SELECT * FROM "user" WHERE id = $(id)`,
+  { id: userId }
+);
+
+// ❌ Bad - Using positional parameters
 const row = await db.one<UserDbRow>(
   `SELECT * FROM "user" WHERE id = $1`,
   [userId]
@@ -113,8 +119,34 @@ const row = await db.one<UserDbRow>(
 
 // ❌ Bad - No type parameter
 const row = await db.one(
-  `SELECT * FROM "user" WHERE id = $1`,
-  [userId]
+  `SELECT * FROM "user" WHERE id = $(id)`,
+  { id: userId }
+);
+```
+
+#### Named Parameters
+ALWAYS use named parameters for database queries. This improves readability, prevents SQL injection, and makes queries self-documenting:
+
+```typescript
+// ✅ Good - Named parameters
+const user = await db.one<UserDbRow>(
+  `INSERT INTO "user" (id, org_id, identity_provider, identity_provider_user_id) 
+   VALUES ($(id), $(orgId), $(identityProvider), $(identityProviderUserId)) 
+   RETURNING *`,
+  {
+    id: input.id,
+    orgId: input.orgId,
+    identityProvider: input.identityProvider,
+    identityProviderUserId: input.identityProviderUserId
+  }
+);
+
+// ❌ Bad - Positional parameters
+const user = await db.one<UserDbRow>(
+  `INSERT INTO "user" (id, org_id, identity_provider, identity_provider_user_id) 
+   VALUES ($1, $2, $3, $4) 
+   RETURNING *`,
+  [input.id, input.orgId, input.identityProvider, input.identityProviderUserId]
 );
 ```
 
@@ -312,6 +344,7 @@ describe('createUser', () => {
 ### 10. Performance Considerations
 
 #### Database Queries
+- ALWAYS use named parameters (e.g., `$(paramName)`) instead of positional parameters (e.g., `$1`)
 - Use parameterized queries to prevent SQL injection
 - Add appropriate indexes for frequently queried columns
 - Use transactions for operations that modify multiple tables

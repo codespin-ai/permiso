@@ -30,8 +30,8 @@ export async function createUser(
     const user = await db.tx(async (t) => {
       const userRow = await t.one<UserDbRow>(
         `INSERT INTO user (id, org_id, identity_provider, identity_provider_user_id, data) 
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [input.id, input.orgId, input.identityProvider, input.identityProviderUserId, input.data ?? null]
+         VALUES ($(id), $(orgId), $(identityProvider), $(identityProviderUserId), $(data)) RETURNING *`,
+        { id: input.id, orgId: input.orgId, identityProvider: input.identityProvider, identityProviderUserId: input.identityProviderUserId, data: input.data ?? null }
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -45,8 +45,8 @@ export async function createUser(
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO user_property (user_id, org_id, name, value, hidden) VALUES ($1, $2, $3, $4, $5)`,
-            [prop.user_id, prop.org_id, prop.name, prop.value, prop.hidden]
+            `INSERT INTO user_property (user_id, org_id, name, value, hidden) VALUES ($(user_id), $(org_id), $(name), $(value), $(hidden))`,
+            prop
           );
         }
       }
@@ -54,8 +54,8 @@ export async function createUser(
       if (input.roleIds && input.roleIds.length > 0) {
         for (const roleId of input.roleIds) {
           await t.none(
-            `INSERT INTO user_role (user_id, role_id, org_id) VALUES ($1, $2, $3)`,
-            [input.id, roleId, input.orgId]
+            `INSERT INTO user_role (user_id, role_id, org_id) VALUES ($(userId), $(roleId), $(orgId))`,
+            { userId: input.id, roleId, orgId: input.orgId }
           );
         }
       }
@@ -77,8 +77,8 @@ export async function getUser(
 ): Promise<Result<UserWithProperties | null>> {
   try {
     const userRow = await db.oneOrNone<UserDbRow>(
-      `SELECT * FROM user WHERE id = $1 AND org_id = $2`,
-      [userId, orgId]
+      `SELECT * FROM user WHERE id = $(userId) AND org_id = $(orgId)`,
+      { userId, orgId }
     );
 
     if (!userRow) {
@@ -124,34 +124,34 @@ export async function getUsers(
       SELECT DISTINCT u.* 
       FROM "user" u
     `;
-    const params: any[] = [orgId];
-    let paramCount = 1;
+    const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
       query += ` LEFT JOIN user_property up ON u.id = up.user_id AND u.org_id = up.org_id`;
     }
 
-    const conditions: string[] = [`u.org_id = $1`];
+    const conditions: string[] = [`u.org_id = $(orgId)`];
 
     if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`u.id = ANY($${++paramCount})`);
-      params.push(filters.ids);
+      conditions.push(`u.id = ANY($(userIds))`);
+      params.userIds = filters.ids;
     }
 
     if (filters?.identityProvider) {
-      conditions.push(`u.identity_provider = $${++paramCount}`);
-      params.push(filters.identityProvider);
+      conditions.push(`u.identity_provider = $(identityProvider)`);
+      params.identityProvider = filters.identityProvider;
     }
 
     if (filters?.identityProviderUserId) {
-      conditions.push(`u.identity_provider_user_id = $${++paramCount}`);
-      params.push(filters.identityProviderUserId);
+      conditions.push(`u.identity_provider_user_id = $(identityProviderUserId)`);
+      params.identityProviderUserId = filters.identityProviderUserId;
     }
 
     if (filters?.properties && filters.properties.length > 0) {
-      filters.properties.forEach(prop => {
-        conditions.push(`(up.name = $${++paramCount} AND up.value = $${++paramCount})`);
-        params.push(prop.name, prop.value);
+      filters.properties.forEach((prop, index) => {
+        conditions.push(`(up.name = $(propName${index}) AND up.value = $(propValue${index}))`);
+        params[`propName${index}`] = prop.name;
+        params[`propValue${index}`] = prop.value;
       });
     }
 
@@ -159,13 +159,13 @@ export async function getUsers(
     query += ` ORDER BY u.created_at DESC`;
 
     if (pagination?.limit) {
-      query += ` LIMIT $${++paramCount}`;
-      params.push(pagination.limit);
+      query += ` LIMIT $(limit)`;
+      params.limit = pagination.limit;
     }
 
     if (pagination?.offset) {
-      query += ` OFFSET $${++paramCount}`;
-      params.push(pagination.offset);
+      query += ` OFFSET $(offset)`;
+      params.offset = pagination.offset;
     }
 
     const rows = await db.manyOrNone<UserDbRow>(query, params);
@@ -203,8 +203,8 @@ export async function getUsersByIdentity(
 ): Promise<Result<UserWithProperties[]>> {
   try {
     const rows = await db.manyOrNone<UserDbRow>(
-      `SELECT * FROM "user" WHERE identity_provider = $1 AND identity_provider_user_id = $2`,
-      [identityProvider, identityProviderUserId]
+      `SELECT * FROM "user" WHERE identity_provider = $(identityProvider) AND identity_provider_user_id = $(identityProviderUserId)`,
+      { identityProvider, identityProviderUserId }
     );
 
     const users = rows.map(mapUserFromDb);
@@ -242,22 +242,21 @@ export async function updateUser(
 ): Promise<Result<User>> {
   try {
     const updates: string[] = [];
-    const params: any[] = [userId, orgId];
-    let paramCount = 2;
+    const params: Record<string, any> = { userId, orgId };
 
     if (input.identityProvider !== undefined) {
-      updates.push(`identity_provider = $${++paramCount}`);
-      params.push(input.identityProvider);
+      updates.push(`identity_provider = $(identityProvider)`);
+      params.identityProvider = input.identityProvider;
     }
 
     if (input.identityProviderUserId !== undefined) {
-      updates.push(`identity_provider_user_id = $${++paramCount}`);
-      params.push(input.identityProviderUserId);
+      updates.push(`identity_provider_user_id = $(identityProviderUserId)`);
+      params.identityProviderUserId = input.identityProviderUserId;
     }
 
     if (input.data !== undefined) {
-      updates.push(`data = $${++paramCount}`);
-      params.push(input.data);
+      updates.push(`data = $(data)`);
+      params.data = input.data;
     }
 
     updates.push(`updated_at = NOW()`);
@@ -265,7 +264,7 @@ export async function updateUser(
     const query = `
       UPDATE "user" 
       SET ${updates.join(', ')}
-      WHERE id = $1 AND org_id = $2
+      WHERE id = $(userId) AND org_id = $(orgId)
       RETURNING *
     `;
 
@@ -283,7 +282,7 @@ export async function deleteUser(
   userId: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(`DELETE FROM "user" WHERE id = $1 AND org_id = $2`, [userId, orgId]);
+    await db.none(`DELETE FROM "user" WHERE id = $(userId) AND org_id = $(orgId)`, { userId, orgId });
     return { success: true, data: true };
   } catch (error) {
     logger.error('Failed to delete user', { error, orgId, userId });
@@ -298,10 +297,10 @@ async function getUserProperties(
   includeHidden: boolean
 ): Promise<UserProperty[]> {
   const query = includeHidden
-    ? `SELECT * FROM user_property WHERE user_id = $1 AND org_id = $2`
-    : `SELECT * FROM user_property WHERE user_id = $1 AND org_id = $2 AND hidden = false`;
+    ? `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId)`
+    : `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<UserPropertyDbRow>(query, [userId, orgId]);
+  const rows = await db.manyOrNone<UserPropertyDbRow>(query, { userId, orgId });
   return rows.map(mapUserPropertyFromDb);
 }
 
@@ -316,11 +315,11 @@ export async function setUserProperty(
   try {
     const row = await db.one<UserPropertyDbRow>(
       `INSERT INTO user_property (user_id, org_id, name, value, hidden) 
-       VALUES ($1, $2, $3, $4, $5) 
+       VALUES ($(userId), $(orgId), $(name), $(value), $(hidden)) 
        ON CONFLICT (user_id, org_id, name) 
-       DO UPDATE SET value = $4, hidden = $5, created_at = NOW()
+       DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = NOW()
        RETURNING *`,
-      [userId, orgId, name, value, hidden]
+      { userId, orgId, name, value, hidden }
     );
 
     return { success: true, data: mapUserPropertyFromDb(row) };
@@ -338,8 +337,8 @@ export async function getUserProperty(
 ): Promise<Result<UserProperty | null>> {
   try {
     const row = await db.oneOrNone<UserPropertyDbRow>(
-      `SELECT * FROM user_property WHERE user_id = $1 AND org_id = $2 AND name = $3`,
-      [userId, orgId, name]
+      `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+      { userId, orgId, name }
     );
 
     return {
@@ -360,8 +359,8 @@ export async function deleteUserProperty(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM user_property WHERE user_id = $1 AND org_id = $2 AND name = $3`,
-      [userId, orgId, name]
+      `DELETE FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+      { userId, orgId, name }
     );
     return { success: true, data: true };
   } catch (error) {
@@ -379,10 +378,10 @@ export async function assignUserRole(
   try {
     const row = await db.one<UserRoleDbRow>(
       `INSERT INTO user_role (user_id, role_id, org_id) 
-       VALUES ($1, $2, $3) 
+       VALUES ($(userId), $(roleId), $(orgId)) 
        ON CONFLICT (user_id, role_id, org_id) DO NOTHING
        RETURNING *`,
-      [userId, roleId, orgId]
+      { userId, roleId, orgId }
     );
 
     return { success: true, data: mapUserRoleFromDb(row) };
@@ -400,8 +399,8 @@ export async function unassignUserRole(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM user_role WHERE user_id = $1 AND role_id = $2 AND org_id = $3`,
-      [userId, roleId, orgId]
+      `DELETE FROM user_role WHERE user_id = $(userId) AND role_id = $(roleId) AND org_id = $(orgId)`,
+      { userId, roleId, orgId }
     );
     return { success: true, data: true };
   } catch (error) {
@@ -417,8 +416,8 @@ export async function getUserRoles(
 ): Promise<Result<string[]>> {
   try {
     const rows = await db.manyOrNone<{ role_id: string }>(
-      `SELECT role_id FROM user_role WHERE user_id = $1 AND org_id = $2`,
-      [userId, orgId]
+      `SELECT role_id FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
+      { userId, orgId }
     );
 
     return { success: true, data: rows.map(r => r.role_id) };
