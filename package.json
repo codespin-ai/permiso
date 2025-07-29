@@ -8,11 +8,12 @@
     "build": "./build.sh",
     "clean": "./clean.sh",
     "start": "./start.sh",
-    "migrate:make": "cd database && knex migrate:make",
-    "migrate:latest": "cd database && knex migrate:latest",
-    "migrate:rollback": "cd database && knex migrate:rollback",
-    "seed:make": "cd database && knex seed:make",
-    "seed:run": "cd database && knex seed:run"
+    "migrate:make": "knex migrate:make",
+    "migrate:latest": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:status": "knex migrate:status",
+    "seed:make": "knex seed:make",
+    "seed:run": "knex seed:run"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",

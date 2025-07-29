@@ -9,10 +9,7 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "migrate:make": "knex migrate:make --migrations-directory ./migrations",
-    "migrate:latest": "knex migrate:latest --migrations-directory ./migrations",
-    "migrate:rollback": "knex migrate:rollback --migrations-directory ./migrations"
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
     "@codespin/permiso-core": "file:../permiso-core",
