@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../setup.js';
+import { testDb, client } from '../index.js';
 
 describe('Roles', () => {
   beforeEach(async () => {
@@ -119,20 +119,22 @@ describe('Roles', () => {
 
       // Query roles
       const query = gql`
-        query ListRoles($orgId: String!) {
+        query ListRoles($orgId: ID!) {
           roles(orgId: $orgId) {
-            id
-            orgId
-            name
-            description
+            nodes {
+              id
+              orgId
+              name
+              description
+            }
           }
         }
       `;
 
       const result = await client.query(query, { orgId: 'test-org' });
 
-      expect(result.data?.roles).to.have.lengthOf(2);
-      const roleIds = result.data?.roles.map((r: any) => r.id);
+      expect(result.data?.roles?.nodes).to.have.lengthOf(2);
+      const roleIds = result.data?.roles?.nodes.map((r: any) => r.id);
       expect(roleIds).to.include.members(['admin', 'user']);
     });
   });
@@ -162,7 +164,7 @@ describe('Roles', () => {
 
       // Query role
       const query = gql`
-        query GetRole($orgId: String!, $roleId: String!) {
+        query GetRole($orgId: ID!, $roleId: ID!) {
           role(orgId: $orgId, roleId: $roleId) {
             id
             orgId
@@ -211,7 +213,7 @@ describe('Roles', () => {
 
       // Update role
       const updateMutation = gql`
-        mutation UpdateRole($orgId: String!, $roleId: String!, $input: UpdateRoleInput!) {
+        mutation UpdateRole($orgId: ID!, $roleId: ID!, $input: UpdateRoleInput!) {
           updateRole(orgId: $orgId, roleId: $roleId, input: $input) {
             id
             name
@@ -266,7 +268,7 @@ describe('Roles', () => {
 
       // Delete role
       const deleteMutation = gql`
-        mutation DeleteRole($orgId: String!, $roleId: String!) {
+        mutation DeleteRole($orgId: ID!, $roleId: ID!) {
           deleteRole(orgId: $orgId, roleId: $roleId)
         }
       `;
@@ -277,7 +279,7 @@ describe('Roles', () => {
 
       // Verify deletion
       const query = gql`
-        query GetRole($orgId: String!, $roleId: String!) {
+        query GetRole($orgId: ID!, $roleId: ID!) {
           role(orgId: $orgId, roleId: $roleId) {
             id
           }

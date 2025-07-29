@@ -150,8 +150,8 @@ export const organizationResolvers = {
 
     resources: async (parent: OrganizationWithProperties, args: { filter?: any; pagination?: any }, context: { db: Database }) => {
       let result;
-      if (args.filter?.pathPrefix) {
-        result = await persistence.getResourcesByPathPrefix(context.db, parent.id, args.filter.pathPrefix);
+      if (args.filter?.idPrefix) {
+        result = await persistence.getResourcesByIdPrefix(context.db, parent.id, args.filter.idPrefix);
       } else {
         result = await persistence.getResources(context.db, parent.id, args.pagination);
       }

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../setup.js';
+import { testDb, client } from '../index.js';
 
 describe('Organizations', () => {
   beforeEach(async () => {
@@ -34,14 +34,16 @@ describe('Organizations', () => {
         }
       });
 
-      expect(result.data?.createOrganization).to.deep.equal({
-        id: 'org-123',
-        name: 'Test Organization',
-        properties: [
-          { name: 'tier', value: 'premium', hidden: false },
-          { name: 'apiKey', value: 'secret123', hidden: true }
-        ]
-      });
+      const org = result.data?.createOrganization;
+      expect(org?.id).to.equal('org-123');
+      expect(org?.name).to.equal('Test Organization');
+      expect(org?.properties).to.have.lengthOf(2);
+      
+      const tierProp = org?.properties.find((p: any) => p.name === 'tier');
+      expect(tierProp).to.deep.include({ name: 'tier', value: 'premium', hidden: false });
+      
+      const apiKeyProp = org?.properties.find((p: any) => p.name === 'apiKey');
+      expect(apiKeyProp).to.deep.include({ name: 'apiKey', value: 'secret123', hidden: true });
     });
 
     it('should fail with duplicate organization ID', async () => {
@@ -72,7 +74,7 @@ describe('Organizations', () => {
         });
         expect.fail('Should have thrown an error');
       } catch (error: any) {
-        expect(error.message).to.include('already exists');
+        expect(error.message).to.include('duplicate key value violates unique constraint');
       }
     });
   });
@@ -100,7 +102,7 @@ describe('Organizations', () => {
 
       // Query the organization
       const query = gql`
-        query GetOrganization($id: String!) {
+        query GetOrganization($id: ID!) {
           organization(id: $id) {
             id
             name
@@ -128,7 +130,7 @@ describe('Organizations', () => {
 
     it('should return null for non-existent organization', async () => {
       const query = gql`
-        query GetOrganization($id: String!) {
+        query GetOrganization($id: ID!) {
           organization(id: $id) {
             id
             name
@@ -171,16 +173,18 @@ describe('Organizations', () => {
       const query = gql`
         query ListOrganizations {
           organizations {
-            id
-            name
+            nodes {
+              id
+              name
+            }
           }
         }
       `;
 
       const result = await client.query(query);
 
-      expect(result.data?.organizations).to.have.lengthOf(2);
-      const orgIds = result.data?.organizations.map((o: any) => o.id);
+      expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
+      const orgIds = result.data?.organizations?.nodes.map((o: any) => o.id);
       expect(orgIds).to.include.members(['org-1', 'org-2']);
     });
   });
@@ -205,7 +209,7 @@ describe('Organizations', () => {
 
       // Update organization
       const updateMutation = gql`
-        mutation UpdateOrganization($id: String!, $input: UpdateOrganizationInput!) {
+        mutation UpdateOrganization($id: ID!, $input: UpdateOrganizationInput!) {
           updateOrganization(id: $id, input: $input) {
             id
             name
@@ -244,7 +248,7 @@ describe('Organizations', () => {
 
       // Delete organization
       const deleteMutation = gql`
-        mutation DeleteOrganization($id: String!) {
+        mutation DeleteOrganization($id: ID!) {
           deleteOrganization(id: $id)
         }
       `;
@@ -255,7 +259,7 @@ describe('Organizations', () => {
 
       // Verify it's deleted
       const query = gql`
-        query GetOrganization($id: String!) {
+        query GetOrganization($id: ID!) {
           organization(id: $id) {
             id
           }

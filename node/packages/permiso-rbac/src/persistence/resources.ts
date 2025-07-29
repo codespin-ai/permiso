@@ -20,9 +20,9 @@ export async function createResource(
 ): Promise<Result<Resource>> {
   try {
     const row = await db.one<ResourceDbRow>(
-      `INSERT INTO resource (id, org_id, name, description, data) VALUES ($(path), $(orgId), $(name), $(description), $(data)) RETURNING *`,
+      `INSERT INTO resource (id, org_id, name, description, data) VALUES ($(id), $(orgId), $(name), $(description), $(data)) RETURNING *`,
       { 
-        path: input.path, 
+        id: input.id, 
         orgId: input.orgId, 
         name: input.name ?? null,
         description: input.description ?? null,
@@ -40,12 +40,12 @@ export async function createResource(
 export async function getResource(
   db: Database,
   orgId: string,
-  resourcePath: string
+  resourceId: string
 ): Promise<Result<Resource | null>> {
   try {
     const row = await db.oneOrNone<ResourceDbRow>(
-      `SELECT * FROM resource WHERE id = $(resourcePath) AND org_id = $(orgId)`,
-      { resourcePath, orgId }
+      `SELECT * FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
+      { resourceId, orgId }
     );
 
     return {
@@ -53,7 +53,7 @@ export async function getResource(
       data: row ? mapResourceFromDb(row) : null
     };
   } catch (error) {
-    logger.error('Failed to get resource', { error, orgId, resourcePath });
+    logger.error('Failed to get resource', { error, orgId, resourceId });
     return { success: false, error: error as Error };
   }
 }
@@ -85,22 +85,22 @@ export async function getResources(
   }
 }
 
-export async function getResourcesByPathPrefix(
+export async function getResourcesByIdPrefix(
   db: Database,
   orgId: string,
-  pathPrefix: string
+  idPrefix: string
 ): Promise<Result<Resource[]>> {
   try {
     const rows = await db.manyOrNone<ResourceDbRow>(
       `SELECT * FROM resource 
-       WHERE org_id = $(orgId) AND id LIKE $(pathPattern) 
+       WHERE org_id = $(orgId) AND id LIKE $(idPattern) 
        ORDER BY id`,
-      { orgId, pathPattern: `${pathPrefix}%` }
+      { orgId, idPattern: `${idPrefix}%` }
     );
 
     return { success: true, data: rows.map(mapResourceFromDb) };
   } catch (error) {
-    logger.error('Failed to get resources by path prefix', { error, orgId, pathPrefix });
+    logger.error('Failed to get resources by id prefix', { error, orgId, idPrefix });
     return { success: false, error: error as Error };
   }
 }
@@ -108,12 +108,12 @@ export async function getResourcesByPathPrefix(
 export async function updateResource(
   db: Database,
   orgId: string,
-  resourcePath: string,
+  resourceId: string,
   input: UpdateResourceInput
 ): Promise<Result<Resource>> {
   try {
     const updates: string[] = [];
-    const params: Record<string, any> = { resourcePath, orgId };
+    const params: Record<string, any> = { resourceId, orgId };
 
     if (input.name !== undefined) {
       updates.push(`name = $(name)`);
@@ -135,14 +135,14 @@ export async function updateResource(
     const query = `
       UPDATE resource 
       SET ${updates.join(', ')}
-      WHERE id = $(resourcePath) AND org_id = $(orgId)
+      WHERE id = $(resourceId) AND org_id = $(orgId)
       RETURNING *
     `;
 
     const row = await db.one<ResourceDbRow>(query, params);
     return { success: true, data: mapResourceFromDb(row) };
   } catch (error) {
-    logger.error('Failed to update resource', { error, orgId, resourcePath, input });
+    logger.error('Failed to update resource', { error, orgId, resourceId, input });
     return { success: false, error: error as Error };
   }
 }
@@ -150,31 +150,31 @@ export async function updateResource(
 export async function deleteResource(
   db: Database,
   orgId: string,
-  resourcePath: string
+  resourceId: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(`DELETE FROM resource WHERE id = $(resourcePath) AND org_id = $(orgId)`, { resourcePath, orgId });
+    await db.none(`DELETE FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`, { resourceId, orgId });
     return { success: true, data: true };
   } catch (error) {
-    logger.error('Failed to delete resource', { error, orgId, resourcePath });
+    logger.error('Failed to delete resource', { error, orgId, resourceId });
     return { success: false, error: error as Error };
   }
 }
 
-export async function deleteResourcesByPathPrefix(
+export async function deleteResourcesByIdPrefix(
   db: Database,
   orgId: string,
-  pathPrefix: string
+  idPrefix: string
 ): Promise<Result<number>> {
   try {
     const result = await db.result(
-      `DELETE FROM resource WHERE org_id = $(orgId) AND id LIKE $(pathPattern)`,
-      { orgId, pathPattern: `${pathPrefix}%` }
+      `DELETE FROM resource WHERE org_id = $(orgId) AND id LIKE $(idPattern)`,
+      { orgId, idPattern: `${idPrefix}%` }
     );
 
     return { success: true, data: result.rowCount };
   } catch (error) {
-    logger.error('Failed to delete resources by path prefix', { error, orgId, pathPrefix });
+    logger.error('Failed to delete resources by id prefix', { error, orgId, idPrefix });
     return { success: false, error: error as Error };
   }
 }

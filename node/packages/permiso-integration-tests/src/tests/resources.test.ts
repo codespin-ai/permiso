@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../setup.js';
+import { testDb, client } from '../index.js';
 
 describe('Resources', () => {
   beforeEach(async () => {
@@ -44,9 +44,8 @@ describe('Resources', () => {
 
       const result = await client.mutate(mutation, {
         input: {
-          id: 'api-users',
+          id: '/api/users/*',
           orgId: 'test-org',
-          path: '/api/users/*',
           name: 'User API',
           description: 'User management endpoints',
           properties: [
@@ -57,9 +56,8 @@ describe('Resources', () => {
       });
 
       expect(result.data?.createResource).to.deep.equal({
-        id: 'api-users',
+        id: '/api/users/*',
         orgId: 'test-org',
-        path: '/api/users/*',
         name: 'User API',
         description: 'User management endpoints',
         properties: [
@@ -81,9 +79,8 @@ describe('Resources', () => {
       try {
         await client.mutate(mutation, {
           input: {
-            id: 'api-users',
+            id: '/api/users/*',
             orgId: 'non-existent-org',
-            path: '/api/users/*',
             name: 'User API'
           }
         });
@@ -107,40 +104,40 @@ describe('Resources', () => {
       // Create multiple resources
       await client.mutate(createResourceMutation, {
         input: {
-          id: 'api-users',
+          id: '/api/users/*',
           orgId: 'test-org',
-          path: '/api/users/*',
           name: 'User API'
         }
       });
 
       await client.mutate(createResourceMutation, {
         input: {
-          id: 'api-roles',
+          id: '/api/roles/*',
           orgId: 'test-org',
-          path: '/api/roles/*',
           name: 'Role API'
         }
       });
 
       // Query resources
       const query = gql`
-        query ListResources($orgId: String!) {
+        query ListResources($orgId: ID!) {
           resources(orgId: $orgId) {
-            id
-            orgId
-            path
-            name
-            description
+            nodes {
+              id
+              orgId
+              path
+              name
+              description
+            }
           }
         }
       `;
 
       const result = await client.query(query, { orgId: 'test-org' });
 
-      expect(result.data?.resources).to.have.lengthOf(2);
-      const resourceIds = result.data?.resources.map((r: any) => r.id);
-      expect(resourceIds).to.include.members(['api-users', 'api-roles']);
+      expect(result.data?.resources?.nodes).to.have.lengthOf(2);
+      const resourceIds = result.data?.resources?.nodes.map((r: any) => r.id);
+      expect(resourceIds).to.include.members(['/api/users/*', '/api/roles/*']);
     });
   });
 
@@ -157,9 +154,8 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: 'api-users',
+          id: '/api/users/*',
           orgId: 'test-org',
-          path: '/api/users/*',
           name: 'User API',
           description: 'User management',
           properties: [
@@ -170,7 +166,7 @@ describe('Resources', () => {
 
       // Query resource
       const query = gql`
-        query GetResource($orgId: String!, $resourceId: String!) {
+        query GetResource($orgId: ID!, $resourceId: ID!) {
           resource(orgId: $orgId, resourceId: $resourceId) {
             id
             orgId
@@ -212,16 +208,15 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: 'api-users',
+          id: '/api/users/*',
           orgId: 'test-org',
-          path: '/api/users/*',
           name: 'User API'
         }
       });
 
       // Update resource
       const updateMutation = gql`
-        mutation UpdateResource($orgId: String!, $resourceId: String!, $input: UpdateResourceInput!) {
+        mutation UpdateResource($orgId: ID!, $resourceId: ID!, $input: UpdateResourceInput!) {
           updateResource(orgId: $orgId, resourceId: $resourceId, input: $input) {
             id
             path
@@ -238,9 +233,8 @@ describe('Resources', () => {
 
       const result = await client.mutate(updateMutation, {
         orgId: 'test-org',
-        resourceId: 'api-users',
+        resourceId: '/api/users/*',
         input: {
-          path: '/api/v2/users/*',
           name: 'User API v2',
           description: 'Enhanced user management',
           properties: [
@@ -271,27 +265,26 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: 'api-users',
+          id: '/api/users/*',
           orgId: 'test-org',
-          path: '/api/users/*',
           name: 'User API'
         }
       });
 
       // Delete resource
       const deleteMutation = gql`
-        mutation DeleteResource($orgId: String!, $resourceId: String!) {
+        mutation DeleteResource($orgId: ID!, $resourceId: ID!) {
           deleteResource(orgId: $orgId, resourceId: $resourceId)
         }
       `;
 
-      const result = await client.mutate(deleteMutation, { orgId: 'test-org', resourceId: 'api-users' });
+      const result = await client.mutate(deleteMutation, { orgId: 'test-org', resourceId: '/api/users/*' });
 
       expect(result.data?.deleteResource).to.be.true;
 
       // Verify deletion
       const query = gql`
-        query GetResource($orgId: String!, $resourceId: String!) {
+        query GetResource($orgId: ID!, $resourceId: ID!) {
           resource(orgId: $orgId, resourceId: $resourceId) {
             id
           }

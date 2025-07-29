@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../setup.js';
+import { testDb, client } from '../index.js';
 
 describe('Permissions', () => {
   beforeEach(async () => {
@@ -68,9 +68,8 @@ describe('Permissions', () => {
 
     await client.mutate(resourceMutation, {
       input: {
-        id: 'api-users',
+        id: '/api/users/*',
         orgId: 'test-org',
-        path: '/api/users/*',
         name: 'User API'
       }
     });
@@ -98,7 +97,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           userId: 'test-user',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'read',
           properties: [
             { name: 'scope', value: 'own' },
@@ -133,7 +132,7 @@ describe('Permissions', () => {
           input: {
             orgId: 'test-org',
             userId: 'non-existent',
-            resourceId: 'api-users',
+            resourceId: '/api/users/*',
             action: 'read'
           }
         });
@@ -166,7 +165,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           roleId: 'admin',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'write',
           properties: [
             { name: 'scope', value: 'all' }
@@ -240,15 +239,15 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           userId: 'test-user',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'read'
         }
       });
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions($orgId: String!, $userId: String!, $resourcePath: String!) {
-          effectivePermissions(orgId: $orgId, userId: $userId, resourcePath: $resourcePath) {
+        query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
+          effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -263,7 +262,7 @@ describe('Permissions', () => {
       const result = await client.query(query, { 
         orgId: 'test-org', 
         userId: 'test-user', 
-        resourcePath: '/api/users/123' 
+        resourceId: '/api/users/123' 
       });
 
       expect(result.data?.effectivePermissions).to.have.lengthOf(1);
@@ -288,7 +287,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           roleId: 'admin',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'write'
         }
       });
@@ -312,8 +311,8 @@ describe('Permissions', () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions($orgId: String!, $userId: String!, $resourcePath: String!) {
-          effectivePermissions(orgId: $orgId, userId: $userId, resourcePath: $resourcePath) {
+        query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
+          effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -325,7 +324,7 @@ describe('Permissions', () => {
       const result = await client.query(query, { 
         orgId: 'test-org', 
         userId: 'test-user', 
-        resourcePath: '/api/users/123' 
+        resourceId: '/api/users/123' 
       });
 
       expect(result.data?.effectivePermissions).to.have.lengthOf(1);
@@ -351,7 +350,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           userId: 'test-user',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'read'
         }
       });
@@ -369,7 +368,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           roleId: 'admin',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'write'
         }
       });
@@ -393,8 +392,8 @@ describe('Permissions', () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions($orgId: String!, $userId: String!, $resourcePath: String!) {
-          effectivePermissions(orgId: $orgId, userId: $userId, resourcePath: $resourcePath) {
+        query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
+          effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -405,7 +404,7 @@ describe('Permissions', () => {
       const result = await client.query(query, { 
         orgId: 'test-org', 
         userId: 'test-user', 
-        resourcePath: '/api/users/123' 
+        resourceId: '/api/users/123' 
       });
 
       expect(result.data?.effectivePermissions).to.have.lengthOf(2);
@@ -429,7 +428,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           userId: 'test-user',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'read'
         }
       });
@@ -445,7 +444,7 @@ describe('Permissions', () => {
         input: {
           orgId: 'test-org',
           userId: 'test-user',
-          resourceId: 'api-users',
+          resourceId: '/api/users/*',
           action: 'read'
         }
       });
@@ -454,8 +453,8 @@ describe('Permissions', () => {
 
       // Verify permission is revoked
       const query = gql`
-        query GetEffectivePermissions($orgId: String!, $userId: String!, $resourcePath: String!) {
-          effectivePermissions(orgId: $orgId, userId: $userId, resourcePath: $resourcePath) {
+        query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
+          effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
             action
           }
         }
@@ -464,7 +463,7 @@ describe('Permissions', () => {
       const queryResult = await client.query(query, { 
         orgId: 'test-org', 
         userId: 'test-user', 
-        resourcePath: '/api/users/123' 
+        resourceId: '/api/users/123' 
       });
 
       expect(queryResult.data?.effectivePermissions).to.deep.equal([]);

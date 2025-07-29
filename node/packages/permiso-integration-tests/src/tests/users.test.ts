@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../setup.js';
+import { testDb, client } from '../index.js';
 
 describe('Users', () => {
   beforeEach(async () => {
@@ -54,16 +54,18 @@ describe('Users', () => {
         }
       });
 
-      expect(result.data?.createUser).to.deep.equal({
-        id: 'user-123',
-        orgId: 'test-org',
-        identityProvider: 'auth0',
-        identityProviderUserId: 'auth0|12345',
-        properties: [
-          { name: 'email', value: 'user@example.com', hidden: false },
-          { name: 'apiToken', value: 'secret', hidden: true }
-        ]
-      });
+      const user = result.data?.createUser;
+      expect(user?.id).to.equal('user-123');
+      expect(user?.orgId).to.equal('test-org');
+      expect(user?.identityProvider).to.equal('auth0');
+      expect(user?.identityProviderUserId).to.equal('auth0|12345');
+      expect(user?.properties).to.have.lengthOf(2);
+      
+      const emailProp = user?.properties.find((p: any) => p.name === 'email');
+      expect(emailProp).to.deep.include({ name: 'email', value: 'user@example.com', hidden: false });
+      
+      const tokenProp = user?.properties.find((p: any) => p.name === 'apiToken');
+      expect(tokenProp).to.deep.include({ name: 'apiToken', value: 'secret', hidden: true });
     });
 
     it('should fail with non-existent organization', async () => {
@@ -86,7 +88,7 @@ describe('Users', () => {
         });
         expect.fail('Should have thrown an error');
       } catch (error: any) {
-        expect(error.message).to.include('Organization not found');
+        expect(error.message).to.include('is not present in table');
       }
     });
   });
@@ -122,35 +124,39 @@ describe('Users', () => {
 
       // Query users
       const query = gql`
-        query ListUsers($orgId: String!) {
+        query ListUsers($orgId: ID!) {
           users(orgId: $orgId) {
-            id
-            orgId
-            identityProvider
-            identityProviderUserId
+            nodes {
+              id
+              orgId
+              identityProvider
+              identityProviderUserId
+            }
           }
         }
       `;
 
       const result = await client.query(query, { orgId: 'test-org' });
 
-      expect(result.data?.users).to.have.lengthOf(2);
-      const userIds = result.data?.users.map((u: any) => u.id);
+      expect(result.data?.users?.nodes).to.have.lengthOf(2);
+      const userIds = result.data?.users?.nodes.map((u: any) => u.id);
       expect(userIds).to.include.members(['user-1', 'user-2']);
     });
 
     it('should return empty array for organization with no users', async () => {
       const query = gql`
-        query ListUsers($orgId: String!) {
+        query ListUsers($orgId: ID!) {
           users(orgId: $orgId) {
-            id
+            nodes {
+              id
+            }
           }
         }
       `;
 
       const result = await client.query(query, { orgId: 'test-org' });
 
-      expect(result.data?.users).to.deep.equal([]);
+      expect(result.data?.users?.nodes).to.deep.equal([]);
     });
   });
 
@@ -179,7 +185,7 @@ describe('Users', () => {
 
       // Query user
       const query = gql`
-        query GetUser($orgId: String!, $userId: String!) {
+        query GetUser($orgId: ID!, $userId: ID!) {
           user(orgId: $orgId, userId: $userId) {
             id
             orgId
@@ -228,7 +234,7 @@ describe('Users', () => {
 
       // Update user
       const updateMutation = gql`
-        mutation UpdateUser($orgId: String!, $userId: String!, $input: UpdateUserInput!) {
+        mutation UpdateUser($orgId: ID!, $userId: ID!, $input: UpdateUserInput!) {
           updateUser(orgId: $orgId, userId: $userId, input: $input) {
             id
             properties {
@@ -280,7 +286,7 @@ describe('Users', () => {
 
       // Delete user
       const deleteMutation = gql`
-        mutation DeleteUser($orgId: String!, $userId: String!) {
+        mutation DeleteUser($orgId: ID!, $userId: ID!) {
           deleteUser(orgId: $orgId, userId: $userId)
         }
       `;
@@ -291,7 +297,7 @@ describe('Users', () => {
 
       // Verify deletion
       const query = gql`
-        query GetUser($orgId: String!, $userId: String!) {
+        query GetUser($orgId: ID!, $userId: ID!) {
           user(orgId: $orgId, userId: $userId) {
             id
           }

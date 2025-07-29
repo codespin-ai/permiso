@@ -29,7 +29,7 @@ type User {
   organization: Organization!
   roles: [Role!]!
   permissions: [UserPermission!]!
-  effectivePermissions(resourcePath: String, action: String): [Permission!]!
+  effectivePermissions(resourceId: String, action: String): [Permission!]!
 }
 
 type Role {
@@ -157,23 +157,23 @@ type Query {
   roleProperty(orgId: ID!, roleId: ID!, propertyName: String!): Property
   
   # Resources (scoped to org)
-  resource(orgId: ID!, resourcePath: String!): Resource
+  resource(orgId: ID!, resourceId: ID!): Resource
   resources(orgId: ID!, filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
-  resourcesByPathPrefix(orgId: ID!, pathPrefix: String!): [Resource!]!
+  resourcesByIdPrefix(orgId: ID!, idPrefix: String!): [Resource!]!
   
   # Permissions
-  userPermissions(orgId: ID!, userId: ID!, resourcePath: String, action: String): [UserPermission!]!
-  rolePermissions(orgId: ID!, roleId: ID!, resourcePath: String, action: String): [RolePermission!]!
-  effectivePermissions(orgId: ID!, userId: ID!, resourcePath: String!, action: String): [EffectivePermission!]!
+  userPermissions(orgId: ID!, userId: ID!, resourceId: String, action: String): [UserPermission!]!
+  rolePermissions(orgId: ID!, roleId: ID!, resourceId: String, action: String): [RolePermission!]!
+  effectivePermissions(orgId: ID!, userId: ID!, resourceId: String!, action: String): [EffectivePermission!]!
   effectivePermissionsByPrefix(
     orgId: ID!, 
     userId: ID!, 
-    resourcePathPrefix: String!, 
+    resourceIdPrefix: String!, 
     action: String
   ): [EffectivePermission!]!
   
   # Check permission (returns boolean)
-  hasPermission(orgId: ID!, userId: ID!, resourcePath: String!, action: String!): Boolean!
+  hasPermission(orgId: ID!, userId: ID!, resourceId: String!, action: String!): Boolean!
 }
 
 # Mutation type
@@ -211,15 +211,15 @@ type Mutation {
   
   # Resources
   createResource(input: CreateResourceInput!): Resource!
-  updateResource(orgId: ID!, resourcePath: String!, input: UpdateResourceInput!): Resource!
-  deleteResource(orgId: ID!, resourcePath: String!): Boolean!
+  updateResource(orgId: ID!, resourceId: ID!, input: UpdateResourceInput!): Resource!
+  deleteResource(orgId: ID!, resourceId: ID!): Boolean!
   
   # Permissions
   grantUserPermission(input: GrantUserPermissionInput!): UserPermission!
-  revokeUserPermission(orgId: ID!, userId: ID!, resourcePath: String!, action: String!): Boolean!
+  revokeUserPermission(orgId: ID!, userId: ID!, resourceId: ID!, action: String!): Boolean!
   
   grantRolePermission(input: GrantRolePermissionInput!): RolePermission!
-  revokeRolePermission(orgId: ID!, roleId: ID!, resourcePath: String!, action: String!): Boolean!
+  revokeRolePermission(orgId: ID!, roleId: ID!, resourceId: ID!, action: String!): Boolean!
 }
 
 # Input types
@@ -265,7 +265,7 @@ input UpdateRoleInput {
 }
 
 input CreateResourceInput {
-  path: String!  # becomes the id
+  id: ID!
   orgId: ID!
   name: String
   description: String
@@ -285,14 +285,14 @@ input PropertyInput {
 input GrantUserPermissionInput {
   orgId: ID!
   userId: ID!
-  resourcePath: String!
+  resourceId: ID!
   action: String!
 }
 
 input GrantRolePermissionInput {
   orgId: ID!
   roleId: ID!
-  resourcePath: String!
+  resourceId: ID!
   action: String!
 }
 
@@ -312,7 +312,7 @@ input RoleFilter {
 }
 
 input ResourceFilter {
-  pathPrefix: String
+  idPrefix: String
 }
 
 input PropertyFilter {

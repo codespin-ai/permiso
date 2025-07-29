@@ -11,8 +11,15 @@ export class TestDatabase {
   private config: any;
 
   private constructor() {
-    this.config = createDbConfig('permiso-test');
-    this.dbName = this.config.connection.database;
+    // Use the main PERMISO database config but with a test database name
+    this.dbName = 'permiso_test';
+    this.config = {
+      ...createDbConfig('permiso'),
+      connection: {
+        ...createDbConfig('permiso').connection,
+        database: this.dbName
+      }
+    };
   }
 
   static getInstance(): TestDatabase {
@@ -27,7 +34,10 @@ export class TestDatabase {
     const adminConfig = {
       ...this.config,
       connection: {
-        ...this.config.connection,
+        host: this.config.connection.host,
+        port: this.config.connection.port,
+        user: this.config.connection.user,
+        password: this.config.connection.password,
         database: 'postgres'
       }
     };
@@ -53,8 +63,9 @@ export class TestDatabase {
     
     try {
       // Run migrations from the permiso database directory
+      const migrationsPath = new URL('../../../../../database/permiso/migrations', import.meta.url);
       await this.knexInstance.migrate.latest({
-        directory: '../../../../database/permiso/migrations'
+        directory: migrationsPath.pathname
       });
       console.log('Migrations completed');
     } finally {
@@ -76,7 +87,10 @@ export class TestDatabase {
     const adminConfig = {
       ...this.config,
       connection: {
-        ...this.config.connection,
+        host: this.config.connection.host,
+        port: this.config.connection.port,
+        user: this.config.connection.user,
+        password: this.config.connection.password,
         database: 'postgres'
       }
     };
@@ -86,6 +100,8 @@ export class TestDatabase {
     try {
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
       console.log(`Dropped test database: ${this.dbName}`);
+    } catch (error) {
+      console.error('Error dropping test database:', error);
     } finally {
       await adminKnex.destroy();
     }

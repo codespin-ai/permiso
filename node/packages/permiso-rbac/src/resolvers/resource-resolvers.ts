@@ -4,8 +4,8 @@ import type { Resource, Permission } from '../types.js';
 
 export const resourceResolvers = {
   Query: {
-    resource: async (_: any, args: { orgId: string; resourcePath: string }, context: { db: Database }) => {
-      const result = await persistence.getResource(context.db, args.orgId, args.resourcePath);
+    resource: async (_: any, args: { orgId: string; resourceId: string }, context: { db: Database }) => {
+      const result = await persistence.getResource(context.db, args.orgId, args.resourceId);
       if (!result.success) {
         throw result.error;
       }
@@ -14,8 +14,8 @@ export const resourceResolvers = {
 
     resources: async (_: any, args: { orgId: string; filter?: any; pagination?: any }, context: { db: Database }) => {
       let result;
-      if (args.filter?.pathPrefix) {
-        result = await persistence.getResourcesByPathPrefix(context.db, args.orgId, args.filter.pathPrefix);
+      if (args.filter?.idPrefix) {
+        result = await persistence.getResourcesByIdPrefix(context.db, args.orgId, args.filter.idPrefix);
       } else {
         result = await persistence.getResources(context.db, args.orgId, args.pagination);
       }
@@ -35,8 +35,8 @@ export const resourceResolvers = {
       };
     },
 
-    resourcesByPathPrefix: async (_: any, args: { orgId: string; pathPrefix: string }, context: { db: Database }) => {
-      const result = await persistence.getResourcesByPathPrefix(context.db, args.orgId, args.pathPrefix);
+    resourcesByIdPrefix: async (_: any, args: { orgId: string; idPrefix: string }, context: { db: Database }) => {
+      const result = await persistence.getResourcesByIdPrefix(context.db, args.orgId, args.idPrefix);
       if (!result.success) {
         throw result.error;
       }
@@ -53,16 +53,16 @@ export const resourceResolvers = {
       return result.data;
     },
 
-    updateResource: async (_: any, args: { orgId: string; resourcePath: string; input: any }, context: { db: Database }) => {
-      const result = await persistence.updateResource(context.db, args.orgId, args.resourcePath, args.input);
+    updateResource: async (_: any, args: { orgId: string; resourceId: string; input: any }, context: { db: Database }) => {
+      const result = await persistence.updateResource(context.db, args.orgId, args.resourceId, args.input);
       if (!result.success) {
         throw result.error;
       }
       return result.data;
     },
 
-    deleteResource: async (_: any, args: { orgId: string; resourcePath: string }, context: { db: Database }) => {
-      const result = await persistence.deleteResource(context.db, args.orgId, args.resourcePath);
+    deleteResource: async (_: any, args: { orgId: string; resourceId: string }, context: { db: Database }) => {
+      const result = await persistence.deleteResource(context.db, args.orgId, args.resourceId);
       if (!result.success) {
         throw result.error;
       }

@@ -223,7 +223,7 @@ export type UpdateUserInput = {
 };
 
 export type CreateResourceInput = {
-  path: string; // becomes the id
+  id: string;
   orgId: string;
   name?: string;
   description?: string;
