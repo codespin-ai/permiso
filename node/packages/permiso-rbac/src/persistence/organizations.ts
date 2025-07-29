@@ -1,6 +1,6 @@
 import { createLogger } from '@codespin/permiso-logger';
 import { Result } from '@codespin/permiso-core';
-import type { Database } from '../db.js';
+import type { Database } from '@codespin/permiso-db';
 import type {
   Organization,
   OrganizationDbRow,

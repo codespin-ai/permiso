@@ -52,18 +52,30 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 ```
 
 ### Database Commands
+
+**IMPORTANT**: NEVER run database migrations or seeds unless explicitly instructed by the user
+- Only run migration/seed commands that modify the database when the user specifically asks
+- You can run status checks and create new migration/seed files without explicit permission
+- There is NO DEFAULT database - all commands must specify the database name
+
 ```bash
-# Run migrations
-npm run migrate:latest
+# Check migration status (safe to run)
+npm run migrate:permiso:status
+npm run migrate:all:status
 
-# Create new migration
-npm run migrate:make migration_name
+# Create new migration (safe to run)
+npm run migrate:permiso:make migration_name
 
-# Create seed file
-npm run seed:make seed_name
+# Run migrations (ONLY when explicitly asked)
+npm run migrate:permiso:latest
+npm run migrate:permiso:rollback
+npm run migrate:all
 
-# Run seeds
-npm run seed:run
+# Create seed file (safe to run)
+npm run seed:permiso:make seed_name
+
+# Run seeds (ONLY when explicitly asked)
+npm run seed:permiso:run
 ```
 
 ### Development Commands
@@ -246,7 +258,7 @@ await db.none(
 - Coding standards: `/CODING-STANDARDS.md`
 - Architecture overview: `/docs/architecture.md`
 - API specification: `/docs/api-spec.md`
-- Database schema: `/database/migrations/`
+- Database schema: `/database/permiso/migrations/`
 
 ## Testing & Quality
 
@@ -275,7 +287,7 @@ await db.none(
 
 ### Database Changes
 1. Create migration: `npm run migrate:make your_migration_name`
-2. Edit migration file in `/database/migrations/`
+2. Edit migration file in `/database/permiso/migrations/`
 3. Run migration: `npm run migrate:latest`
 4. Update types in `@codespin/permiso-rbac`
 5. Update persistence layer functions

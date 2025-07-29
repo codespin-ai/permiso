@@ -4,8 +4,8 @@
 #
 # Flags:
 #   --install   Force npm install in every package even if node_modules exists
-#   --migrate   Run DB migrations after build (delegates to root npm script)
-#   --seed      Run DB seeders after build (delegates to root npm script)
+#   --migrate   Run DB migrations after build for all databases
+#   --seed      Run DB seeders after build for all databases
 # -------------------------------------------------------------------
 set -euo pipefail
 
@@ -58,13 +58,13 @@ done
 
 # 5 ▸ optional migrations / seeds via root scripts
 if [[ "$*" == *--migrate* ]]; then
-  echo "Running database migrations…"
-  npm run migrate:latest
+  echo "Running database migrations for all databases…"
+  npm run migrate:all
 fi
 
 if [[ "$*" == *--seed* ]]; then
-  echo "Running database seeds…"
-  npm run seed:run
+  echo "Running database seeds for all databases…"
+  npm run seed:all
 fi
 
 echo "=== Build completed successfully ==="

@@ -8,12 +8,16 @@
     "build": "./build.sh",
     "clean": "./clean.sh",
     "start": "./start.sh",
-    "migrate:make": "knex migrate:make",
-    "migrate:latest": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback",
-    "migrate:status": "knex migrate:status",
-    "seed:make": "knex seed:make",
-    "seed:run": "knex seed:run"
+    "migrate:all": "./scripts/db-all.sh migrate:latest",
+    "migrate:all:rollback": "./scripts/db-all.sh migrate:rollback",
+    "migrate:all:status": "./scripts/db-all.sh migrate:status",
+    "seed:all": "./scripts/db-all.sh seed:run",
+    "migrate:permiso:make": "knex migrate:make --knexfile database/permiso/knexfile.js",
+    "migrate:permiso:latest": "knex migrate:latest --knexfile database/permiso/knexfile.js",
+    "migrate:permiso:rollback": "knex migrate:rollback --knexfile database/permiso/knexfile.js",
+    "migrate:permiso:status": "knex migrate:status --knexfile database/permiso/knexfile.js",
+    "seed:permiso:make": "knex seed:make --knexfile database/permiso/knexfile.js",
+    "seed:permiso:run": "knex seed:run --knexfile database/permiso/knexfile.js"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
@@ -39,5 +43,8 @@
     "typescript"
   ],
   "author": "Codespin",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
 }

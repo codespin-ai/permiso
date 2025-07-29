@@ -1,4 +1,4 @@
-import type { Database } from '../db.js';
+import type { Database } from '@codespin/permiso-db';
 import * as persistence from '../persistence/index.js';
 import type { RoleWithProperties } from '../types.js';
 
