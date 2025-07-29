@@ -1,0 +1,37 @@
+{
+  "name": "@codespin/permiso-integration-tests",
+  "version": "0.0.1",
+  "description": "Integration tests for Permiso RBAC system",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "mocha",
+    "test:watch": "mocha --watch",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.11.4",
+    "graphql": "^16.9.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.9",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "chai": "^5.2.1",
+    "eslint": "^8.55.0",
+    "knex": "^3.1.0",
+    "mocha": "^11.7.1",
+    "pg": "^8.16.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

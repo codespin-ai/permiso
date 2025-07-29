@@ -17,6 +17,7 @@ PACKAGES=(
   "permiso-logger"
   "permiso-db"
   "permiso-rbac"
+  "permiso-integration-tests"
 )
 
 # 1 ▸ clean first
@@ -66,6 +67,7 @@ if [[ "$*" == *--seed* ]]; then
   echo "Running database seeds for all databases…"
   npm run seed:all
 fi
+
 
 echo "=== Build completed successfully ==="
 echo "To start the application, run: ./start.sh"

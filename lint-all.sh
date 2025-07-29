@@ -35,12 +35,13 @@ for pkg in node/packages/*; do
   fi
 done
 
+
 # Summary
 echo "================================"
 if [[ "$ALL_PASSED" == "true" ]]; then
-  echo "✓ All packages passed linting!"
+  echo "✓ All packages and tests passed linting!"
   exit 0
 else
-  echo "✗ Some packages failed linting"
+  echo "✗ Some packages or tests failed linting"
   exit 1
 fi

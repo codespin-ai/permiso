@@ -93,6 +93,11 @@ cd node && npm run lint:fix    # Run ESLint with auto-fix on all packages
 # Individual package linting
 cd node/packages/[package-name] && npm run lint
 cd node/packages/[package-name] && npm run lint:fix
+
+# Integration tests
+npm run test:integration:permiso      # Run integration tests for permiso database
+npm run test:integration:permiso:watch # Run integration tests in watch mode
+npm run test:integration:all          # Run all integration tests
 ```
 
 ## Critical Architecture Decisions
@@ -129,7 +134,9 @@ Located in `/node/packages/`, build order matters:
 
 1. **@codespin/permiso-core** - Core types, utilities, and Result type
 2. **@codespin/permiso-logger** - Centralized logging for all packages
-3. **@codespin/permiso-rbac** - Main RBAC implementation with GraphQL API
+3. **@codespin/permiso-db** - Database connection and management utilities
+4. **@codespin/permiso-rbac** - Main RBAC implementation with GraphQL API
+5. **@codespin/permiso-integration-tests** - Integration tests using GraphQL API (separate from production build)
 
 ## Environment Variables
 
