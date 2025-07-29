@@ -29,6 +29,9 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 - Common explicit instructions include: "commit", "push", "commit and push", "save to git"
 - If unsure, ask the user if they want to commit the changes
 - Always wait for user approval before making any git operations
+- **DO NOT** automatically commit or push after making changes
+- **DO NOT** commit/push even if you think the task is complete
+- The user will explicitly tell you when they want to commit/push
 
 ### Build Commands
 ```bash
