@@ -1,6 +1,12 @@
 export * from './types.js';
-export * from './persistence/index.js';
 export { resolvers } from './resolvers/index.js';
+
+// Export all the resolver functions for direct use
+export * from './resolvers/organization/index.js';
+export * from './resolvers/user/index.js';
+export * from './resolvers/role/index.js';
+export * from './resolvers/resource/index.js';
+export * from './resolvers/permission/index.js';
 
 // Re-export the GraphQL schema as a string
 import { readFileSync } from 'fs';
