@@ -42,3 +42,7 @@ temp/
 
 # OS generated files
 Thumbs.db
+
+# Docker devenv data
+devenv/pgdata/
+devenv/redisdata/
