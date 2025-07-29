@@ -13,7 +13,7 @@ const pgp = pgPromise({
   }
 });
 
-export type Database = pgPromise.IDatabase<{}>;
+export type Database = pgPromise.IDatabase<unknown>;
 
 let db: Database | null = null;
 

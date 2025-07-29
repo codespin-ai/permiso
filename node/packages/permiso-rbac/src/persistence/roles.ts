@@ -14,9 +14,7 @@ import type {
 } from '../types.js';
 import {
   mapRoleFromDb,
-  mapRoleToDb,
-  mapRolePropertyFromDb,
-  mapRolePropertyToDb
+  mapRolePropertyFromDb
 } from '../mappers.js';
 
 const logger = createLogger('permiso-rbac:roles');

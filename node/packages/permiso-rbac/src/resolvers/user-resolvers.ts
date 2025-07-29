@@ -1,9 +1,6 @@
-import { createLogger } from '@codespin/permiso-logger';
 import type { Database } from '../db.js';
 import * as persistence from '../persistence/index.js';
-import type { UserWithProperties, OrganizationWithProperties, RoleWithProperties, UserPermission } from '../types.js';
-
-const logger = createLogger('permiso-rbac:user-resolvers');
+import type { UserWithProperties } from '../types.js';
 
 export const userResolvers = {
   Query: {

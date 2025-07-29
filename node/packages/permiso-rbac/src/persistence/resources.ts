@@ -9,8 +9,7 @@ import type {
   PaginationInput
 } from '../types.js';
 import {
-  mapResourceFromDb,
-  mapResourceToDb
+  mapResourceFromDb
 } from '../mappers.js';
 
 const logger = createLogger('permiso-rbac:resources');

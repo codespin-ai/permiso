@@ -10,9 +10,7 @@ import type {
 } from '../types.js';
 import {
   mapUserPermissionFromDb,
-  mapUserPermissionToDb,
-  mapRolePermissionFromDb,
-  mapRolePermissionToDb
+  mapRolePermissionFromDb
 } from '../mappers.js';
 
 const logger = createLogger('permiso-rbac:permissions');

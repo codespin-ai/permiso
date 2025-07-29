@@ -16,9 +16,7 @@ import type {
 } from '../types.js';
 import {
   mapUserFromDb,
-  mapUserToDb,
   mapUserPropertyFromDb,
-  mapUserPropertyToDb,
   mapUserRoleFromDb
 } from '../mappers.js';
 
@@ -97,7 +95,7 @@ export async function getUser(
     const result: UserWithProperties = {
       ...user,
       roleIds: roleIds.success ? roleIds.data : [],
-      properties: properties.reduce((acc, prop) => {
+      properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
         acc[prop.name] = prop.value;
         return acc;
       }, {} as Record<string, string>)
@@ -183,7 +181,7 @@ export async function getUsers(
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: properties.reduce((acc, prop) => {
+          properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
             acc[prop.name] = prop.value;
             return acc;
           }, {} as Record<string, string>)
@@ -221,7 +219,7 @@ export async function getUsersByIdentity(
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: properties.reduce((acc, prop) => {
+          properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
             acc[prop.name] = prop.value;
             return acc;
           }, {} as Record<string, string>)
