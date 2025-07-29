@@ -6,12 +6,14 @@ import type {
   OrganizationDbRow,
   OrganizationProperty,
   OrganizationPropertyDbRow,
-  OrganizationWithProperties,
+  OrganizationWithProperties
+} from '../types.js';
+import type {
   CreateOrganizationInput,
   UpdateOrganizationInput,
   PropertyFilter,
   PaginationInput
-} from '../types.js';
+} from '../generated/graphql.js';
 import {
   mapOrganizationFromDb,
   mapOrganizationPropertyFromDb
@@ -26,12 +28,11 @@ export async function createOrganization(
   try {
     const org = await db.tx(async (t) => {
       const orgRow = await t.one<OrganizationDbRow>(
-        `INSERT INTO organization (id, name, description, data) VALUES ($(id), $(name), $(description), $(data)) RETURNING *`,
+        `INSERT INTO organization (id, name, description) VALUES ($(id), $(name), $(description)) RETURNING *`,
         { 
           id: input.id, 
           name: input.name,
-          description: input.description ?? null,
-          data: input.data ?? null 
+          description: input.description ?? null
         }
       );
 
@@ -193,10 +194,6 @@ export async function updateOrganization(
       params.description = input.description;
     }
     
-    if (input.data !== undefined) {
-      updates.push(`data = $(data)`);
-      params.data = input.data;
-    }
 
     updates.push(`updated_at = NOW()`);
 

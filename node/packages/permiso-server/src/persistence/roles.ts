@@ -6,12 +6,14 @@ import type {
   RoleDbRow,
   RoleProperty,
   RolePropertyDbRow,
-  RoleWithProperties,
+  RoleWithProperties
+} from '../types.js';
+import type {
   CreateRoleInput,
   UpdateRoleInput,
   PropertyFilter,
   PaginationInput
-} from '../types.js';
+} from '../generated/graphql.js';
 import {
   mapRoleFromDb,
   mapRolePropertyFromDb
@@ -26,13 +28,12 @@ export async function createRole(
   try {
     const role = await db.tx(async (t) => {
       const roleRow = await t.one<RoleDbRow>(
-        `INSERT INTO role (id, org_id, name, description, data) VALUES ($(id), $(orgId), $(name), $(description), $(data)) RETURNING *`,
+        `INSERT INTO role (id, org_id, name, description) VALUES ($(id), $(orgId), $(name), $(description)) RETURNING *`,
         { 
           id: input.id, 
           orgId: input.orgId, 
           name: input.name,
-          description: input.description ?? null,
-          data: input.data ?? null 
+          description: input.description ?? null
         }
       );
 
@@ -196,10 +197,6 @@ export async function updateRole(
       params.description = input.description;
     }
     
-    if (input.data !== undefined) {
-      updates.push(`data = $(data)`);
-      params.data = input.data;
-    }
 
     updates.push(`updated_at = NOW()`);
 

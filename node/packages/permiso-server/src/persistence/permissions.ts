@@ -2,9 +2,9 @@ import { createLogger } from '@codespin/permiso-logger';
 import { Result } from '@codespin/permiso-core';
 import type { Database } from '@codespin/permiso-db';
 import type {
-  UserPermission,
+  UserPermissionWithOrgId,
   UserPermissionDbRow,
-  RolePermission,
+  RolePermissionWithOrgId,
   RolePermissionDbRow,
   EffectivePermission
 } from '../types.js';
@@ -22,7 +22,7 @@ export async function grantUserPermission(
   userId: string,
   resourceId: string,
   action: string
-): Promise<Result<UserPermission>> {
+): Promise<Result<UserPermissionWithOrgId>> {
   try {
     const row = await db.one<UserPermissionDbRow>(
       `INSERT INTO user_permission (user_id, org_id, resource_id, action) 
@@ -65,7 +65,7 @@ export async function getUserPermissions(
   userId: string,
   resourceId?: string,
   action?: string
-): Promise<Result<UserPermission[]>> {
+): Promise<Result<UserPermissionWithOrgId[]>> {
   try {
     let query = `SELECT * FROM user_permission WHERE user_id = $(userId) AND org_id = $(orgId)`;
     const params: Record<string, any> = { userId, orgId };
@@ -97,7 +97,7 @@ export async function grantRolePermission(
   roleId: string,
   resourceId: string,
   action: string
-): Promise<Result<RolePermission>> {
+): Promise<Result<RolePermissionWithOrgId>> {
   try {
     const row = await db.one<RolePermissionDbRow>(
       `INSERT INTO role_permission (role_id, org_id, resource_id, action) 
@@ -140,7 +140,7 @@ export async function getRolePermissions(
   roleId: string,
   resourceId?: string,
   action?: string
-): Promise<Result<RolePermission[]>> {
+): Promise<Result<RolePermissionWithOrgId[]>> {
   try {
     let query = `SELECT * FROM role_permission WHERE role_id = $(roleId) AND org_id = $(orgId)`;
     const params: Record<string, any> = { roleId, orgId };

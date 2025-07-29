@@ -1,6 +1,6 @@
 import type { Database } from '@codespin/permiso-db';
 import * as persistence from '../persistence/index.js';
-import type { Resource, Permission } from '../types.js';
+import type { Resource, UserPermission, RolePermission } from '../types.js';
 
 export const resourceResolvers = {
   Query: {
@@ -81,35 +81,43 @@ export const resourceResolvers = {
 
     permissions: async (parent: Resource, _: any, context: { db: Database }) => {
       // Get all user permissions for this resource
-      const userPermsResult = await context.db.manyOrNone(
+      const userPermsResult = await context.db.manyOrNone<any>(
         `SELECT * FROM user_permission WHERE org_id = $(orgId) AND resource_id = $(resourceId)`,
         { orgId: parent.orgId, resourceId: parent.id }
       );
       
       // Get all role permissions for this resource
-      const rolePermsResult = await context.db.manyOrNone(
+      const rolePermsResult = await context.db.manyOrNone<any>(
         `SELECT * FROM role_permission WHERE org_id = $(orgId) AND resource_id = $(resourceId)`,
         { orgId: parent.orgId, resourceId: parent.id }
       );
       
-      const permissions: Permission[] = [
-        ...userPermsResult.map((p: any) => ({
-          userId: p.user_id,
-          orgId: p.org_id,
-          resourceId: p.resource_id,
-          action: p.action,
-          createdAt: p.created_at
-        })),
-        ...rolePermsResult.map((p: any) => ({
-          roleId: p.role_id,
-          orgId: p.org_id,
-          resourceId: p.resource_id,
-          action: p.action,
-          createdAt: p.created_at
-        }))
-      ];
+      // Map to UserPermission and RolePermission types
+      const userPermissions: UserPermission[] = userPermsResult.map((p: any) => ({
+        __typename: 'UserPermission' as const,
+        userId: p.user_id,
+        resourceId: p.resource_id,
+        action: p.action,
+        createdAt: p.created_at,
+        // These will be populated by GraphQL resolvers
+        organization: null as any,
+        resource: null as any,
+        user: null as any
+      }));
       
-      return permissions;
+      const rolePermissions: RolePermission[] = rolePermsResult.map((p: any) => ({
+        __typename: 'RolePermission' as const,
+        roleId: p.role_id,
+        resourceId: p.resource_id,
+        action: p.action,
+        createdAt: p.created_at,
+        // These will be populated by GraphQL resolvers
+        organization: null as any,
+        resource: null as any,
+        role: null as any
+      }));
+      
+      return [...userPermissions, ...rolePermissions];
     }
   }
 };

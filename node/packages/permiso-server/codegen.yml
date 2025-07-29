@@ -1,0 +1,18 @@
+overwrite: true
+schema: "./src/schema.graphql"
+generates:
+  ./src/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      contextType: "../context.js#GraphQLContext"
+      scalars:
+        DateTime: "Date"
+      enumsAsTypes: true
+      avoidOptionals:
+        field: true
+        inputValue: false
+        object: false
+        defaultValue: false

@@ -3,11 +3,13 @@ import { Result } from '@codespin/permiso-core';
 import type { Database } from '@codespin/permiso-db';
 import type {
   Resource,
-  ResourceDbRow,
+  ResourceDbRow
+} from '../types.js';
+import type {
   CreateResourceInput,
   UpdateResourceInput,
   PaginationInput
-} from '../types.js';
+} from '../generated/graphql.js';
 import {
   mapResourceFromDb
 } from '../mappers.js';
@@ -20,13 +22,12 @@ export async function createResource(
 ): Promise<Result<Resource>> {
   try {
     const row = await db.one<ResourceDbRow>(
-      `INSERT INTO resource (id, org_id, name, description, data) VALUES ($(id), $(orgId), $(name), $(description), $(data)) RETURNING *`,
+      `INSERT INTO resource (id, org_id, name, description) VALUES ($(id), $(orgId), $(name), $(description)) RETURNING *`,
       { 
         id: input.id, 
         orgId: input.orgId, 
         name: input.name ?? null,
-        description: input.description ?? null,
-        data: input.data ?? null 
+        description: input.description ?? null
       }
     );
 
@@ -125,10 +126,6 @@ export async function updateResource(
       params.description = input.description;
     }
     
-    if (input.data !== undefined) {
-      updates.push(`data = $(data)`);
-      params.data = input.data;
-    }
 
     updates.push(`updated_at = NOW()`);
 

@@ -1,6 +1,6 @@
 import type { Database } from '@codespin/permiso-db';
 import * as persistence from '../persistence/index.js';
-import type { UserPermission, RolePermission } from '../types.js';
+import type { UserPermissionWithOrgId, RolePermissionWithOrgId } from '../types.js';
 
 export const permissionResolvers = {
   Query: {
@@ -92,7 +92,7 @@ export const permissionResolvers = {
   },
 
   UserPermission: {
-    organization: async (parent: UserPermission, _: any, context: { db: Database }) => {
+    organization: async (parent: UserPermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getOrganization(context.db, parent.orgId);
       if (!result.success) {
         throw result.error;
@@ -100,7 +100,7 @@ export const permissionResolvers = {
       return result.data;
     },
 
-    resource: async (parent: UserPermission, _: any, context: { db: Database }) => {
+    resource: async (parent: UserPermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getResource(context.db, parent.orgId, parent.resourceId);
       if (!result.success) {
         throw result.error;
@@ -108,7 +108,7 @@ export const permissionResolvers = {
       return result.data;
     },
 
-    user: async (parent: UserPermission, _: any, context: { db: Database }) => {
+    user: async (parent: UserPermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getUser(context.db, parent.orgId, parent.userId);
       if (!result.success) {
         throw result.error;
@@ -118,7 +118,7 @@ export const permissionResolvers = {
   },
 
   RolePermission: {
-    organization: async (parent: RolePermission, _: any, context: { db: Database }) => {
+    organization: async (parent: RolePermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getOrganization(context.db, parent.orgId);
       if (!result.success) {
         throw result.error;
@@ -126,7 +126,7 @@ export const permissionResolvers = {
       return result.data;
     },
 
-    resource: async (parent: RolePermission, _: any, context: { db: Database }) => {
+    resource: async (parent: RolePermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getResource(context.db, parent.orgId, parent.resourceId);
       if (!result.success) {
         throw result.error;
@@ -134,7 +134,7 @@ export const permissionResolvers = {
       return result.data;
     },
 
-    role: async (parent: RolePermission, _: any, context: { db: Database }) => {
+    role: async (parent: RolePermissionWithOrgId, _: any, context: { db: Database }) => {
       const result = await persistence.getRole(context.db, parent.orgId, parent.roleId);
       if (!result.success) {
         throw result.error;
