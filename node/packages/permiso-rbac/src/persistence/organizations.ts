@@ -26,8 +26,13 @@ export async function createOrganization(
   try {
     const org = await db.tx(async (t) => {
       const orgRow = await t.one<OrganizationDbRow>(
-        `INSERT INTO organization (id, data) VALUES ($(id), $(data)) RETURNING *`,
-        { id: input.id, data: input.data ?? null }
+        `INSERT INTO organization (id, name, description, data) VALUES ($(id), $(name), $(description), $(data)) RETURNING *`,
+        { 
+          id: input.id, 
+          name: input.name,
+          description: input.description ?? null,
+          data: input.data ?? null 
+        }
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -170,6 +175,16 @@ export async function updateOrganization(
     const updates: string[] = [];
     const params: Record<string, any> = { id };
 
+    if (input.name !== undefined) {
+      updates.push(`name = $(name)`);
+      params.name = input.name;
+    }
+    
+    if (input.description !== undefined) {
+      updates.push(`description = $(description)`);
+      params.description = input.description;
+    }
+    
     if (input.data !== undefined) {
       updates.push(`data = $(data)`);
       params.data = input.data;

@@ -2,7 +2,8 @@ import pgPromise from "pg-promise";
 
 const pgp = pgPromise({});
 
-const db = pgp({
+// Default database connection
+const defaultDb = pgp({
   host: process.env.PERMISO_DB_HOST || 'localhost',
   port: process.env.PERMISO_DB_PORT
     ? parseInt(process.env.PERMISO_DB_PORT, 10)
@@ -13,7 +14,19 @@ const db = pgp({
 });
 
 export function getDb() {
-  return db;
+  return defaultDb;
 }
 
 export type Database = pgPromise.IDatabase<unknown>;
+
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+}
+
+export function createDatabaseConnection(config: DatabaseConfig): Database {
+  return pgp(config);
+}

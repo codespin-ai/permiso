@@ -1,6 +1,8 @@
 // Domain types
 export type Organization = {
   id: string;
+  name: string;
+  description?: string;
   data?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +19,8 @@ export type OrganizationProperty = {
 export type Role = {
   id: string;
   orgId: string;
+  name: string;
+  description?: string;
   data?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -51,8 +55,10 @@ export type UserProperty = {
 };
 
 export type Resource = {
-  id: string; // This is the path
+  id: string; // This is the path (e.g., /india/data/legal)
   orgId: string;
+  name?: string;
+  description?: string;
   data?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -84,6 +90,8 @@ export type RolePermission = {
 // Database row types (snake_case)
 export type OrganizationDbRow = {
   id: string;
+  name: string;
+  description: string | null;
   data: string | null;
   created_at: Date;
   updated_at: Date;
@@ -100,6 +108,8 @@ export type OrganizationPropertyDbRow = {
 export type RoleDbRow = {
   id: string;
   org_id: string;
+  name: string;
+  description: string | null;
   data: string | null;
   created_at: Date;
   updated_at: Date;
@@ -136,6 +146,8 @@ export type UserPropertyDbRow = {
 export type ResourceDbRow = {
   id: string;
   org_id: string;
+  name: string | null;
+  description: string | null;
   data: string | null;
   created_at: Date;
   updated_at: Date;
@@ -167,22 +179,30 @@ export type RolePermissionDbRow = {
 // Input types
 export type CreateOrganizationInput = {
   id: string;
+  name: string;
+  description?: string;
   data?: string;
   properties?: Array<{ name: string; value: string; hidden?: boolean }>;
 };
 
 export type UpdateOrganizationInput = {
+  name?: string;
+  description?: string;
   data?: string;
 };
 
 export type CreateRoleInput = {
   id: string;
   orgId: string;
+  name: string;
+  description?: string;
   data?: string;
   properties?: Array<{ name: string; value: string; hidden?: boolean }>;
 };
 
 export type UpdateRoleInput = {
+  name?: string;
+  description?: string;
   data?: string;
 };
 
@@ -205,10 +225,14 @@ export type UpdateUserInput = {
 export type CreateResourceInput = {
   path: string; // becomes the id
   orgId: string;
+  name?: string;
+  description?: string;
   data?: string;
 };
 
 export type UpdateResourceInput = {
+  name?: string;
+  description?: string;
   data?: string;
 };
 

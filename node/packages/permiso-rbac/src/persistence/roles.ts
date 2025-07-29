@@ -26,8 +26,14 @@ export async function createRole(
   try {
     const role = await db.tx(async (t) => {
       const roleRow = await t.one<RoleDbRow>(
-        `INSERT INTO role (id, org_id, data) VALUES ($(id), $(orgId), $(data)) RETURNING *`,
-        { id: input.id, orgId: input.orgId, data: input.data ?? null }
+        `INSERT INTO role (id, org_id, name, description, data) VALUES ($(id), $(orgId), $(name), $(description), $(data)) RETURNING *`,
+        { 
+          id: input.id, 
+          orgId: input.orgId, 
+          name: input.name,
+          description: input.description ?? null,
+          data: input.data ?? null 
+        }
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -173,6 +179,16 @@ export async function updateRole(
     const updates: string[] = [];
     const params: Record<string, any> = { roleId, orgId };
 
+    if (input.name !== undefined) {
+      updates.push(`name = $(name)`);
+      params.name = input.name;
+    }
+    
+    if (input.description !== undefined) {
+      updates.push(`description = $(description)`);
+      params.description = input.description;
+    }
+    
     if (input.data !== undefined) {
       updates.push(`data = $(data)`);
       params.data = input.data;

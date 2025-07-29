@@ -25,6 +25,8 @@ import type {
 export function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
   return {
     id: row.id,
+    name: row.name,
+    description: row.description ?? undefined,
     data: row.data ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -34,6 +36,8 @@ export function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
 export function mapOrganizationToDb(org: Partial<Organization>): Partial<OrganizationDbRow> {
   return {
     id: org.id,
+    name: org.name,
+    description: org.description ?? null,
     data: org.data ?? null,
     created_at: org.createdAt,
     updated_at: org.updatedAt
@@ -66,6 +70,8 @@ export function mapRoleFromDb(row: RoleDbRow): Role {
   return {
     id: row.id,
     orgId: row.org_id,
+    name: row.name,
+    description: row.description ?? undefined,
     data: row.data ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -76,6 +82,8 @@ export function mapRoleToDb(role: Partial<Role>): Partial<RoleDbRow> {
   return {
     id: role.id,
     org_id: role.orgId,
+    name: role.name,
+    description: role.description ?? null,
     data: role.data ?? null,
     created_at: role.createdAt,
     updated_at: role.updatedAt
@@ -158,6 +166,8 @@ export function mapResourceFromDb(row: ResourceDbRow): Resource {
   return {
     id: row.id,
     orgId: row.org_id,
+    name: row.name ?? undefined,
+    description: row.description ?? undefined,
     data: row.data ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -168,6 +178,8 @@ export function mapResourceToDb(resource: Partial<Resource>): Partial<ResourceDb
   return {
     id: resource.id,
     org_id: resource.orgId,
+    name: resource.name ?? null,
+    description: resource.description ?? null,
     data: resource.data ?? null,
     created_at: resource.createdAt,
     updated_at: resource.updatedAt

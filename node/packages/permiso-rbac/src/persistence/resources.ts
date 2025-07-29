@@ -20,8 +20,14 @@ export async function createResource(
 ): Promise<Result<Resource>> {
   try {
     const row = await db.one<ResourceDbRow>(
-      `INSERT INTO resource (id, org_id, data) VALUES ($(path), $(orgId), $(data)) RETURNING *`,
-      { path: input.path, orgId: input.orgId, data: input.data ?? null }
+      `INSERT INTO resource (id, org_id, name, description, data) VALUES ($(path), $(orgId), $(name), $(description), $(data)) RETURNING *`,
+      { 
+        path: input.path, 
+        orgId: input.orgId, 
+        name: input.name ?? null,
+        description: input.description ?? null,
+        data: input.data ?? null 
+      }
     );
 
     return { success: true, data: mapResourceFromDb(row) };
@@ -109,6 +115,16 @@ export async function updateResource(
     const updates: string[] = [];
     const params: Record<string, any> = { resourcePath, orgId };
 
+    if (input.name !== undefined) {
+      updates.push(`name = $(name)`);
+      params.name = input.name;
+    }
+    
+    if (input.description !== undefined) {
+      updates.push(`description = $(description)`);
+      params.description = input.description;
+    }
+    
     if (input.data !== undefined) {
       updates.push(`data = $(data)`);
       params.data = input.data;

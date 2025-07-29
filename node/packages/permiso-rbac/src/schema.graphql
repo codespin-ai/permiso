@@ -3,7 +3,8 @@ scalar DateTime
 # Core Types
 type Organization {
   id: ID!
-  data: String
+  name: String!
+  description: String
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -34,7 +35,8 @@ type User {
 type Role {
   id: ID!
   orgId: ID!
-  data: String
+  name: String!
+  description: String
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -46,9 +48,10 @@ type Role {
 }
 
 type Resource {
-  id: ID!  # This is the path
+  id: ID!  # This is the path (e.g., /india/data/legal)
   orgId: ID!
-  data: String
+  name: String
+  description: String
   createdAt: DateTime!
   updatedAt: DateTime!
   
@@ -222,12 +225,14 @@ type Mutation {
 # Input types
 input CreateOrganizationInput {
   id: ID!
-  data: String
+  name: String!
+  description: String
   properties: [PropertyInput!]
 }
 
 input UpdateOrganizationInput {
-  data: String
+  name: String
+  description: String
 }
 
 input CreateUserInput {
@@ -249,22 +254,26 @@ input UpdateUserInput {
 input CreateRoleInput {
   id: ID!
   orgId: ID!
-  data: String
+  name: String!
+  description: String
   properties: [PropertyInput!]
 }
 
 input UpdateRoleInput {
-  data: String
+  name: String
+  description: String
 }
 
 input CreateResourceInput {
   path: String!  # becomes the id
   orgId: ID!
-  data: String
+  name: String
+  description: String
 }
 
 input UpdateResourceInput {
-  data: String
+  name: String
+  description: String
 }
 
 input PropertyInput {
