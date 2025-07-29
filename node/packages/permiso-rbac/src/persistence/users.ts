@@ -85,17 +85,21 @@ export async function getUser(
       return { success: true, data: null };
     }
 
-    const [properties, roleIds] = await Promise.all([
+    const [propertiesResult, roleIds] = await Promise.all([
       getUserProperties(db, orgId, userId, false),
       getUserRoles(db, orgId, userId)
     ]);
+
+    if (!propertiesResult.success) {
+      throw propertiesResult.error;
+    }
 
     const user = mapUserFromDb(userRow);
 
     const result: UserWithProperties = {
       ...user,
       roleIds: roleIds.success ? roleIds.data : [],
-      properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
+      properties: propertiesResult.data.reduce((acc: Record<string, string>, prop: UserProperty) => {
         acc[prop.name] = prop.value;
         return acc;
       }, {} as Record<string, string>)
@@ -173,15 +177,19 @@ export async function getUsers(
 
     const result = await Promise.all(
       users.map(async (user) => {
-        const [properties, roleIds] = await Promise.all([
+        const [propertiesResult, roleIds] = await Promise.all([
           getUserProperties(db, user.orgId, user.id, false),
           getUserRoles(db, user.orgId, user.id)
         ]);
 
+        if (!propertiesResult.success) {
+          throw propertiesResult.error;
+        }
+
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
+          properties: propertiesResult.data.reduce((acc: Record<string, string>, prop: UserProperty) => {
             acc[prop.name] = prop.value;
             return acc;
           }, {} as Record<string, string>)
@@ -211,15 +219,19 @@ export async function getUsersByIdentity(
 
     const result = await Promise.all(
       users.map(async (user) => {
-        const [properties, roleIds] = await Promise.all([
+        const [propertiesResult, roleIds] = await Promise.all([
           getUserProperties(db, user.orgId, user.id, false),
           getUserRoles(db, user.orgId, user.id)
         ]);
 
+        if (!propertiesResult.success) {
+          throw propertiesResult.error;
+        }
+
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: properties.reduce((acc: Record<string, string>, prop: UserProperty) => {
+          properties: propertiesResult.data.reduce((acc: Record<string, string>, prop: UserProperty) => {
             acc[prop.name] = prop.value;
             return acc;
           }, {} as Record<string, string>)
@@ -290,18 +302,23 @@ export async function deleteUser(
   }
 }
 
-async function getUserProperties(
+export async function getUserProperties(
   db: Database,
   orgId: string,
   userId: string,
-  includeHidden: boolean
-): Promise<UserProperty[]> {
-  const query = includeHidden
-    ? `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId)`
-    : `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND hidden = false`;
+  includeHidden: boolean = true
+): Promise<Result<UserProperty[]>> {
+  try {
+    const query = includeHidden
+      ? `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId)`
+      : `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<UserPropertyDbRow>(query, { userId, orgId });
-  return rows.map(mapUserPropertyFromDb);
+    const rows = await db.manyOrNone<UserPropertyDbRow>(query, { userId, orgId });
+    return { success: true, data: rows.map(mapUserPropertyFromDb) };
+  } catch (error) {
+    logger.error('Failed to get user properties', { error, orgId, userId });
+    return { success: false, error: error as Error };
+  }
 }
 
 export async function setUserProperty(

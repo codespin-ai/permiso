@@ -41,8 +41,8 @@ after(async function() {
       await server.stop();
     }
     
-    // Wait a bit for connections to close
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait longer for connections to close
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Teardown database
     if (testDb) {

@@ -45,6 +45,17 @@ export class TestDatabase {
     const adminKnex = knex(adminConfig);
     
     try {
+      // First, force disconnect all connections to the test database
+      await adminKnex.raw(`
+        SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = '${this.dbName}'
+        AND pid <> pg_backend_pid()
+      `);
+      
+      // Wait a moment for connections to terminate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Drop database if exists
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
       
@@ -98,6 +109,17 @@ export class TestDatabase {
     const adminKnex = knex(adminConfig);
     
     try {
+      // First, force disconnect all connections to the test database
+      await adminKnex.raw(`
+        SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = '${this.dbName}'
+        AND pid <> pg_backend_pid()
+      `);
+      
+      // Wait a moment for connections to terminate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
       console.log(`Dropped test database: ${this.dbName}`);
     } catch (error) {

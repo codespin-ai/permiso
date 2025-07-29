@@ -137,13 +137,12 @@ export const userResolvers = {
   },
 
   User: {
-    properties: (parent: UserWithProperties) => {
-      return Object.entries(parent.properties).map(([name, value]) => ({
-        name,
-        value,
-        hidden: false,
-        createdAt: new Date()
-      }));
+    properties: async (parent: UserWithProperties, _: any, context: { db: Database }) => {
+      const result = await persistence.getUserProperties(context.db, parent.orgId, parent.id);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
     },
 
     organization: async (parent: UserWithProperties, _: any, context: { db: Database }) => {

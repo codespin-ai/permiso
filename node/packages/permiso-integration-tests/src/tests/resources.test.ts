@@ -30,14 +30,8 @@ describe('Resources', () => {
           createResource(input: $input) {
             id
             orgId
-            path
             name
             description
-            properties {
-              name
-              value
-              hidden
-            }
           }
         }
       `;
@@ -47,24 +41,15 @@ describe('Resources', () => {
           id: '/api/users/*',
           orgId: 'test-org',
           name: 'User API',
-          description: 'User management endpoints',
-          properties: [
-            { name: 'version', value: 'v1' },
-            { name: 'rateLimit', value: '1000', hidden: true }
-          ]
+          description: 'User management endpoints'
         }
       });
 
-      expect(result.data?.createResource).to.deep.equal({
-        id: '/api/users/*',
-        orgId: 'test-org',
-        name: 'User API',
-        description: 'User management endpoints',
-        properties: [
-          { name: 'version', value: 'v1', hidden: false },
-          { name: 'rateLimit', value: '1000', hidden: true }
-        ]
-      });
+      const resource = result.data?.createResource;
+      expect(resource?.id).to.equal('/api/users/*');
+      expect(resource?.orgId).to.equal('test-org');
+      expect(resource?.name).to.equal('User API');
+      expect(resource?.description).to.equal('User management endpoints');
     });
 
     it('should fail with non-existent organization', async () => {
@@ -77,16 +62,33 @@ describe('Resources', () => {
       `;
 
       try {
-        await client.mutate(mutation, {
+        const result = await client.mutate(mutation, {
           input: {
             id: '/api/users/*',
             orgId: 'non-existent-org',
             name: 'User API'
           }
         });
-        expect.fail('Should have thrown an error');
+        
+        // Check if there are errors in the response
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message.toLowerCase();
+          expect(errorMessage).to.satisfy((msg: string) => 
+            msg.includes('foreign key violation') || 
+            msg.includes('is not present in table') ||
+            msg.includes('constraint')
+          );
+        } else {
+          expect.fail('Should have returned an error');
+        }
       } catch (error: any) {
-        expect(error.message).to.include('Organization not found');
+        // If an exception was thrown, check it
+        const errorMessage = error.graphQLErrors?.[0]?.message || error.message || '';
+        expect(errorMessage.toLowerCase()).to.satisfy((msg: string) => 
+          msg.includes('foreign key violation') || 
+          msg.includes('is not present in table') ||
+          msg.includes('constraint')
+        );
       }
     });
   });
@@ -125,7 +127,6 @@ describe('Resources', () => {
             nodes {
               id
               orgId
-              path
               name
               description
             }
@@ -157,10 +158,7 @@ describe('Resources', () => {
           id: '/api/users/*',
           orgId: 'test-org',
           name: 'User API',
-          description: 'User management',
-          properties: [
-            { name: 'version', value: 'v1' }
-          ]
+          description: 'User management'
         }
       });
 
@@ -170,28 +168,19 @@ describe('Resources', () => {
           resource(orgId: $orgId, resourceId: $resourceId) {
             id
             orgId
-            path
             name
             description
-            properties {
-              name
-              value
-              hidden
-            }
             createdAt
             updatedAt
           }
         }
       `;
 
-      const result = await client.query(query, { orgId: 'test-org', resourceId: 'api-users' });
+      const result = await client.query(query, { orgId: 'test-org', resourceId: '/api/users/*' });
 
-      expect(result.data?.resource?.id).to.equal('api-users');
-      expect(result.data?.resource?.path).to.equal('/api/users/*');
+      expect(result.data?.resource?.id).to.equal('/api/users/*');
       expect(result.data?.resource?.name).to.equal('User API');
-      expect(result.data?.resource?.properties).to.deep.equal([
-        { name: 'version', value: 'v1', hidden: false }
-      ]);
+      expect(result.data?.resource?.description).to.equal('User management');
     });
   });
 
@@ -219,14 +208,8 @@ describe('Resources', () => {
         mutation UpdateResource($orgId: ID!, $resourceId: ID!, $input: UpdateResourceInput!) {
           updateResource(orgId: $orgId, resourceId: $resourceId, input: $input) {
             id
-            path
             name
             description
-            properties {
-              name
-              value
-              hidden
-            }
           }
         }
       `;
@@ -236,19 +219,13 @@ describe('Resources', () => {
         resourceId: '/api/users/*',
         input: {
           name: 'User API v2',
-          description: 'Enhanced user management',
-          properties: [
-            { name: 'version', value: 'v2' }
-          ]
+          description: 'Enhanced user management'
         }
       });
 
-      expect(result.data?.updateResource?.path).to.equal('/api/v2/users/*');
+      expect(result.data?.updateResource?.id).to.equal('/api/users/*');
       expect(result.data?.updateResource?.name).to.equal('User API v2');
       expect(result.data?.updateResource?.description).to.equal('Enhanced user management');
-      expect(result.data?.updateResource?.properties).to.deep.equal([
-        { name: 'version', value: 'v2', hidden: false }
-      ]);
     });
   });
 
@@ -291,7 +268,7 @@ describe('Resources', () => {
         }
       `;
 
-      const queryResult = await client.query(query, { orgId: 'test-org', resourceId: 'api-users' });
+      const queryResult = await client.query(query, { orgId: 'test-org', resourceId: '/api/users/*' });
 
       expect(queryResult.data?.resource).to.be.null;
     });

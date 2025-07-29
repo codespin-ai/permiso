@@ -101,13 +101,12 @@ export const roleResolvers = {
   },
 
   Role: {
-    properties: (parent: RoleWithProperties) => {
-      return Object.entries(parent.properties).map(([name, value]) => ({
-        name,
-        value,
-        hidden: false,
-        createdAt: new Date()
-      }));
+    properties: async (parent: RoleWithProperties, _: any, context: { db: Database }) => {
+      const result = await persistence.getRoleProperties(context.db, parent.orgId, parent.id);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
     },
 
     organization: async (parent: RoleWithProperties, _: any, context: { db: Database }) => {

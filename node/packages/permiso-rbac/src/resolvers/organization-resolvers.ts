@@ -105,13 +105,12 @@ export const organizationResolvers = {
   },
 
   Organization: {
-    properties: (parent: OrganizationWithProperties) => {
-      return Object.entries(parent.properties).map(([name, value]) => ({
-        name,
-        value,
-        hidden: false,
-        createdAt: new Date()
-      }));
+    properties: async (parent: OrganizationWithProperties, _: any, context: { db: Database }) => {
+      const result = await persistence.getOrganizationProperties(context.db, parent.id);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
     },
 
     users: async (parent: OrganizationWithProperties, args: { filter?: any; pagination?: any }, context: { db: Database }) => {

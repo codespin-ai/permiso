@@ -78,12 +78,16 @@ export async function getRole(
       return { success: true, data: null };
     }
 
-    const properties = await getRoleProperties(db, orgId, roleId, false);
+    const propertiesResult = await getRoleProperties(db, orgId, roleId, false);
+    if (!propertiesResult.success) {
+      throw propertiesResult.error;
+    }
+    
     const role = mapRoleFromDb(roleRow);
 
     const result: RoleWithProperties = {
       ...role,
-      properties: properties.reduce((acc, prop) => {
+      properties: propertiesResult.data.reduce((acc, prop) => {
         acc[prop.name] = prop.value;
         return acc;
       }, {} as Record<string, string>)
@@ -151,10 +155,13 @@ export async function getRoles(
 
     const result = await Promise.all(
       roles.map(async (role) => {
-        const properties = await getRoleProperties(db, role.orgId, role.id, false);
+        const propertiesResult = await getRoleProperties(db, role.orgId, role.id, false);
+        if (!propertiesResult.success) {
+          throw propertiesResult.error;
+        }
         return {
           ...role,
-          properties: properties.reduce((acc, prop) => {
+          properties: propertiesResult.data.reduce((acc, prop) => {
             acc[prop.name] = prop.value;
             return acc;
           }, {} as Record<string, string>)
@@ -225,18 +232,23 @@ export async function deleteRole(
   }
 }
 
-async function getRoleProperties(
+export async function getRoleProperties(
   db: Database,
   orgId: string,
   roleId: string,
-  includeHidden: boolean
-): Promise<RoleProperty[]> {
-  const query = includeHidden
-    ? `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId)`
-    : `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND hidden = false`;
+  includeHidden: boolean = true
+): Promise<Result<RoleProperty[]>> {
+  try {
+    const query = includeHidden
+      ? `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId)`
+      : `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<RolePropertyDbRow>(query, { roleId, orgId });
-  return rows.map(mapRolePropertyFromDb);
+    const rows = await db.manyOrNone<RolePropertyDbRow>(query, { roleId, orgId });
+    return { success: true, data: rows.map(mapRolePropertyFromDb) };
+  } catch (error) {
+    logger.error('Failed to get role properties', { error, orgId, roleId });
+    return { success: false, error: error as Error };
+  }
 }
 
 export async function setRoleProperty(

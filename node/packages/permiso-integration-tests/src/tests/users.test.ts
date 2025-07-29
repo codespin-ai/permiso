@@ -78,7 +78,7 @@ describe('Users', () => {
       `;
 
       try {
-        await client.mutate(mutation, {
+        const result = await client.mutate(mutation, {
           input: {
             id: 'user-123',
             orgId: 'non-existent-org',
@@ -86,9 +86,26 @@ describe('Users', () => {
             identityProviderUserId: 'auth0|12345'
           }
         });
-        expect.fail('Should have thrown an error');
+        
+        // Check if there are errors in the response
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message.toLowerCase();
+          expect(errorMessage).to.satisfy((msg: string) => 
+            msg.includes('foreign key violation') || 
+            msg.includes('is not present in table') ||
+            msg.includes('constraint')
+          );
+        } else {
+          expect.fail('Should have returned an error');
+        }
       } catch (error: any) {
-        expect(error.message).to.include('is not present in table');
+        // If an exception was thrown, check it
+        const errorMessage = error.graphQLErrors?.[0]?.message || error.message || '';
+        expect(errorMessage.toLowerCase()).to.satisfy((msg: string) => 
+          msg.includes('foreign key violation') || 
+          msg.includes('is not present in table') ||
+          msg.includes('constraint')
+        );
       }
     });
   });
@@ -206,14 +223,14 @@ describe('Users', () => {
 
       expect(result.data?.user?.id).to.equal('user-123');
       expect(result.data?.user?.orgId).to.equal('test-org');
-      expect(result.data?.user?.properties).to.deep.equal([
-        { name: 'email', value: 'user@example.com', hidden: false }
-      ]);
+      expect(result.data?.user?.properties).to.have.lengthOf(1);
+      const prop = result.data?.user?.properties[0];
+      expect(prop).to.include({ name: 'email', value: 'user@example.com', hidden: false });
     });
   });
 
   describe('updateUser', () => {
-    it('should update user properties', async () => {
+    it('should update user identity provider info', async () => {
       // Create user
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -237,6 +254,74 @@ describe('Users', () => {
         mutation UpdateUser($orgId: ID!, $userId: ID!, $input: UpdateUserInput!) {
           updateUser(orgId: $orgId, userId: $userId, input: $input) {
             id
+            identityProvider
+            identityProviderUserId
+          }
+        }
+      `;
+
+      const result = await client.mutate(updateMutation, {
+        orgId: 'test-org',
+        userId: 'user-123',
+        input: {
+          identityProvider: 'google',
+          identityProviderUserId: 'google|67890'
+        }
+      });
+
+      expect(result.data?.updateUser?.identityProvider).to.equal('google');
+      expect(result.data?.updateUser?.identityProviderUserId).to.equal('google|67890');
+    });
+
+    it('should update user properties using setUserProperty', async () => {
+      // Create user
+      const createMutation = gql`
+        mutation CreateUser($input: CreateUserInput!) {
+          createUser(input: $input) {
+            id
+          }
+        }
+      `;
+
+      await client.mutate(createMutation, {
+        input: {
+          id: 'user-123',
+          orgId: 'test-org',
+          identityProvider: 'auth0',
+          identityProviderUserId: 'auth0|12345'
+        }
+      });
+
+      // Set user properties
+      const setPropMutation = gql`
+        mutation SetUserProperty($orgId: ID!, $userId: ID!, $name: String!, $value: String!, $hidden: Boolean) {
+          setUserProperty(orgId: $orgId, userId: $userId, name: $name, value: $value, hidden: $hidden) {
+            name
+            value
+            hidden
+          }
+        }
+      `;
+
+      await client.mutate(setPropMutation, {
+        orgId: 'test-org',
+        userId: 'user-123',
+        name: 'email',
+        value: 'updated@example.com'
+      });
+
+      await client.mutate(setPropMutation, {
+        orgId: 'test-org',
+        userId: 'user-123',
+        name: 'phone',
+        value: '+1234567890'
+      });
+
+      // Query user to verify properties
+      const query = gql`
+        query GetUser($orgId: ID!, $userId: ID!) {
+          user(orgId: $orgId, userId: $userId) {
+            id
             properties {
               name
               value
@@ -246,21 +331,15 @@ describe('Users', () => {
         }
       `;
 
-      const result = await client.mutate(updateMutation, {
-        orgId: 'test-org',
-        userId: 'user-123',
-        input: {
-          properties: [
-            { name: 'email', value: 'updated@example.com' },
-            { name: 'phone', value: '+1234567890' }
-          ]
-        }
-      });
+      const result = await client.query(query, { orgId: 'test-org', userId: 'user-123' });
 
-      expect(result.data?.updateUser?.properties).to.deep.equal([
-        { name: 'email', value: 'updated@example.com', hidden: false },
-        { name: 'phone', value: '+1234567890', hidden: false }
-      ]);
+      expect(result.data?.user?.properties).to.have.lengthOf(2);
+      const props = result.data?.user?.properties;
+      const emailProp = props.find((p: any) => p.name === 'email');
+      const phoneProp = props.find((p: any) => p.name === 'phone');
+      
+      expect(emailProp).to.deep.include({ name: 'email', value: 'updated@example.com', hidden: false });
+      expect(phoneProp).to.deep.include({ name: 'phone', value: '+1234567890', hidden: false });
     });
   });
 

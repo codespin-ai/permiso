@@ -75,7 +75,11 @@ export async function getOrganization(
       return { success: true, data: null };
     }
 
-    const properties = await getOrganizationProperties(db, id, false);
+    const propsResult = await getOrganizationProperties(db, id, false);
+    if (!propsResult.success) {
+      throw propsResult.error;
+    }
+    const properties = propsResult.data;
     const org = mapOrganizationFromDb(orgRow);
 
     const result: OrganizationWithProperties = {
@@ -148,7 +152,11 @@ export async function getOrganizations(
 
     const result = await Promise.all(
       orgs.map(async (org) => {
-        const properties = await getOrganizationProperties(db, org.id, false);
+        const propsResult = await getOrganizationProperties(db, org.id, false);
+        if (!propsResult.success) {
+          throw propsResult.error;
+        }
+        const properties = propsResult.data;
         return {
           ...org,
           properties: properties.reduce((acc, prop) => {
@@ -220,17 +228,22 @@ export async function deleteOrganization(
   }
 }
 
-async function getOrganizationProperties(
+export async function getOrganizationProperties(
   db: Database,
   orgId: string,
-  includeHidden: boolean
-): Promise<OrganizationProperty[]> {
+  includeHidden: boolean = true
+): Promise<Result<OrganizationProperty[]>> {
+  try {
   const query = includeHidden
     ? `SELECT * FROM organization_property WHERE org_id = $(orgId)`
     : `SELECT * FROM organization_property WHERE org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<OrganizationPropertyDbRow>(query, { orgId });
-  return rows.map(mapOrganizationPropertyFromDb);
+    const rows = await db.manyOrNone<OrganizationPropertyDbRow>(query, { orgId });
+    return { success: true, data: rows.map(mapOrganizationPropertyFromDb) };
+  } catch (error) {
+    logger.error('Failed to get organization properties', { error, orgId });
+    return { success: false, error: error as Error };
+  }
 }
 
 export async function setOrganizationProperty(
