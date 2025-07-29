@@ -57,6 +57,15 @@ cd node/packages/permiso-server
 npm run migrate:latest
 ```
 
+### Starting the Server
+
+```bash
+# Start the GraphQL server
+./start.sh
+
+# The server will be available at http://localhost:5001/graphql
+```
+
 ## Architecture
 
 Permiso is built as a monorepo with the following packages:
@@ -231,14 +240,55 @@ npm test
 
 ## Environment Variables
 
-| Variable              | Description       | Default     |
-| --------------------- | ----------------- | ----------- |
-| `PERMISO_DB_HOST`     | PostgreSQL host   | `localhost` |
-| `PERMISO_DB_PORT`     | PostgreSQL port   | `5432`      |
-| `PERMISO_DB_NAME`     | Database name     | `permiso`   |
-| `PERMISO_DB_USER`     | Database user     | `postgres`  |
-| `PERMISO_DB_PASSWORD` | Database password | `postgres`  |
-| `LOG_LEVEL`           | Logging level     | `info`      |
+| Variable              | Description                     | Default     |
+| --------------------- | ------------------------------- | ----------- |
+| `PERMISO_DB_HOST`     | PostgreSQL host                 | `localhost` |
+| `PERMISO_DB_PORT`     | PostgreSQL port                 | `5432`      |
+| `PERMISO_DB_NAME`     | Database name                   | `permiso`   |
+| `PERMISO_DB_USER`     | Database user                   | `postgres`  |
+| `PERMISO_DB_PASSWORD` | Database password               | `postgres`  |
+| `PERMISO_API_KEY`     | API key for authentication      | (none)      |
+| `PERMISO_API_KEY_ENABLED` | Enable API key auth         | `false`     |
+| `PERMISO_SERVER_PORT` | GraphQL server port             | `5001`      |
+| `LOG_LEVEL`           | Logging level                   | `info`      |
+
+## API Authentication
+
+Permiso supports optional API key authentication to secure your GraphQL endpoint. When enabled, all requests must include a valid API key in the `x-api-key` header.
+
+### Enabling API Key Authentication
+
+```bash
+# Set the API key (this automatically enables authentication)
+export PERMISO_API_KEY=your-secret-api-key
+
+# Or explicitly enable with a separate flag
+export PERMISO_API_KEY_ENABLED=true
+export PERMISO_API_KEY=your-secret-api-key
+
+# Start the server
+./start.sh
+```
+
+### Making Authenticated Requests
+
+Include the API key in the `x-api-key` header:
+
+```bash
+# Using curl
+curl -X POST http://localhost:5001/graphql \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: your-secret-api-key" \
+  -d '{"query": "{ organizations { id name } }"}'
+
+# Using Apollo Client
+const client = new ApolloClient({
+  uri: 'http://localhost:5001/graphql',
+  headers: {
+    'x-api-key': 'your-secret-api-key'
+  }
+});
+```
 
 ## Contributing
 

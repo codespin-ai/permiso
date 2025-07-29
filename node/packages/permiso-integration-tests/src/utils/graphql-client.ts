@@ -4,10 +4,11 @@ import type { ApolloQueryResult, FetchResult } from '@apollo/client/core/index.j
 export class GraphQLClient {
   private client: ApolloClient<NormalizedCacheObject>;
 
-  constructor(uri: string) {
+  constructor(uri: string, options?: { headers?: Record<string, string> }) {
     const httpLink = createHttpLink({
       uri,
       fetch,
+      headers: options?.headers,
     });
 
     this.client = new ApolloClient({

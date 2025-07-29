@@ -46,6 +46,9 @@ export class TestServer {
         PERMISO_DB_NAME: 'permiso_test', // Use test database
         PERMISO_DB_USER: process.env.PERMISO_DB_USER || 'postgres',
         PERMISO_DB_PASSWORD: process.env.PERMISO_DB_PASSWORD || 'postgres',
+        // Include API key settings if present
+        PERMISO_API_KEY: process.env.PERMISO_API_KEY || '',
+        PERMISO_API_KEY_ENABLED: process.env.PERMISO_API_KEY_ENABLED || 'false',
       };
 
       // Start the server from the project root

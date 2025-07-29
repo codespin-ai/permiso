@@ -8,6 +8,7 @@ import './tests/users.test.js';
 import './tests/roles.test.js';
 import './tests/resources.test.js';
 import './tests/permissions.test.js';
+import './tests/api-key-auth.test.js';
 
 export let testDb: TestDatabase;
 export let server: TestServer;
