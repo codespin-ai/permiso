@@ -26,10 +26,10 @@ export async function grantUserPermission(
   try {
     const row = await db.one<UserPermissionDbRow>(
       `INSERT INTO user_permission (user_id, org_id, resource_id, action) 
-       VALUES ($1, $2, $3, $4) 
+       VALUES ($(userId), $(orgId), $(resourcePath), $(action)) 
        ON CONFLICT (user_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
-      [userId, orgId, resourcePath, action]
+      { userId, orgId, resourcePath, action }
     );
 
     return { success: true, data: mapUserPermissionFromDb(row) };
@@ -49,8 +49,8 @@ export async function revokeUserPermission(
   try {
     await db.none(
       `DELETE FROM user_permission 
-       WHERE user_id = $1 AND org_id = $2 AND resource_id = $3 AND action = $4`,
-      [userId, orgId, resourcePath, action]
+       WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id = $(resourcePath) AND action = $(action)`,
+      { userId, orgId, resourcePath, action }
     );
     return { success: true, data: true };
   } catch (error) {
@@ -67,18 +67,17 @@ export async function getUserPermissions(
   action?: string
 ): Promise<Result<UserPermission[]>> {
   try {
-    let query = `SELECT * FROM user_permission WHERE user_id = $1 AND org_id = $2`;
-    const params: any[] = [userId, orgId];
-    let paramCount = 2;
+    let query = `SELECT * FROM user_permission WHERE user_id = $(userId) AND org_id = $(orgId)`;
+    const params: Record<string, any> = { userId, orgId };
 
     if (resourcePath) {
-      query += ` AND resource_id = $${++paramCount}`;
-      params.push(resourcePath);
+      query += ` AND resource_id = $(resourcePath)`;
+      params.resourcePath = resourcePath;
     }
 
     if (action) {
-      query += ` AND action = $${++paramCount}`;
-      params.push(action);
+      query += ` AND action = $(action)`;
+      params.action = action;
     }
 
     query += ` ORDER BY created_at DESC`;
@@ -102,10 +101,10 @@ export async function grantRolePermission(
   try {
     const row = await db.one<RolePermissionDbRow>(
       `INSERT INTO role_permission (role_id, org_id, resource_id, action) 
-       VALUES ($1, $2, $3, $4) 
+       VALUES ($(roleId), $(orgId), $(resourcePath), $(action)) 
        ON CONFLICT (role_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
-      [roleId, orgId, resourcePath, action]
+      { roleId, orgId, resourcePath, action }
     );
 
     return { success: true, data: mapRolePermissionFromDb(row) };
@@ -125,8 +124,8 @@ export async function revokeRolePermission(
   try {
     await db.none(
       `DELETE FROM role_permission 
-       WHERE role_id = $1 AND org_id = $2 AND resource_id = $3 AND action = $4`,
-      [roleId, orgId, resourcePath, action]
+       WHERE role_id = $(roleId) AND org_id = $(orgId) AND resource_id = $(resourcePath) AND action = $(action)`,
+      { roleId, orgId, resourcePath, action }
     );
     return { success: true, data: true };
   } catch (error) {
@@ -143,18 +142,17 @@ export async function getRolePermissions(
   action?: string
 ): Promise<Result<RolePermission[]>> {
   try {
-    let query = `SELECT * FROM role_permission WHERE role_id = $1 AND org_id = $2`;
-    const params: any[] = [roleId, orgId];
-    let paramCount = 2;
+    let query = `SELECT * FROM role_permission WHERE role_id = $(roleId) AND org_id = $(orgId)`;
+    const params: Record<string, any> = { roleId, orgId };
 
     if (resourcePath) {
-      query += ` AND resource_id = $${++paramCount}`;
-      params.push(resourcePath);
+      query += ` AND resource_id = $(resourcePath)`;
+      params.resourcePath = resourcePath;
     }
 
     if (action) {
-      query += ` AND action = $${++paramCount}`;
-      params.push(action);
+      query += ` AND action = $(action)`;
+      params.action = action;
     }
 
     query += ` ORDER BY created_at DESC`;
@@ -180,25 +178,27 @@ export async function getEffectivePermissions(
     const userPermsQuery = action
       ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $1 AND org_id = $2 AND resource_id = $3 AND action = $4`
+         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id = $(resourcePath) AND action = $(action)`
       : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $1 AND org_id = $2 AND resource_id = $3`;
+         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id = $(resourcePath)`;
 
-    const userPermsParams = action ? [userId, orgId, resourcePath, action] : [userId, orgId, resourcePath];
+    const userPermsParams: Record<string, any> = { userId, orgId, resourcePath };
+    if (action) userPermsParams.action = action;
 
     // Get permissions from user's roles
     const rolePermsQuery = action
       ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
          INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $1 AND rp.org_id = $2 AND rp.resource_id = $3 AND rp.action = $4`
+         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id = $(resourcePath) AND rp.action = $(action)`
       : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
          INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $1 AND rp.org_id = $2 AND rp.resource_id = $3`;
+         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id = $(resourcePath)`;
 
-    const rolePermsParams = action ? [userId, orgId, resourcePath, action] : [userId, orgId, resourcePath];
+    const rolePermsParams: Record<string, any> = { userId, orgId, resourcePath };
+    if (action) rolePermsParams.action = action;
 
     const [userPerms, rolePerms] = await Promise.all([
       db.manyOrNone(userPermsQuery, userPermsParams),
@@ -241,29 +241,27 @@ export async function getEffectivePermissionsByPrefix(
     const userPermsQuery = action
       ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $1 AND org_id = $2 AND resource_id LIKE $3 AND action = $4`
+         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id LIKE $(resourcePattern) AND action = $(action)`
       : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $1 AND org_id = $2 AND resource_id LIKE $3`;
+         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id LIKE $(resourcePattern)`;
 
-    const userPermsParams = action 
-      ? [userId, orgId, `${resourcePathPrefix}%`, action] 
-      : [userId, orgId, `${resourcePathPrefix}%`];
+    const userPermsParams: Record<string, any> = { userId, orgId, resourcePattern: `${resourcePathPrefix}%` };
+    if (action) userPermsParams.action = action;
 
     // Get permissions from user's roles
     const rolePermsQuery = action
       ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
          INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $1 AND rp.org_id = $2 AND rp.resource_id LIKE $3 AND rp.action = $4`
+         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id LIKE $(resourcePattern) AND rp.action = $(action)`
       : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
          INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $1 AND rp.org_id = $2 AND rp.resource_id LIKE $3`;
+         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id LIKE $(resourcePattern)`;
 
-    const rolePermsParams = action 
-      ? [userId, orgId, `${resourcePathPrefix}%`, action] 
-      : [userId, orgId, `${resourcePathPrefix}%`];
+    const rolePermsParams: Record<string, any> = { userId, orgId, resourcePattern: `${resourcePathPrefix}%` };
+    if (action) rolePermsParams.action = action;
 
     const [userPerms, rolePerms] = await Promise.all([
       db.manyOrNone(userPermsQuery, userPermsParams),

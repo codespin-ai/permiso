@@ -82,14 +82,14 @@ export const resourceResolvers = {
     permissions: async (parent: Resource, _: any, context: { db: Database }) => {
       // Get all user permissions for this resource
       const userPermsResult = await context.db.manyOrNone(
-        `SELECT * FROM user_permission WHERE org_id = $1 AND resource_id = $2`,
-        [parent.orgId, parent.id]
+        `SELECT * FROM user_permission WHERE org_id = $(orgId) AND resource_id = $(resourceId)`,
+        { orgId: parent.orgId, resourceId: parent.id }
       );
       
       // Get all role permissions for this resource
       const rolePermsResult = await context.db.manyOrNone(
-        `SELECT * FROM role_permission WHERE org_id = $1 AND resource_id = $2`,
-        [parent.orgId, parent.id]
+        `SELECT * FROM role_permission WHERE org_id = $(orgId) AND resource_id = $(resourceId)`,
+        { orgId: parent.orgId, resourceId: parent.id }
       );
       
       const permissions: Permission[] = [

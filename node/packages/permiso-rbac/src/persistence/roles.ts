@@ -26,8 +26,8 @@ export async function createRole(
   try {
     const role = await db.tx(async (t) => {
       const roleRow = await t.one<RoleDbRow>(
-        `INSERT INTO role (id, org_id, data) VALUES ($1, $2, $3) RETURNING *`,
-        [input.id, input.orgId, input.data ?? null]
+        `INSERT INTO role (id, org_id, data) VALUES ($(id), $(orgId), $(data)) RETURNING *`,
+        { id: input.id, orgId: input.orgId, data: input.data ?? null }
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -41,8 +41,8 @@ export async function createRole(
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO role_property (role_id, org_id, name, value, hidden) VALUES ($1, $2, $3, $4, $5)`,
-            [prop.role_id, prop.org_id, prop.name, prop.value, prop.hidden]
+            `INSERT INTO role_property (role_id, org_id, name, value, hidden) VALUES ($(roleId), $(orgId), $(name), $(value), $(hidden))`,
+            { roleId: prop.role_id, orgId: prop.org_id, name: prop.name, value: prop.value, hidden: prop.hidden }
           );
         }
       }
@@ -64,8 +64,8 @@ export async function getRole(
 ): Promise<Result<RoleWithProperties | null>> {
   try {
     const roleRow = await db.oneOrNone<RoleDbRow>(
-      `SELECT * FROM role WHERE id = $1 AND org_id = $2`,
-      [roleId, orgId]
+      `SELECT * FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
+      { roleId, orgId }
     );
 
     if (!roleRow) {
@@ -104,24 +104,26 @@ export async function getRoles(
       SELECT DISTINCT r.* 
       FROM role r
     `;
-    const params: any[] = [orgId];
-    let paramCount = 1;
+    const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
       query += ` LEFT JOIN role_property rp ON r.id = rp.role_id AND r.org_id = rp.org_id`;
     }
 
-    const conditions: string[] = [`r.org_id = $1`];
+    const conditions: string[] = [`r.org_id = $(orgId)`];
 
     if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`r.id = ANY($${++paramCount})`);
-      params.push(filters.ids);
+      conditions.push(`r.id = ANY($(ids))`);
+      params.ids = filters.ids;
     }
 
     if (filters?.properties && filters.properties.length > 0) {
-      filters.properties.forEach(prop => {
-        conditions.push(`(rp.name = $${++paramCount} AND rp.value = $${++paramCount})`);
-        params.push(prop.name, prop.value);
+      filters.properties.forEach((prop, index) => {
+        const nameParam = `propName${index}`;
+        const valueParam = `propValue${index}`;
+        conditions.push(`(rp.name = $(${nameParam}) AND rp.value = $(${valueParam}))`);
+        params[nameParam] = prop.name;
+        params[valueParam] = prop.value;
       });
     }
 
@@ -129,13 +131,13 @@ export async function getRoles(
     query += ` ORDER BY r.created_at DESC`;
 
     if (pagination?.limit) {
-      query += ` LIMIT $${++paramCount}`;
-      params.push(pagination.limit);
+      query += ` LIMIT $(limit)`;
+      params.limit = pagination.limit;
     }
 
     if (pagination?.offset) {
-      query += ` OFFSET $${++paramCount}`;
-      params.push(pagination.offset);
+      query += ` OFFSET $(offset)`;
+      params.offset = pagination.offset;
     }
 
     const rows = await db.manyOrNone<RoleDbRow>(query, params);
@@ -169,12 +171,11 @@ export async function updateRole(
 ): Promise<Result<Role>> {
   try {
     const updates: string[] = [];
-    const params: any[] = [roleId, orgId];
-    let paramCount = 2;
+    const params: Record<string, any> = { roleId, orgId };
 
     if (input.data !== undefined) {
-      updates.push(`data = $${++paramCount}`);
-      params.push(input.data);
+      updates.push(`data = $(data)`);
+      params.data = input.data;
     }
 
     updates.push(`updated_at = NOW()`);
@@ -182,7 +183,7 @@ export async function updateRole(
     const query = `
       UPDATE role 
       SET ${updates.join(', ')}
-      WHERE id = $1 AND org_id = $2
+      WHERE id = $(roleId) AND org_id = $(orgId)
       RETURNING *
     `;
 
@@ -200,7 +201,7 @@ export async function deleteRole(
   roleId: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(`DELETE FROM role WHERE id = $1 AND org_id = $2`, [roleId, orgId]);
+    await db.none(`DELETE FROM role WHERE id = $(roleId) AND org_id = $(orgId)`, { roleId, orgId });
     return { success: true, data: true };
   } catch (error) {
     logger.error('Failed to delete role', { error, orgId, roleId });
@@ -215,10 +216,10 @@ async function getRoleProperties(
   includeHidden: boolean
 ): Promise<RoleProperty[]> {
   const query = includeHidden
-    ? `SELECT * FROM role_property WHERE role_id = $1 AND org_id = $2`
-    : `SELECT * FROM role_property WHERE role_id = $1 AND org_id = $2 AND hidden = false`;
+    ? `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId)`
+    : `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND hidden = false`;
 
-  const rows = await db.manyOrNone<RolePropertyDbRow>(query, [roleId, orgId]);
+  const rows = await db.manyOrNone<RolePropertyDbRow>(query, { roleId, orgId });
   return rows.map(mapRolePropertyFromDb);
 }
 
@@ -233,11 +234,11 @@ export async function setRoleProperty(
   try {
     const row = await db.one<RolePropertyDbRow>(
       `INSERT INTO role_property (role_id, org_id, name, value, hidden) 
-       VALUES ($1, $2, $3, $4, $5) 
+       VALUES ($(roleId), $(orgId), $(name), $(value), $(hidden)) 
        ON CONFLICT (role_id, org_id, name) 
-       DO UPDATE SET value = $4, hidden = $5, created_at = NOW()
+       DO UPDATE SET value = $(value), hidden = $(hidden), created_at = NOW()
        RETURNING *`,
-      [roleId, orgId, name, value, hidden]
+      { roleId, orgId, name, value, hidden }
     );
 
     return { success: true, data: mapRolePropertyFromDb(row) };
@@ -255,8 +256,8 @@ export async function getRoleProperty(
 ): Promise<Result<RoleProperty | null>> {
   try {
     const row = await db.oneOrNone<RolePropertyDbRow>(
-      `SELECT * FROM role_property WHERE role_id = $1 AND org_id = $2 AND name = $3`,
-      [roleId, orgId, name]
+      `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
+      { roleId, orgId, name }
     );
 
     return {
@@ -277,8 +278,8 @@ export async function deleteRoleProperty(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM role_property WHERE role_id = $1 AND org_id = $2 AND name = $3`,
-      [roleId, orgId, name]
+      `DELETE FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
+      { roleId, orgId, name }
     );
     return { success: true, data: true };
   } catch (error) {
@@ -294,8 +295,8 @@ export async function getRoleUsers(
 ): Promise<Result<string[]>> {
   try {
     const rows = await db.manyOrNone<{ user_id: string }>(
-      `SELECT user_id FROM user_role WHERE role_id = $1 AND org_id = $2`,
-      [roleId, orgId]
+      `SELECT user_id FROM user_role WHERE role_id = $(roleId) AND org_id = $(orgId)`,
+      { roleId, orgId }
     );
 
     return { success: true, data: rows.map(r => r.user_id) };
