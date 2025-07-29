@@ -53,4 +53,10 @@ export class GraphQLClient {
       throw error;
     }
   }
+
+  async stop(): Promise<void> {
+    // Stop the Apollo Client to clean up any active connections
+    await this.client.stop();
+    await this.client.clearStore();
+  }
 }

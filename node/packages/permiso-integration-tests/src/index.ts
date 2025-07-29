@@ -36,7 +36,12 @@ after(async function() {
   console.log('🧹 Cleaning up test environment...');
   
   try {
-    // Stop server first
+    // Stop GraphQL client first
+    if (client) {
+      await client.stop();
+    }
+    
+    // Stop server
     if (server) {
       await server.stop();
     }
@@ -50,9 +55,15 @@ after(async function() {
     }
     
     console.log('✅ Cleanup complete');
+    
+    // Force exit after cleanup to ensure test process terminates
+    // This is needed because some connections might still be lingering
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
   } catch (error) {
     console.error('Error during cleanup:', error);
     // Force exit on cleanup error
-    process.exit(0);
+    process.exit(1);
   }
 });
