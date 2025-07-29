@@ -1,6 +1,6 @@
 import type { Database } from '@codespin/permiso-db';
 import type { Resource } from '../../types.js';
-import { getOrganization } from '../organization/get-organization.js';
+import { getOrganization } from '../../domain/organization/get-organization.js';
 
 export const resourceFieldResolvers = {
   Resource: {

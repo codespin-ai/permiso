@@ -1,9 +1,9 @@
 import type { Database } from '@codespin/permiso-db';
 import type { RoleWithProperties } from '../../types.js';
-import { getRoleProperties } from './get-role-properties.js';
-import { getRoleUsers } from './get-role-users.js';
-import { getUsers } from '../user/get-users.js';
-import { getRolePermissions } from '../permission/get-role-permissions.js';
+import { getRoleProperties } from '../../domain/role/get-role-properties.js';
+import { getRoleUsers } from '../../domain/role/get-role-users.js';
+import { getUsers } from '../../domain/user/get-users.js';
+import { getRolePermissions } from '../../domain/permission/get-role-permissions.js';
 
 export const roleFieldResolvers = {
   Role: {

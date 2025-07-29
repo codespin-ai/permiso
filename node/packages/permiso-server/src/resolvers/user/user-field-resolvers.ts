@@ -1,8 +1,8 @@
 import type { Database } from '@codespin/permiso-db';
 import type { UserWithProperties } from '../../types.js';
-import { getUserProperties } from './get-user-properties.js';
-import { getRoles } from '../role/get-roles.js';
-import { getEffectivePermissions } from '../permission/get-effective-permissions.js';
+import { getUserProperties } from '../../domain/user/get-user-properties.js';
+import { getRoles } from '../../domain/role/get-roles.js';
+import { getEffectivePermissions } from '../../domain/permission/get-effective-permissions.js';
 
 export const userFieldResolvers = {
   User: {

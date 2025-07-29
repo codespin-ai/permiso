@@ -3,7 +3,7 @@ import type { OrganizationWithProperties } from '../../types.js';
 import { getOrganizationProperties } from './get-organization-properties.js';
 import { getUsers } from '../user/get-users.js';
 import { getRoles } from '../role/get-roles.js';
-import { getResources, getResourcesByIdPrefix } from '../resource/get-resources.js';
+import { getResources, getResourcesByIdPrefix } from '../../domain/resource/get-resources.js';
 
 export const organizationFieldResolvers = {
   Organization: {
