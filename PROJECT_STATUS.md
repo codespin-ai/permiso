@@ -13,7 +13,7 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 3. **Project structure** - Monorepo setup with custom build system
 
 ### ✅ Completed RBAC Implementation
-4. **permiso-rbac** - Full RBAC system with:
+4. **permiso-server** - GraphQL server with:
    - Database schema and migrations
    - Complete persistence layer for all entities
    - GraphQL schema with all types defined

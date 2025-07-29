@@ -17,7 +17,7 @@ import {
   mapRolePropertyFromDb
 } from '../mappers.js';
 
-const logger = createLogger('permiso-rbac:roles');
+const logger = createLogger('permiso-server:roles');
 
 export async function createRole(
   db: Database,

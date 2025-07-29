@@ -135,7 +135,7 @@ Located in `/node/packages/`, build order matters:
 1. **@codespin/permiso-core** - Core types, utilities, and Result type
 2. **@codespin/permiso-logger** - Centralized logging for all packages
 3. **@codespin/permiso-db** - Database connection and management utilities
-4. **@codespin/permiso-rbac** - Main RBAC implementation with GraphQL API
+4. **@codespin/permiso-server** - GraphQL server for RBAC implementation
 5. **@codespin/permiso-integration-tests** - Integration tests using GraphQL API (separate from production build)
 
 ## Environment Variables
@@ -296,18 +296,18 @@ await db.none(
 1. Create migration: `npm run migrate:make your_migration_name`
 2. Edit migration file in `/database/permiso/migrations/`
 3. Run migration: `npm run migrate:latest`
-4. Update types in `@codespin/permiso-rbac`
+4. Update types in `@codespin/permiso-server`
 5. Update persistence layer functions
 
 ### GraphQL Schema Changes
-1. Update schema in `/node/packages/permiso-rbac/src/graphql/schema.graphql`
-2. Update resolvers in `/node/packages/permiso-rbac/src/graphql/resolvers/`
+1. Update schema in `/node/packages/permiso-server/src/schema.graphql`
+2. Update resolvers in `/node/packages/permiso-server/src/resolvers/`
 3. Add/update persistence functions as needed
 4. Test with GraphQL playground at `http://localhost:5001/graphql`
 
 ## GraphQL API Overview
 
-The permiso-rbac package provides a complete GraphQL API for RBAC operations:
+The permiso-server package provides a complete GraphQL API for RBAC operations:
 
 ### Key Queries
 - `organization(id)` - Get organization details

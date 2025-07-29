@@ -17,7 +17,7 @@ import {
   mapOrganizationPropertyFromDb
 } from '../mappers.js';
 
-const logger = createLogger('permiso-rbac:organizations');
+const logger = createLogger('permiso-server:organizations');
 
 export async function createOrganization(
   db: Database,

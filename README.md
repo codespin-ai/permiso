@@ -54,7 +54,7 @@ export PERMISO_DB_USER=postgres
 export PERMISO_DB_PASSWORD=your_password
 
 # Run migrations
-cd node/packages/permiso-rbac
+cd node/packages/permiso-server
 npm run migrate:latest
 ```
 
@@ -64,7 +64,7 @@ Permiso is built as a monorepo with the following packages:
 
 - **`@codespin/permiso-core`** - Core types and utilities (Result type, etc.)
 - **`@codespin/permiso-logger`** - Centralized logging with Winston
-- **`@codespin/permiso-rbac`** - Main RBAC implementation with GraphQL
+- **`@codespin/permiso-server`** - GraphQL server for RBAC implementation
 
 ### Design Principles
 
@@ -110,7 +110,7 @@ Key-value metadata that can be attached to organizations, users, and roles:
 ## Usage Example
 
 ```typescript
-import { initializeDatabase, createOrganization, createUser, createRole, grantRolePermission, assignUserRole } from '@codespin/permiso-rbac';
+import { initializeDatabase, createOrganization, createUser, createRole, grantRolePermission, assignUserRole } from '@codespin/permiso-server';
 
 // Initialize database
 const db = initializeDatabase();
@@ -187,7 +187,7 @@ permiso/
 ├── node/packages/
 │   ├── permiso-core/       # Core utilities
 │   ├── permiso-logger/     # Logging
-│   └── permiso-rbac/       # RBAC implementation
+│   └── permiso-server/     # GraphQL server
 ├── build.sh                # Build script
 ├── clean.sh                # Clean script
 └── lint-all.sh            # Lint all packages

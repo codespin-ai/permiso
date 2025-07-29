@@ -65,7 +65,6 @@ describe('Organizations', () => {
       });
 
       // Try to create duplicate
-      let errorThrown = false;
       try {
         const dupResult = await client.mutate(mutation, {
           input: {
@@ -75,7 +74,6 @@ describe('Organizations', () => {
         });
         console.log('Duplicate result:', JSON.stringify(dupResult, null, 2));
       } catch (error: any) {
-        errorThrown = true;
         // The mutation succeeded when it should have failed
         // This might mean the test needs to be run in isolation
         if (error.message === 'Should have thrown an error') {

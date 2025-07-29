@@ -16,7 +16,7 @@ PACKAGES=(
   "permiso-core"
   "permiso-logger"
   "permiso-db"
-  "permiso-rbac"
+  "permiso-server"
   "permiso-integration-tests"
 )
 

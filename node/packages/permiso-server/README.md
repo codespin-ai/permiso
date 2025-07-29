@@ -1,6 +1,6 @@
-# @codespin/permiso-rbac
+# @codespin/permiso-server
 
-Core RBAC functionality for the Permiso authorization system. Inspired by Tankman but implemented with GraphQL and functional programming patterns.
+GraphQL server for the Permiso RBAC authorization system. Provides a complete GraphQL API for managing role-based access control.
 
 ## Features
 
@@ -57,8 +57,8 @@ The package provides a complete GraphQL schema for RBAC operations:
 ## Usage
 
 ```typescript
-import { initializeDatabase } from '@codespin/permiso-rbac';
-import { createOrganization, createUser, grantUserPermission } from '@codespin/permiso-rbac';
+import { initializeDatabase } from '@codespin/permiso-server';
+import { createOrganization, createUser, grantUserPermission } from '@codespin/permiso-server';
 
 // Initialize database connection
 const db = initializeDatabase();

@@ -1,7 +1,7 @@
 {
-  "name": "@codespin/permiso-rbac",
+  "name": "@codespin/permiso-server",
   "version": "0.0.1",
-  "description": "Core RBAC functionality for Permiso",
+  "description": "GraphQL server for Permiso RBAC",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

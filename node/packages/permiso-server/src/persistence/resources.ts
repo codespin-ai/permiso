@@ -12,7 +12,7 @@ import {
   mapResourceFromDb
 } from '../mappers.js';
 
-const logger = createLogger('permiso-rbac:resources');
+const logger = createLogger('permiso-server:resources');
 
 export async function createResource(
   db: Database,

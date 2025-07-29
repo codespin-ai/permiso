@@ -4,5 +4,5 @@
 cd "$(dirname "$0")"
 
 # Start the GraphQL server
-cd node/packages/permiso-rbac
+cd node/packages/permiso-server
 node dist/bin/server.js
