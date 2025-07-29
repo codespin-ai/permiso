@@ -36,6 +36,15 @@ npm install
 
 ### Database Setup
 
+To run the development environment, use the following scripts from the `devenv` directory:
+- **For macOS:** `./run.sh up`
+- **For Linux:** `./run-rootless.sh up`
+
+This will start a PostgreSQL container.
+
+You can then set the following environment variables to connect to the database:
+
+
 ```bash
 # Set environment variables
 export PERMISO_DB_HOST=localhost
