@@ -15,6 +15,7 @@ echo "=== Building Permiso ==="
 PACKAGES=(
   "permiso-core"
   "permiso-logger"
+  "permiso-db"
   "permiso-rbac"
 )
 
