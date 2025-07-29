@@ -17,14 +17,23 @@
     "migrate:permiso:rollback": "knex migrate:rollback --knexfile database/permiso/knexfile.js",
     "migrate:permiso:status": "knex migrate:status --knexfile database/permiso/knexfile.js",
     "seed:permiso:make": "knex seed:make --knexfile database/permiso/knexfile.js",
-    "seed:permiso:run": "knex seed:run --knexfile database/permiso/knexfile.js"
+    "seed:permiso:run": "knex seed:run --knexfile database/permiso/knexfile.js",
+    "test": "npm run test:all",
+    "test:all": "./scripts/test-all.sh",
+    "test:permiso": "NODE_ENV=test mocha 'tests/permiso/**/*.test.ts'",
+    "test:permiso:watch": "NODE_ENV=test mocha 'tests/permiso/**/*.test.ts' --watch"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.9",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",
+    "chai": "^5.2.1",
     "eslint": "^8.55.0",
     "knex": "^3.1.0",
+    "mocha": "^11.7.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "engines": {

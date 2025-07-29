@@ -1,0 +1,11 @@
+{
+  "extension": ["ts"],
+  "require": "ts-node/register",
+  "timeout": 10000,
+  "exit": true,
+  "recursive": true,
+  "node-option": [
+    "loader=ts-node/esm",
+    "experimental-specifier-resolution=node"
+  ]
+}
