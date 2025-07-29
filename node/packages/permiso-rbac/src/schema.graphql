@@ -1,0 +1,317 @@
+scalar DateTime
+
+# Core Types
+type Organization {
+  id: ID!
+  data: String
+  properties: [Property!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Relationships
+  users(filter: UserFilter, pagination: PaginationInput): UserConnection!
+  roles(filter: RoleFilter, pagination: PaginationInput): RoleConnection!
+  resources(filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
+}
+
+type User {
+  id: ID!
+  orgId: ID!
+  identityProvider: String!
+  identityProviderUserId: String!
+  data: String
+  properties: [Property!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Relationships
+  organization: Organization!
+  roles: [Role!]!
+  permissions: [UserPermission!]!
+  effectivePermissions(resourcePath: String, action: String): [Permission!]!
+}
+
+type Role {
+  id: ID!
+  orgId: ID!
+  data: String
+  properties: [Property!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Relationships
+  organization: Organization!
+  users: [User!]!
+  permissions: [RolePermission!]!
+}
+
+type Resource {
+  id: ID!  # This is the path
+  orgId: ID!
+  data: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  
+  # Relationships
+  organization: Organization!
+  permissions: [Permission!]!
+}
+
+type Property {
+  name: String!
+  value: String!
+  hidden: Boolean!
+  createdAt: DateTime!
+}
+
+interface Permission {
+  resourceId: ID!
+  action: String!
+  createdAt: DateTime!
+  organization: Organization!
+  resource: Resource!
+}
+
+type UserPermission implements Permission {
+  userId: ID!
+  resourceId: ID!
+  action: String!
+  createdAt: DateTime!
+  organization: Organization!
+  resource: Resource!
+  user: User!
+}
+
+type RolePermission implements Permission {
+  roleId: ID!
+  resourceId: ID!
+  action: String!
+  createdAt: DateTime!
+  organization: Organization!
+  resource: Resource!
+  role: Role!
+}
+
+type EffectivePermission {
+  resourceId: ID!
+  action: String!
+  source: String! # 'user' or 'role'
+  sourceId: ID # userId or roleId
+  createdAt: DateTime!
+}
+
+# Connection types for pagination
+type OrganizationConnection {
+  nodes: [Organization!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+
+type UserConnection {
+  nodes: [User!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+
+type RoleConnection {
+  nodes: [Role!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+
+type ResourceConnection {
+  nodes: [Resource!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Query type
+type Query {
+  # Organizations
+  organization(id: ID!): Organization
+  organizations(filter: OrganizationFilter, pagination: PaginationInput): OrganizationConnection!
+  organizationsByIds(ids: [ID!]!): [Organization!]!
+  organizationProperty(orgId: ID!, propertyName: String!): Property
+  
+  # Users (scoped to org)
+  user(orgId: ID!, userId: ID!): User
+  users(orgId: ID!, filter: UserFilter, pagination: PaginationInput): UserConnection!
+  usersByIds(orgId: ID!, ids: [ID!]!): [User!]!
+  usersByIdentity(identityProvider: String!, identityProviderUserId: String!): [User!]!
+  userProperty(orgId: ID!, userId: ID!, propertyName: String!): Property
+  
+  # Roles (scoped to org)
+  role(orgId: ID!, roleId: ID!): Role
+  roles(orgId: ID!, filter: RoleFilter, pagination: PaginationInput): RoleConnection!
+  rolesByIds(orgId: ID!, ids: [ID!]!): [Role!]!
+  roleProperty(orgId: ID!, roleId: ID!, propertyName: String!): Property
+  
+  # Resources (scoped to org)
+  resource(orgId: ID!, resourcePath: String!): Resource
+  resources(orgId: ID!, filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
+  resourcesByPathPrefix(orgId: ID!, pathPrefix: String!): [Resource!]!
+  
+  # Permissions
+  userPermissions(orgId: ID!, userId: ID!, resourcePath: String, action: String): [UserPermission!]!
+  rolePermissions(orgId: ID!, roleId: ID!, resourcePath: String, action: String): [RolePermission!]!
+  effectivePermissions(orgId: ID!, userId: ID!, resourcePath: String!, action: String): [EffectivePermission!]!
+  effectivePermissionsByPrefix(
+    orgId: ID!, 
+    userId: ID!, 
+    resourcePathPrefix: String!, 
+    action: String
+  ): [EffectivePermission!]!
+  
+  # Check permission (returns boolean)
+  hasPermission(orgId: ID!, userId: ID!, resourcePath: String!, action: String!): Boolean!
+}
+
+# Mutation type
+type Mutation {
+  # Organizations
+  createOrganization(input: CreateOrganizationInput!): Organization!
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
+  deleteOrganization(id: ID!, safetyKey: String): Boolean!
+  
+  # Organization Properties
+  setOrganizationProperty(orgId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  deleteOrganizationProperty(orgId: ID!, name: String!): Boolean!
+  
+  # Users
+  createUser(input: CreateUserInput!): User!
+  updateUser(orgId: ID!, userId: ID!, input: UpdateUserInput!): User!
+  deleteUser(orgId: ID!, userId: ID!): Boolean!
+  
+  # User Properties
+  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  deleteUserProperty(orgId: ID!, userId: ID!, name: String!): Boolean!
+  
+  # User Roles
+  assignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
+  unassignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
+  
+  # Roles
+  createRole(input: CreateRoleInput!): Role!
+  updateRole(orgId: ID!, roleId: ID!, input: UpdateRoleInput!): Role!
+  deleteRole(orgId: ID!, roleId: ID!): Boolean!
+  
+  # Role Properties
+  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  deleteRoleProperty(orgId: ID!, roleId: ID!, name: String!): Boolean!
+  
+  # Resources
+  createResource(input: CreateResourceInput!): Resource!
+  updateResource(orgId: ID!, resourcePath: String!, input: UpdateResourceInput!): Resource!
+  deleteResource(orgId: ID!, resourcePath: String!): Boolean!
+  
+  # Permissions
+  grantUserPermission(input: GrantUserPermissionInput!): UserPermission!
+  revokeUserPermission(orgId: ID!, userId: ID!, resourcePath: String!, action: String!): Boolean!
+  
+  grantRolePermission(input: GrantRolePermissionInput!): RolePermission!
+  revokeRolePermission(orgId: ID!, roleId: ID!, resourcePath: String!, action: String!): Boolean!
+}
+
+# Input types
+input CreateOrganizationInput {
+  id: ID!
+  data: String
+  properties: [PropertyInput!]
+}
+
+input UpdateOrganizationInput {
+  data: String
+}
+
+input CreateUserInput {
+  id: ID!
+  orgId: ID!
+  identityProvider: String!
+  identityProviderUserId: String!
+  data: String
+  properties: [PropertyInput!]
+  roleIds: [ID!]
+}
+
+input UpdateUserInput {
+  identityProvider: String
+  identityProviderUserId: String
+  data: String
+}
+
+input CreateRoleInput {
+  id: ID!
+  orgId: ID!
+  data: String
+  properties: [PropertyInput!]
+}
+
+input UpdateRoleInput {
+  data: String
+}
+
+input CreateResourceInput {
+  path: String!  # becomes the id
+  orgId: ID!
+  data: String
+}
+
+input UpdateResourceInput {
+  data: String
+}
+
+input PropertyInput {
+  name: String!
+  value: String!
+  hidden: Boolean
+}
+
+input GrantUserPermissionInput {
+  orgId: ID!
+  userId: ID!
+  resourcePath: String!
+  action: String!
+}
+
+input GrantRolePermissionInput {
+  orgId: ID!
+  roleId: ID!
+  resourcePath: String!
+  action: String!
+}
+
+# Filter inputs
+input OrganizationFilter {
+  properties: [PropertyFilter!]
+}
+
+input UserFilter {
+  properties: [PropertyFilter!]
+  identityProvider: String
+  identityProviderUserId: String
+}
+
+input RoleFilter {
+  properties: [PropertyFilter!]
+}
+
+input ResourceFilter {
+  pathPrefix: String
+}
+
+input PropertyFilter {
+  name: String!
+  value: String!
+}
+
+input PaginationInput {
+  offset: Int
+  limit: Int
+}

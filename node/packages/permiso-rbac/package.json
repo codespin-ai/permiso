@@ -1,0 +1,36 @@
+{
+  "name": "@codespin/permiso-rbac",
+  "version": "0.0.1",
+  "description": "Core RBAC functionality for Permiso",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "migrate:make": "knex migrate:make --migrations-directory ./migrations",
+    "migrate:latest": "knex migrate:latest --migrations-directory ./migrations",
+    "migrate:rollback": "knex migrate:rollback --migrations-directory ./migrations"
+  },
+  "dependencies": {
+    "@codespin/permiso-core": "file:../permiso-core",
+    "@codespin/permiso-logger": "file:../permiso-logger",
+    "knex": "^3.1.0",
+    "pg": "^8.11.3",
+    "pg-promise": "^11.5.4",
+    "graphql": "^16.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@types/pg": "^8.10.9",
+    "typescript": "^5.3.3"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

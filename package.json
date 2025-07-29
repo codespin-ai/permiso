@@ -1,0 +1,42 @@
+{
+  "name": "@codespin/permiso",
+  "version": "0.0.1",
+  "description": "A comprehensive Role-Based Access Control (RBAC) system with GraphQL",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "./build.sh",
+    "clean": "./clean.sh",
+    "start": "./start.sh",
+    "migrate:make": "cd database && knex migrate:make",
+    "migrate:latest": "cd database && knex migrate:latest",
+    "migrate:rollback": "cd database && knex migrate:rollback",
+    "seed:make": "cd database && knex seed:make",
+    "seed:run": "cd database && knex seed:run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "eslint": "^8.55.0",
+    "knex": "^3.1.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codespin-ai/permiso.git"
+  },
+  "keywords": [
+    "rbac",
+    "authorization",
+    "permissions",
+    "roles",
+    "graphql",
+    "typescript"
+  ],
+  "author": "Codespin",
+  "license": "MIT"
+}
