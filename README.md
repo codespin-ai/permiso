@@ -251,6 +251,7 @@ npm test
 | `PERMISO_API_KEY_ENABLED` | Enable API key auth         | `false`     |
 | `PERMISO_SERVER_PORT` | GraphQL server port             | `5001`      |
 | `LOG_LEVEL`           | Logging level                   | `info`      |
+| `PERMISO_AUTO_MIGRATE` | Auto-run database migrations (Docker) | `false`     |
 
 ## Docker Support
 
@@ -259,18 +260,38 @@ Permiso can be run as a Docker container for easy deployment and distribution.
 ### Using Pre-built Images
 
 ```bash
-# Pull from Docker Hub (example)
-docker pull your-registry/permiso:latest
+# Pull from GitHub Container Registry
+docker pull ghcr.io/codespin-ai/permiso:latest
 
-# Run with environment variables
+# Run with automatic database setup (recommended for first run)
 docker run -p 5001:5001 \
   -e PERMISO_DB_HOST=your-db-host \
   -e PERMISO_DB_PORT=5432 \
   -e PERMISO_DB_NAME=permiso \
   -e PERMISO_DB_USER=postgres \
   -e PERMISO_DB_PASSWORD=your-password \
-  your-registry/permiso:latest
+  -e PERMISO_AUTO_MIGRATE=true \
+  ghcr.io/codespin-ai/permiso:latest
+
+# Run without automatic migrations (for production)
+docker run -p 5001:5001 \
+  -e PERMISO_DB_HOST=your-db-host \
+  -e PERMISO_DB_PORT=5432 \
+  -e PERMISO_DB_NAME=permiso \
+  -e PERMISO_DB_USER=postgres \
+  -e PERMISO_DB_PASSWORD=your-password \
+  ghcr.io/codespin-ai/permiso:latest
 ```
+
+#### Automatic Database Setup
+
+The Docker image includes an intelligent entrypoint that can automatically set up your database:
+
+- **`PERMISO_AUTO_MIGRATE=true`** - Enables automatic database migrations
+- On first run: Creates all necessary tables
+- On subsequent runs: Applies any pending migrations
+- Safe for development and staging environments
+- For production: Run migrations manually or in a separate step
 
 ### Building Your Own Image
 
@@ -306,14 +327,30 @@ cd ..
 ./start.sh
 ```
 
+### Quick Start with Docker Compose
+
+For a complete setup with both PostgreSQL and Permiso:
+
+```bash
+# Copy the example file
+cp docker-compose.example.yml docker-compose.yml
+
+# Edit passwords and configuration as needed
+# Then start everything:
+docker-compose up -d
+
+# The application will be available at http://localhost:5001/graphql
+# Database migrations will run automatically on first start
+```
+
 ### Pushing to a Registry
 
 ```bash
-# Push to Docker Hub
-./docker-push.sh docker.io/yourorg/permiso latest
+# Push to GitHub Container Registry (official)
+./docker-push.sh ghcr.io/codespin-ai/permiso latest
 
-# Push to GitHub Container Registry
-./docker-push.sh ghcr.io/yourorg/permiso latest
+# Push to your own registry
+./docker-push.sh docker.io/yourorg/permiso latest
 
 # Push to AWS ECR
 ./docker-push.sh 123456789.dkr.ecr.us-east-1.amazonaws.com/permiso latest
@@ -356,7 +393,7 @@ spec:
     spec:
       containers:
       - name: permiso
-        image: your-registry/permiso:latest
+        image: ghcr.io/codespin-ai/permiso:latest
         ports:
         - containerPort: 5001
         env:

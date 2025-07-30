@@ -49,6 +49,10 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 
 # Lint entire project (from root)
 ./lint-all.sh           # Run ESLint on all packages
+
+# Docker commands
+./docker-build.sh       # Build Docker image
+./docker-push.sh ghcr.io/codespin-ai/permiso latest  # Push to registry
 ```
 
 ### Database Commands
@@ -291,6 +295,12 @@ await db.none(
 3. Add to `PACKAGES` array in `./build.sh` (respect dependency order)
 4. Create `src/` directory and `tsconfig.json`
 5. Run `./build.sh --install`
+
+### Docker Deployment
+1. Build image: `./docker-build.sh`
+2. Test locally: `docker run -p 5001:5001 --env-file .env permiso:latest`
+3. Push to registry: `./docker-push.sh ghcr.io/codespin-ai/permiso latest`
+4. Official images available at: `ghcr.io/codespin-ai/permiso`
 
 ### Database Changes
 1. Create migration: `npm run migrate:make your_migration_name`

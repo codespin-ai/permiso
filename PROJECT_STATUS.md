@@ -11,9 +11,12 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 1. **permiso-core** - Core utilities, Result type, and base types
 2. **permiso-logger** - Centralized logging with context support
 3. **Project structure** - Monorepo setup with custom build system
+4. **Docker support** - Production-ready Docker image with multi-stage build
+   - Available at: `ghcr.io/codespin-ai/permiso`
+   - Build scripts: `docker-build.sh` and `docker-push.sh`
 
 ### ✅ Completed RBAC Implementation
-4. **permiso-server** - GraphQL server with:
+5. **permiso-server** - GraphQL server with:
    - Database schema and migrations
    - Complete persistence layer for all entities
    - GraphQL schema with all types defined

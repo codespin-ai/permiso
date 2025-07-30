@@ -51,9 +51,9 @@ COPY --from=builder --chown=permiso:root /app/node ./node
 COPY --from=builder --chown=permiso:root /app/database ./database
 COPY --from=builder --chown=permiso:root /app/package*.json ./
 
-# Copy start script
-COPY --chown=permiso:root start.sh ./
-RUN chmod +x start.sh
+# Copy start script and entrypoint
+COPY --chown=permiso:root start.sh docker-entrypoint.sh ./
+RUN chmod +x start.sh docker-entrypoint.sh
 
 # Switch to non-root user
 USER permiso
@@ -70,5 +70,5 @@ ENV NODE_ENV=production \
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD node -e "require('http').get('http://localhost:' + (process.env.PERMISO_SERVER_PORT || 5001) + '/graphql', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
 
-# Start the application
-CMD ["./start.sh"]
+# Use entrypoint for automatic setup
+ENTRYPOINT ["./docker-entrypoint.sh"]
