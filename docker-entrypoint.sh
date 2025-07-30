@@ -12,7 +12,7 @@ echo -e "${GREEN}Starting Permiso RBAC Server...${NC}"
 # Function to wait for database
 wait_for_db() {
     echo -e "${YELLOW}Waiting for database connection...${NC}"
-    until node -e "
+    until cd /app/node/packages/permiso-server && node -e "
         const pg = require('pg');
         const client = new pg.Client({
             host: process.env.PERMISO_DB_HOST || 'localhost',
