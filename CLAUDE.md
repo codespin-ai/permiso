@@ -250,7 +250,7 @@ await db.none(
 1. **Organizations** - Top-level tenant isolation
 2. **Users** - Authenticated principals within an organization
 3. **Roles** - Named collections of permissions
-4. **Resources** - Protected entities using Unix-like paths (e.g., `/api/users/*`)
+4. **Resources** - Protected entities with IDs in path-like format (e.g., `/api/users/*`)
 5. **Permissions** - Actions allowed on resources (e.g., `read`, `write`, `delete`)
 6. **Custom Properties** - Key-value metadata attached to any entity
 
@@ -258,7 +258,7 @@ await db.none(
 - **User Permissions** - Direct permissions assigned to users
 - **Role Permissions** - Permissions assigned to roles
 - **Effective Permissions** - Computed combination of user and role permissions
-- **Resource Paths** - Support wildcards (`*`) and hierarchical matching
+- **Resource IDs** - Support wildcards (`*`) and hierarchical matching in path-like format
 
 ## Key Documentation
 
@@ -315,7 +315,7 @@ The permiso-server package provides a complete GraphQL API for RBAC operations:
 - `users(orgId)` - List users in an organization
 - `roles(orgId)` - List roles in an organization
 - `resources(orgId)` - List resources in an organization
-- `effectivePermissions(orgId, userId, resourcePath)` - Calculate user's permissions
+- `effectivePermissions(orgId, userId, resourceId)` - Calculate user's permissions
 
 ### Key Mutations
 - `createOrganization` - Create new organization

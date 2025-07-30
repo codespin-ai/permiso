@@ -49,8 +49,8 @@ When running in development mode, you can access the GraphQL Playground at the s
 - Can be assigned to multiple users
 
 ### Resources
-- Protected entities identified by paths
-- Use Unix-like path notation (e.g., `/api/users/*`)
+- Protected entities identified by IDs in path-like format
+- IDs follow Unix-like path notation (e.g., `/api/users/*`)
 - Support wildcard matching with `*`
 
 ### Permissions
@@ -548,7 +548,7 @@ query FilterUsersByDepartment {
 }
 ```
 
-### Get Resources by Path Prefix
+### Get Resources by ID Prefix
 
 ```graphql
 query GetAPIResources {
@@ -741,9 +741,9 @@ mutation RevokePermission {
 
 ## Permission System
 
-### Resource Path Matching
+### Resource ID Matching
 
-Permiso uses Unix-like path notation with wildcard support:
+Permiso uses path-like IDs with wildcard support:
 
 - `/api/users` - Exact match
 - `/api/users/*` - Matches `/api/users/123`, `/api/users/456`, etc.
@@ -806,9 +806,9 @@ Instead of auto-generated IDs, use descriptive identifiers:
 - Roles: `admin`, `editor`, `viewer`
 - Resources: `/api/users/*`, `/documents/contracts/*`
 
-### 2. Resource Path Design
+### 2. Resource ID Design
 
-Design your resource paths hierarchically:
+Design your resource IDs hierarchically in path-like format:
 ```
 /api/
   /users/
@@ -856,7 +856,7 @@ Always test permission chains:
 1. Grant permission to role
 2. Assign role to user
 3. Verify user has effective permission
-4. Test with actual resource paths
+4. Test with actual resource IDs
 
 ### 7. Wildcard Usage
 
@@ -905,7 +905,7 @@ curl -X POST http://localhost:5001/graphql \
 2. **Caching**: Cache permission calculations for frequently checked resources
 3. **Indexes**: Ensure database indexes on:
    - Foreign keys
-   - Resource paths (for prefix matching)
+   - Resource IDs (for prefix matching)
    - Identity provider fields
 
 ### Multi-tenancy Considerations
@@ -938,7 +938,7 @@ curl -X POST http://localhost:5001/graphql \
        variables: {
          orgId: req.user.orgId,
          userId: req.user.id,
-         resourceId: req.path,
+         resourceId: req.path, // Using request path as resource ID
          action: req.method.toLowerCase()
        }
      });
@@ -974,13 +974,13 @@ query AuditPermissions {
    - Check organization ID is correct
 
 2. **Empty permission results**
-   - Verify resource paths match (including wildcards)
+   - Verify resource IDs match (including wildcards)
    - Check user has assigned roles
    - Ensure permissions are granted to roles
 
 3. **Performance issues**
    - Add pagination to large queries
-   - Use specific resource paths instead of broad wildcards
+   - Use specific resource IDs instead of broad wildcards
    - Consider caching frequently checked permissions
 
 ### Debug Queries
@@ -1020,7 +1020,7 @@ query DebugUserPermissions {
 If migrating from another RBAC system:
 
 1. Map existing roles to Permiso roles
-2. Convert resource identifiers to path format
+2. Convert resource identifiers to path-like ID format
 3. Import organizations first, then roles, then users
 4. Assign permissions to roles before assigning roles to users
 5. Verify permissions with test queries

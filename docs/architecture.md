@@ -95,12 +95,11 @@ type Role = {
 ```
 
 #### Resource
-A protected entity identified by a Unix-like path.
+A protected entity with an identifier in path-like format.
 ```typescript
 type Resource = {
-  id: string;
+  id: string;  // e.g., "/api/users/*" - ID in path-like format
   orgId: string;
-  path: string;  // e.g., "/api/users/*"
   description?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -162,9 +161,9 @@ CREATE TABLE custom_property (
 2. **Role-based Permissions**: Inherited through role assignments
 3. **Effective Permissions**: The computed combination of direct and role-based permissions
 
-### Resource Path Matching
+### Resource ID Matching
 
-Resources use Unix-like paths with wildcard support:
+Resource IDs follow a path-like format with wildcard support:
 - `/api/users` - Exact match
 - `/api/users/*` - Matches any child path
 - `/api/*/read` - Matches any resource with 'read' suffix
@@ -249,7 +248,7 @@ While not yet implemented, the architecture supports:
 ### Input Validation
 
 - String length limits enforced
-- Path format validation for resources
+- ID format validation for resources (path-like structure)
 - Action name validation
 
 ### Future Considerations

@@ -7,7 +7,7 @@ GraphQL server for the Permiso RBAC authorization system. Provides a complete Gr
 - **Organizations**: Root entities that contain all other resources
 - **Users**: Belong to organizations, can have roles and direct permissions
 - **Roles**: Groups of permissions that can be assigned to users
-- **Resources**: Named entities using Unix-like paths (e.g., `/files/documents`, `/features/admin`)
+- **Resources**: Entities with IDs in path-like format (e.g., `/files/documents`, `/features/admin`)
 - **Permissions**: Define what actions users/roles can perform on resources
 - **Properties**: Custom key-value pairs for organizations, users, and roles with filtering support
 - **Effective Permissions**: Combined user and role permissions calculation

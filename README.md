@@ -6,7 +6,7 @@ A comprehensive Role-Based Access Control (RBAC) system with GraphQL API, built 
 
 - 🏢 **Multi-tenant Organizations** - Isolated authorization contexts
 - 👥 **Users & Roles** - Flexible user management with role assignments
-- 🔐 **Fine-grained Permissions** - Resource-based access control with Unix-like paths
+- 🔐 **Fine-grained Permissions** - Resource-based access control with path-like IDs
 - 🏷️ **Properties & Filtering** - Custom metadata with query capabilities
 - 🚀 **GraphQL API** - Modern, type-safe API with full CRUD operations
 - 📊 **Effective Permissions** - Combined user and role permission calculation
@@ -95,7 +95,7 @@ Collections of permissions that can be assigned to users. Useful for common perm
 
 ### Resources
 
-Named entities using Unix-like paths that permissions apply to:
+Entities identified by IDs in path-like format that permissions apply to:
 
 - `/documents/contracts/2023/acme.pdf`
 - `/features/billing`
@@ -194,7 +194,7 @@ query GetUserPermissions {
         action
       }
     }
-    effectivePermissions(resourcePath: "/documents/*") {
+    effectivePermissions(resourceId: "/documents/*") {
       resourceId
       action
       source

@@ -64,7 +64,6 @@ type Role {
 type Resource {
   id: ID!
   orgId: ID!
-  path: String!
   description: String
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -161,7 +160,7 @@ query GetUserPermissions($orgId: ID!, $userId: ID!) {
     resourceId
     resource {
       id
-      path
+      id
       description
     }
     action
@@ -192,7 +191,7 @@ query GetRolePermissions($roleId: ID!) {
     resourceId
     resource {
       id
-      path
+      id
       description
     }
     action
@@ -220,12 +219,12 @@ query ListResources($orgId: ID!) {
 
 #### Calculate Effective Permissions
 ```graphql
-query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourcePath: String!) {
-  effectivePermissions(orgId: $orgId, userId: $userId, resourcePath: $resourcePath) {
+query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
+  effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
     resourceId
     resource {
       id
-      path
+      id
       description
     }
     action
@@ -390,7 +389,7 @@ mutation CreateResource($input: CreateResourceInput!) {
   "input": {
     "id": "users-api",
     "orgId": "acme-corp",
-    "path": "/api/users/*",
+    "id": "/api/users/*",
     "description": "User management endpoints"
   }
 }
@@ -508,11 +507,11 @@ mutation {
 ### 2. Check User Access
 
 ```graphql
-query CheckAccess($userId: ID!, $resourcePath: String!) {
+query CheckAccess($userId: ID!, $resourceId: String!) {
   effectivePermissions(
     orgId: "acme-corp",
     userId: $userId,
-    resourcePath: $resourcePath
+    resourceId: $resourceId
   ) {
     action
     source
@@ -522,7 +521,7 @@ query CheckAccess($userId: ID!, $resourcePath: String!) {
 # Variables
 {
   "userId": "jane-doe",
-  "resourcePath": "/api/users/jane-doe/profile"
+  "resourceId": "/api/users/jane-doe/profile"
 }
 ```
 
@@ -581,7 +580,7 @@ Common error codes:
 2. **Batch Operations**: Use multiple mutations in a single request when possible
 3. **Handle Errors**: Always check for errors in responses
 4. **Use Variables**: Pass dynamic values as variables, not string interpolation
-5. **Resource Paths**: Use consistent path patterns (e.g., `/api/resource/*`)
+5. **Resource IDs**: Use consistent ID patterns in path-like format (e.g., `/api/resource/*`)
 
 ## Pagination
 

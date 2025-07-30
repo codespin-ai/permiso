@@ -27,7 +27,7 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 - Organizations table
 - Users table with identity provider support
 - Roles table
-- Resources table with path-based permissions
+- Resources table with IDs in path-like format for permissions
 - User-role assignments
 - User permissions (direct)
 - Role permissions
@@ -43,7 +43,7 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 - `userRoles(orgId, userId)` - Get user's assigned roles
 - `userPermissions(orgId, userId)` - Get user's direct permissions
 - `rolePermissions(roleId)` - Get role's permissions
-- `effectivePermissions(orgId, userId, resourcePath)` - Calculate effective permissions
+- `effectivePermissions(orgId, userId, resourceId)` - Calculate effective permissions
 
 #### Mutations Implemented:
 - `createOrganization` - Create new organization
