@@ -15,7 +15,7 @@ A comprehensive Role-Based Access Control (RBAC) system with GraphQL API, built 
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - PostgreSQL 12+
 - npm or yarn
 
