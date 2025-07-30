@@ -62,9 +62,9 @@ check_migrations() {
 # Function to run migrations
 run_migrations() {
     echo -e "${YELLOW}Running database migrations...${NC}"
-    cd /app/node/packages/permiso-server
+    cd /app
     
-    if npm run migrate:latest; then
+    if npm run migrate:permiso:latest; then
         echo -e "${GREEN}Migrations completed successfully!${NC}"
         return 0
     else

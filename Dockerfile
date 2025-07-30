@@ -19,6 +19,7 @@ COPY build.sh clean.sh ./
 
 # Copy source code
 COPY tsconfig.base.json ./
+COPY knexfile.js ./
 COPY node ./node
 COPY database ./database
 
@@ -50,6 +51,8 @@ WORKDIR /app
 COPY --from=builder --chown=permiso:root /app/node ./node
 COPY --from=builder --chown=permiso:root /app/database ./database
 COPY --from=builder --chown=permiso:root /app/package*.json ./
+COPY --from=builder --chown=permiso:root /app/node_modules ./node_modules
+COPY --from=builder --chown=permiso:root /app/knexfile.js ./
 
 # Copy start script and entrypoint
 COPY --chown=permiso:root start.sh docker-entrypoint.sh ./
