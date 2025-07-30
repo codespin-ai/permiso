@@ -252,6 +252,129 @@ npm test
 | `PERMISO_SERVER_PORT` | GraphQL server port             | `5001`      |
 | `LOG_LEVEL`           | Logging level                   | `info`      |
 
+## Docker Support
+
+Permiso can be run as a Docker container for easy deployment and distribution.
+
+### Using Pre-built Images
+
+```bash
+# Pull from Docker Hub (example)
+docker pull your-registry/permiso:latest
+
+# Run with environment variables
+docker run -p 5001:5001 \
+  -e PERMISO_DB_HOST=your-db-host \
+  -e PERMISO_DB_PORT=5432 \
+  -e PERMISO_DB_NAME=permiso \
+  -e PERMISO_DB_USER=postgres \
+  -e PERMISO_DB_PASSWORD=your-password \
+  your-registry/permiso:latest
+```
+
+### Building Your Own Image
+
+```bash
+# Build the Docker image
+./docker-build.sh
+
+# Or manually with Docker
+docker build -t permiso:latest .
+
+# Run the container
+docker run -p 5001:5001 \
+  --env-file .env \
+  permiso:latest
+```
+
+### Docker Compose for Development
+
+For local development with PostgreSQL:
+
+```bash
+# macOS users
+cd devenv
+./run.sh up
+
+# Linux users
+cd devenv
+./run-rootless.sh up
+
+# Run the application (outside container)
+cd ..
+./build.sh
+./start.sh
+```
+
+### Pushing to a Registry
+
+```bash
+# Push to Docker Hub
+./docker-push.sh docker.io/yourorg/permiso latest
+
+# Push to GitHub Container Registry
+./docker-push.sh ghcr.io/yourorg/permiso latest
+
+# Push to AWS ECR
+./docker-push.sh 123456789.dkr.ecr.us-east-1.amazonaws.com/permiso latest
+```
+
+### Environment Configuration
+
+Create a `.env` file based on `.env.example`:
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### Production Deployment
+
+The Docker image is optimized for production with:
+- Multi-stage build for smaller image size
+- Node 24 on Ubuntu 24.04 minimal base
+- Non-root user execution
+- Health checks included
+- Proper signal handling for graceful shutdown
+
+Example Kubernetes deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: permiso
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: permiso
+  template:
+    metadata:
+      labels:
+        app: permiso
+    spec:
+      containers:
+      - name: permiso
+        image: your-registry/permiso:latest
+        ports:
+        - containerPort: 5001
+        env:
+        - name: PERMISO_DB_HOST
+          value: postgres-service
+        - name: PERMISO_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: permiso-secrets
+              key: db-password
+        livenessProbe:
+          httpGet:
+            path: /graphql
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+```
+
 ## API Authentication
 
 Permiso supports optional API key authentication to secure your GraphQL endpoint. When enabled, all requests must include a valid API key in the `x-api-key` header.
