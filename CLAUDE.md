@@ -51,6 +51,7 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system built with No
 
 # Docker commands
 ./docker-build.sh       # Build Docker image
+./docker-test.sh        # Test Docker image (see Docker section for options)
 ./docker-push.sh ghcr.io/codespin-ai/permiso latest  # Push to registry
 ```
 
@@ -300,6 +301,48 @@ await db.none(
 2. Test locally: `docker run -p 5001:5001 --env-file .env permiso:latest`
 3. Push to registry: `./docker-push.sh ghcr.io/codespin-ai/permiso latest`
 4. Official images available at: `ghcr.io/codespin-ai/permiso`
+
+### Testing Docker Images
+
+**Automated Testing**: Use the `./docker-test.sh` script to validate Docker images:
+
+```bash
+# Test default image (permiso:latest) on default port (5099)
+./docker-test.sh
+
+# Test specific image
+./docker-test.sh ghcr.io/codespin-ai/permiso:latest
+
+# Test on specific port
+./docker-test.sh permiso:latest 5001
+
+# Show help
+./docker-test.sh --help
+```
+
+The test script:
+- Creates a temporary test database
+- Runs the container with auto-migration
+- Executes comprehensive GraphQL tests including:
+  - Organization creation
+  - All JSON property types (string, number, boolean, null, array, object)
+  - User and Role creation with properties
+  - Complex nested JSON structures
+- Cleans up automatically after tests
+- Returns exit code 0 on success, 1 on failure
+
+**Manual Testing**: For debugging or custom testing:
+```bash
+# Run with host networking (Linux)
+docker run --rm -p 5001:5001 \
+  --add-host=host.docker.internal:host-gateway \
+  -e PERMISO_DB_HOST=host.docker.internal \
+  -e PERMISO_DB_PORT=5432 \
+  -e PERMISO_DB_NAME=permiso \
+  -e PERMISO_DB_USER=postgres \
+  -e PERMISO_DB_PASSWORD=postgres \
+  permiso:latest
+```
 
 ### Database Changes
 1. Create migration: `npm run migrate:make your_migration_name`
