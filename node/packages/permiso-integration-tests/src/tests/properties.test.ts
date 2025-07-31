@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
 import { testDb, client } from '../index.js';
 
-describe('Properties with JSONB values', () => {
+describe('Properties', () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
   });
