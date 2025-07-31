@@ -32,17 +32,17 @@ export async function createRole(
 
       if (input.properties && input.properties.length > 0) {
         const propertyValues = input.properties.map(p => ({
-          role_id: input.id,
+          parent_id: input.id,
           org_id: input.orgId,
           name: p.name,
-          value: p.value,
+          value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false
         }));
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO role_property (role_id, org_id, name, value, hidden) VALUES ($(roleId), $(orgId), $(name), $(value), $(hidden))`,
-            { roleId: prop.role_id, orgId: prop.org_id, name: prop.name, value: prop.value, hidden: prop.hidden }
+            `INSERT INTO role_property (parent_id, org_id, name, value, hidden) VALUES ($(parent_id), $(orgId), $(name), $(value), $(hidden))`,
+            { parent_id: prop.parent_id, orgId: prop.org_id, name: prop.name, value: prop.value, hidden: prop.hidden }
           );
         }
       }

@@ -12,7 +12,7 @@ export async function deleteUserProperty(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+      `DELETE FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
       { userId, orgId, name }
     );
     return { success: true, data: true };

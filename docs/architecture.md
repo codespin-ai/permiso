@@ -63,6 +63,7 @@ type Organization = {
   id: string;
   name: string;
   description?: string;
+  properties: Property[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +77,8 @@ type User = {
   orgId: string;
   identityProvider: string;
   identityProviderUserId: string;
+  data?: string;
+  properties: Property[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +92,7 @@ type Role = {
   orgId: string;
   name: string;
   description?: string;
+  properties: Property[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -140,18 +144,53 @@ CREATE TABLE role_permission (
 );
 ```
 
-#### Custom Properties
-Key-value metadata that can be attached to any entity.
+#### Properties
+Key-value metadata stored as JSONB that can be attached to organizations, users, and roles.
+
+```typescript
+type Property = {
+  name: string;
+  value: any;  // Stored as JSONB - can be string, number, boolean, object, array, or null
+  hidden: boolean;
+  createdAt: Date;
+}
+```
+
 ```sql
-CREATE TABLE custom_property (
-  entity_type VARCHAR(50),
-  entity_id VARCHAR(100),
-  key VARCHAR(100),
+-- Separate tables for each entity type with unified structure
+CREATE TABLE organization_property (
+  parent_id VARCHAR(100),    -- Organization ID
+  name VARCHAR(100),
+  value JSONB,              -- Flexible JSON storage
+  hidden BOOLEAN,
+  created_at TIMESTAMP
+);
+
+CREATE TABLE user_property (
+  parent_id VARCHAR(100),    -- User ID
+  org_id VARCHAR(100),       -- Organization scope
+  name VARCHAR(100),
   value JSONB,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
+  hidden BOOLEAN,
+  created_at TIMESTAMP
+);
+
+CREATE TABLE role_property (
+  parent_id VARCHAR(100),    -- Role ID
+  org_id VARCHAR(100),       -- Organization scope
+  name VARCHAR(100),
+  value JSONB,
+  hidden BOOLEAN,
+  created_at TIMESTAMP
 );
 ```
+
+**JSONB Advantages:**
+- Native JSON operations in PostgreSQL
+- GIN indexes for fast JSON queries
+- Type-safe storage with validation
+- Support for complex nested structures
+- Efficient storage and retrieval
 
 ## Permission Model
 
@@ -228,7 +267,22 @@ type Result<T, E = Error> =
 
 1. **Indexes**: Created on all foreign keys and frequently queried columns
 2. **Composite Indexes**: For multi-column queries (e.g., org_id + entity_id)
-3. **Query Optimization**: Using JOINs instead of multiple queries
+3. **GIN Indexes**: On JSONB columns for fast JSON queries
+4. **Query Optimization**: Using JOINs instead of multiple queries
+
+**Property Query Performance:**
+```sql
+-- GIN indexes enable fast JSONB queries
+CREATE INDEX idx_org_property_value ON organization_property USING gin(value);
+CREATE INDEX idx_user_property_value ON user_property USING gin(value);
+CREATE INDEX idx_role_property_value ON role_property USING gin(value);
+
+-- Example: Find all users with a specific department
+SELECT u.* FROM "user" u
+JOIN user_property up ON u.id = up.parent_id
+WHERE up.name = 'profile' 
+AND up.value->>'department' = 'engineering';
+```
 
 ### Caching Strategy
 
@@ -259,12 +313,48 @@ While not yet implemented, the architecture supports:
 
 ## Extension Points
 
-### Custom Properties
+### Properties System
 
-The system supports arbitrary metadata through custom properties:
-- Attach to any entity type
-- Store as JSONB for flexibility
-- Query by key or value
+The system supports arbitrary metadata through properties stored as JSONB:
+
+**Features:**
+- Attach to organizations, users, and roles
+- Store any JSON-compatible data type
+- Hidden flag for sensitive data
+- Unified `parent_id` pattern across all property tables
+
+**Example Use Cases:**
+```typescript
+// Organization settings
+{
+  "name": "settings",
+  "value": {
+    "maxUsers": 1000,
+    "features": ["sso", "audit-logs"],
+    "customDomain": "acme.example.com"
+  }
+}
+
+// User metadata
+{
+  "name": "profile",
+  "value": {
+    "department": "engineering",
+    "level": 3,
+    "skills": ["typescript", "graphql", "postgres"]
+  }
+}
+
+// Role configuration
+{
+  "name": "permissions",
+  "value": {
+    "maxApiCalls": 10000,
+    "allowedRegions": ["us-east", "eu-west"],
+    "features": {"billing": true, "reporting": false}
+  }
+}
+```
 
 ### Permission Actions
 

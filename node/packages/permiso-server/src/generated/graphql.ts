@@ -17,6 +17,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   DateTime: { input: Date; output: Date; }
+  JSON: { input: unknown; output: unknown; }
 };
 
 export type CreateOrganizationInput = {
@@ -204,7 +205,7 @@ export type MutationSetOrganizationPropertyArgs = {
   hidden?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
   orgId: Scalars['ID']['input'];
-  value: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 
@@ -213,7 +214,7 @@ export type MutationSetRolePropertyArgs = {
   name: Scalars['String']['input'];
   orgId: Scalars['ID']['input'];
   roleId: Scalars['ID']['input'];
-  value: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 
@@ -222,7 +223,7 @@ export type MutationSetUserPropertyArgs = {
   name: Scalars['String']['input'];
   orgId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
-  value: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 
@@ -327,18 +328,18 @@ export type Property = {
   createdAt: Scalars['DateTime']['output'];
   hidden: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
-  value: Scalars['String']['output'];
+  value: Maybe<Scalars['JSON']['output']>;
 };
 
 export type PropertyFilter = {
   name: Scalars['String']['input'];
-  value: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 export type PropertyInput = {
   hidden?: InputMaybe<Scalars['Boolean']['input']>;
   name: Scalars['String']['input'];
-  value: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 export type Query = {
@@ -718,6 +719,7 @@ export type ResolversTypes = ResolversObject<{
   GrantUserPermissionInput: GrantUserPermissionInput;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Organization: ResolverTypeWrapper<Omit<Organization, 'resources' | 'roles' | 'users'> & { resources: ResolversTypes['ResourceConnection'], roles: ResolversTypes['RoleConnection'], users: ResolversTypes['UserConnection'] }>;
   OrganizationConnection: ResolverTypeWrapper<Omit<OrganizationConnection, 'nodes'> & { nodes: Array<ResolversTypes['Organization']> }>;
@@ -760,6 +762,7 @@ export type ResolversParentTypes = ResolversObject<{
   GrantUserPermissionInput: GrantUserPermissionInput;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
+  JSON: Scalars['JSON']['output'];
   Mutation: {};
   Organization: Omit<Organization, 'resources' | 'roles' | 'users'> & { resources: ResolversParentTypes['ResourceConnection'], roles: ResolversParentTypes['RoleConnection'], users: ResolversParentTypes['UserConnection'] };
   OrganizationConnection: Omit<OrganizationConnection, 'nodes'> & { nodes: Array<ResolversParentTypes['Organization']> };
@@ -802,6 +805,10 @@ export type EffectivePermissionResolvers<ContextType = GraphQLContext, ParentTyp
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSON'], any> {
+  name: 'JSON';
+}
+
 export type MutationResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   assignUserRole?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationAssignUserRoleArgs, 'orgId' | 'roleId' | 'userId'>>;
   createOrganization?: Resolver<ResolversTypes['Organization'], ParentType, ContextType, RequireFields<MutationCreateOrganizationArgs, 'input'>>;
@@ -819,9 +826,9 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   grantUserPermission?: Resolver<ResolversTypes['UserPermission'], ParentType, ContextType, RequireFields<MutationGrantUserPermissionArgs, 'input'>>;
   revokeRolePermission?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRevokeRolePermissionArgs, 'action' | 'orgId' | 'resourceId' | 'roleId'>>;
   revokeUserPermission?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationRevokeUserPermissionArgs, 'action' | 'orgId' | 'resourceId' | 'userId'>>;
-  setOrganizationProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetOrganizationPropertyArgs, 'name' | 'orgId' | 'value'>>;
-  setRoleProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetRolePropertyArgs, 'name' | 'orgId' | 'roleId' | 'value'>>;
-  setUserProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetUserPropertyArgs, 'name' | 'orgId' | 'userId' | 'value'>>;
+  setOrganizationProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetOrganizationPropertyArgs, 'name' | 'orgId'>>;
+  setRoleProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetRolePropertyArgs, 'name' | 'orgId' | 'roleId'>>;
+  setUserProperty?: Resolver<ResolversTypes['Property'], ParentType, ContextType, RequireFields<MutationSetUserPropertyArgs, 'name' | 'orgId' | 'userId'>>;
   unassignUserRole?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationUnassignUserRoleArgs, 'orgId' | 'roleId' | 'userId'>>;
   updateOrganization?: Resolver<ResolversTypes['Organization'], ParentType, ContextType, RequireFields<MutationUpdateOrganizationArgs, 'id' | 'input'>>;
   updateResource?: Resolver<ResolversTypes['Resource'], ParentType, ContextType, RequireFields<MutationUpdateResourceArgs, 'input' | 'orgId' | 'resourceId'>>;
@@ -870,7 +877,7 @@ export type PropertyResolvers<ContextType = GraphQLContext, ParentType extends R
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   hidden?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  value?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -986,6 +993,7 @@ export type UserPermissionResolvers<ContextType = GraphQLContext, ParentType ext
 export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
   DateTime?: GraphQLScalarType;
   EffectivePermission?: EffectivePermissionResolvers<ContextType>;
+  JSON?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
   Organization?: OrganizationResolvers<ContextType>;
   OrganizationConnection?: OrganizationConnectionResolvers<ContextType>;

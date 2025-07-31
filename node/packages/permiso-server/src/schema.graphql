@@ -1,4 +1,5 @@
 scalar DateTime
+scalar JSON
 
 # Core Types
 type Organization {
@@ -62,7 +63,7 @@ type Resource {
 
 type Property {
   name: String!
-  value: String!
+  value: JSON
   hidden: Boolean!
   createdAt: DateTime!
 }
@@ -184,7 +185,7 @@ type Mutation {
   deleteOrganization(id: ID!, safetyKey: String): Boolean!
   
   # Organization Properties
-  setOrganizationProperty(orgId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setOrganizationProperty(orgId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteOrganizationProperty(orgId: ID!, name: String!): Boolean!
   
   # Users
@@ -193,7 +194,7 @@ type Mutation {
   deleteUser(orgId: ID!, userId: ID!): Boolean!
   
   # User Properties
-  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteUserProperty(orgId: ID!, userId: ID!, name: String!): Boolean!
   
   # User Roles
@@ -206,7 +207,7 @@ type Mutation {
   deleteRole(orgId: ID!, roleId: ID!): Boolean!
   
   # Role Properties
-  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteRoleProperty(orgId: ID!, roleId: ID!, name: String!): Boolean!
   
   # Resources
@@ -278,7 +279,7 @@ input UpdateResourceInput {
 
 input PropertyInput {
   name: String!
-  value: String!
+  value: JSON
   hidden: Boolean
 }
 
@@ -317,7 +318,7 @@ input ResourceFilter {
 
 input PropertyFilter {
   name: String!
-  value: String!
+  value: JSON
 }
 
 input PaginationInput {

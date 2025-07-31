@@ -10,6 +10,7 @@ generates:
       contextType: "../context.js#GraphQLContext"
       scalars:
         DateTime: "Date"
+        JSON: "unknown"
       enumsAsTypes: true
       avoidOptionals:
         field: true

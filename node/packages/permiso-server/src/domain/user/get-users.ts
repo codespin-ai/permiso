@@ -4,7 +4,7 @@ import type { Database } from '@codespin/permiso-db';
 import type {
   UserDbRow,
   UserWithProperties,
-  UserProperty
+  Property
 } from '../../types.js';
 import type {
   PropertyFilter,
@@ -37,7 +37,7 @@ export async function getUsers(
     const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN user_property up ON u.id = up.user_id AND u.org_id = up.org_id`;
+      query += ` LEFT JOIN user_property up ON u.id = up.parent_id AND u.org_id = up.org_id`;
     }
 
     const conditions: string[] = [`u.org_id = $(orgId)`];
@@ -95,10 +95,10 @@ export async function getUsers(
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: propertiesResult.data.reduce((acc: Record<string, string>, prop: UserProperty) => {
+          properties: propertiesResult.data.reduce((acc: Record<string, unknown>, prop: Property) => {
             acc[prop.name] = prop.value;
             return acc;
-          }, {} as Record<string, string>)
+          }, {} as Record<string, unknown>)
         };
       })
     );

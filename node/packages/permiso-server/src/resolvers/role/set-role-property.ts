@@ -6,7 +6,7 @@ export { setRoleProperty };
 
 export const setRolePropertyResolver = {
   Mutation: {
-    setRoleProperty: async (_: any, args: { orgId: string; roleId: string; name: string; value: string; hidden?: boolean }, context: { db: Database }) => {
+    setRoleProperty: async (_: any, args: { orgId: string; roleId: string; name: string; value: unknown; hidden?: boolean }, context: { db: Database }) => {
       const result = await setRoleProperty(context.db, args.orgId, args.roleId, args.name, args.value, args.hidden ?? false);
       if (!result.success) {
         throw result.error;

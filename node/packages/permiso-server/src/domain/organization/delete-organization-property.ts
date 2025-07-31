@@ -11,7 +11,7 @@ export async function deleteOrganizationProperty(
 ): Promise<Result<boolean>> {
   try {
     await db.none(
-      `DELETE FROM organization_property WHERE org_id = $(orgId) AND name = $(name)`,
+      `DELETE FROM organization_property WHERE parent_id = $(orgId) AND name = $(name)`,
       { orgId, name }
     );
     return { success: true, data: true };

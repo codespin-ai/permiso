@@ -32,7 +32,7 @@ export async function getOrganizations(
     const params: Record<string, any> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN organization_property op ON o.id = op.org_id`;
+      query += ` LEFT JOIN organization_property op ON o.id = op.parent_id`;
     }
 
     const conditions: string[] = [];
@@ -81,7 +81,7 @@ export async function getOrganizations(
           properties: properties.reduce((acc, prop) => {
             acc[prop.name] = prop.value;
             return acc;
-          }, {} as Record<string, string>)
+          }, {} as Record<string, unknown>)
         };
       })
     );

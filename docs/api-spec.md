@@ -27,6 +27,7 @@ type Organization {
   id: ID!
   name: String!
   description: String
+  properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -40,6 +41,8 @@ type User {
   orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
+  data: String
+  properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -53,6 +56,7 @@ type Role {
   orgId: ID!
   name: String!
   description: String
+  properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -81,18 +85,24 @@ type Permission {
 }
 ```
 
-### CustomProperty
+### Property
 
 ```graphql
-type CustomProperty {
-  entityType: String!
-  entityId: ID!
-  key: String!
-  value: JSON!
+type Property {
+  name: String!
+  value: JSON  # Can store any JSON value: string, number, boolean, object, array, or null
+  hidden: Boolean!
   createdAt: DateTime!
-  updatedAt: DateTime!
 }
 ```
+
+Properties can be attached to organizations, users, and roles. The `value` field accepts any valid JSON:
+- Strings: `"hello world"`
+- Numbers: `42`, `3.14`
+- Booleans: `true`, `false`
+- Objects: `{"department": "engineering", "level": 3}`
+- Arrays: `["admin", "developer", "viewer"]`
+- Null: `null`
 
 ## Queries
 
@@ -244,6 +254,11 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
     id
     name
     description
+    properties {
+      name
+      value
+      hidden
+    }
     createdAt
     updatedAt
   }
@@ -254,7 +269,20 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
   "input": {
     "id": "acme-corp",
     "name": "ACME Corporation",
-    "description": "Global leader in innovation"
+    "description": "Global leader in innovation",
+    "properties": [
+      {
+        "name": "tier",
+        "value": "enterprise"
+      },
+      {
+        "name": "settings",
+        "value": {
+          "maxUsers": 5000,
+          "features": ["sso", "audit", "api"]
+        }
+      }
+    ]
   }
 }
 ```
@@ -439,36 +467,113 @@ mutation RevokeRolePermission($roleId: ID!, $resourceId: ID!, $action: String!) 
 }
 ```
 
-### Custom Property Mutations
+### Property Mutations
 
-#### Set Custom Property
+#### Set Organization Property
 ```graphql
-mutation SetCustomProperty($input: SetCustomPropertyInput!) {
-  setCustomProperty(input: $input) {
-    entityType
-    entityId
-    key
+mutation SetOrganizationProperty($orgId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
+  setOrganizationProperty(orgId: $orgId, name: $name, value: $value, hidden: $hidden) {
+    name
     value
+    hidden
     createdAt
-    updatedAt
   }
 }
 
-# Variables
+# Examples:
+# String value
 {
-  "input": {
-    "entityType": "user",
-    "entityId": "john-doe",
-    "key": "department",
-    "value": "engineering"
+  "orgId": "acme-corp",
+  "name": "tier",
+  "value": "premium"
+}
+
+# Object value
+{
+  "orgId": "acme-corp",
+  "name": "settings",
+  "value": {
+    "maxUsers": 1000,
+    "features": ["sso", "audit-logs", "api-access"],
+    "customDomain": true
+  }
+}
+
+# Hidden property (for sensitive data)
+{
+  "orgId": "acme-corp",
+  "name": "apiKey",
+  "value": "sk_live_...",
+  "hidden": true
+}
+```
+
+#### Set User Property
+```graphql
+mutation SetUserProperty($orgId: ID!, $userId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
+  setUserProperty(orgId: $orgId, userId: $userId, name: $name, value: $value, hidden: $hidden) {
+    name
+    value
+    hidden
+    createdAt
+  }
+}
+
+# Examples:
+# User metadata
+{
+  "orgId": "acme-corp",
+  "userId": "john-doe",
+  "name": "profile",
+  "value": {
+    "department": "engineering",
+    "level": 3,
+    "manager": "jane-smith",
+    "skills": ["python", "golang", "kubernetes"]
   }
 }
 ```
 
-#### Delete Custom Property
+#### Set Role Property
 ```graphql
-mutation DeleteCustomProperty($entityType: String!, $entityId: ID!, $key: String!) {
-  deleteCustomProperty(entityType: $entityType, entityId: $entityId, key: $key)
+mutation SetRoleProperty($orgId: ID!, $roleId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
+  setRoleProperty(orgId: $orgId, roleId: $roleId, name: $name, value: $value, hidden: $hidden) {
+    name
+    value
+    hidden
+    createdAt
+  }
+}
+
+# Example: Role configuration
+{
+  "orgId": "acme-corp",
+  "roleId": "admin",
+  "name": "permissions",
+  "value": {
+    "canManageUsers": true,
+    "canViewBilling": true,
+    "maxApiCalls": 10000,
+    "allowedRegions": ["us-east", "eu-west"]
+  }
+}
+```
+
+#### Delete Properties
+```graphql
+# Delete organization property
+mutation DeleteOrganizationProperty($orgId: ID!, $name: String!) {
+  deleteOrganizationProperty(orgId: $orgId, name: $name)
+}
+
+# Delete user property
+mutation DeleteUserProperty($orgId: ID!, $userId: ID!, $name: String!) {
+  deleteUserProperty(orgId: $orgId, userId: $userId, name: $name)
+}
+
+# Delete role property
+mutation DeleteRoleProperty($orgId: ID!, $roleId: ID!, $name: String!) {
+  deleteRoleProperty(orgId: $orgId, roleId: $roleId, name: $name)
 }
 ```
 

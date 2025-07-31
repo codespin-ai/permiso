@@ -111,11 +111,60 @@ Define what actions can be performed on resources:
 
 ### Properties
 
-Key-value metadata that can be attached to organizations, users, and roles:
+Key-value metadata stored as JSONB that can be attached to organizations, users, and roles:
 
-- Support for hidden properties
-- Filterable queries
-- Useful for custom business logic
+- **Flexible JSON storage** - Store strings, numbers, booleans, objects, arrays, or null
+- **Hidden properties** - Mark sensitive data as hidden
+- **Filterable queries** - Query by property names and values
+- **Type-safe** - PostgreSQL JSONB validation and operations
+
+#### Property Examples
+
+```graphql
+# Set a simple string property
+mutation {
+  setOrganizationProperty(
+    orgId: "acme-corp"
+    name: "tier"
+    value: "enterprise"
+  ) {
+    name
+    value
+  }
+}
+
+# Set a complex object property
+mutation {
+  setUserProperty(
+    orgId: "acme-corp"
+    userId: "john-doe"
+    name: "profile"
+    value: {
+      department: "engineering"
+      level: 3
+      skills: ["typescript", "graphql", "postgres"]
+      manager: "jane-smith"
+    }
+  ) {
+    name
+    value
+  }
+}
+
+# Set a hidden property (for sensitive data)
+mutation {
+  setOrganizationProperty(
+    orgId: "acme-corp"
+    name: "apiKey"
+    value: "sk_live_..."
+    hidden: true
+  ) {
+    name
+    value
+    hidden
+  }
+}
+```
 
 ## Usage Example
 
@@ -132,29 +181,62 @@ import {
 // Initialize database
 const db = initializeDatabase();
 
-// Create an organization
+// Create an organization with properties
 const org = await createOrganization(db, {
   id: "acme-corp",
-  data: "ACME Corporation",
+  name: "ACME Corporation",
+  properties: [
+    {
+      name: "tier",
+      value: "enterprise"
+    },
+    {
+      name: "settings",
+      value: {
+        maxUsers: 5000,
+        features: ["sso", "audit", "api"]
+      }
+    }
+  ]
 });
 
-// Create a role
+// Create a role with properties
 const role = await createRole(db, {
   id: "editor",
   orgId: "acme-corp",
-  data: "Content Editor Role",
+  name: "Content Editor Role",
+  properties: [
+    {
+      name: "permissions",
+      value: {
+        canPublish: true,
+        canDelete: false,
+        maxDrafts: 10
+      }
+    }
+  ]
 });
 
 // Grant permissions to role
 await grantRolePermission(db, "acme-corp", "editor", "/documents/*", "read");
 await grantRolePermission(db, "acme-corp", "editor", "/documents/*", "write");
 
-// Create a user
+// Create a user with properties
 const user = await createUser(db, {
   id: "john-doe",
   orgId: "acme-corp",
   identityProvider: "google",
   identityProviderUserId: "john@acme.com",
+  properties: [
+    {
+      name: "profile",
+      value: {
+        department: "engineering",
+        level: 3,
+        location: "San Francisco"
+      }
+    }
+  ]
 });
 
 // Assign role to user
@@ -187,8 +269,17 @@ Example query:
 query GetUserPermissions {
   user(orgId: "acme-corp", userId: "john-doe") {
     id
+    properties {
+      name
+      value
+      hidden
+    }
     roles {
       id
+      properties {
+        name
+        value
+      }
       permissions {
         resourceId
         action

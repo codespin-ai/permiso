@@ -4,7 +4,7 @@ import type { Database } from '@codespin/permiso-db';
 import type {
   UserDbRow,
   UserWithProperties,
-  UserProperty
+  Property
 } from '../../types.js';
 import {
   mapUserFromDb
@@ -43,10 +43,10 @@ export async function getUser(
     const result: UserWithProperties = {
       ...user,
       roleIds: roleIds.success ? roleIds.data : [],
-      properties: propertiesResult.data.reduce((acc: Record<string, string>, prop: UserProperty) => {
+      properties: propertiesResult.data.reduce((acc: Record<string, unknown>, prop: Property) => {
         acc[prop.name] = prop.value;
         return acc;
-      }, {} as Record<string, string>)
+      }, {} as Record<string, unknown>)
     };
 
     return { success: true, data: result };

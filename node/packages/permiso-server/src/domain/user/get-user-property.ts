@@ -2,11 +2,11 @@ import { createLogger } from '@codespin/permiso-logger';
 import { Result } from '@codespin/permiso-core';
 import type { Database } from '@codespin/permiso-db';
 import type {
-  UserProperty,
-  UserPropertyDbRow
+  Property,
+  PropertyDbRow
 } from '../../types.js';
 import {
-  mapUserPropertyFromDb
+  mapPropertyFromDb
 } from '../../mappers.js';
 
 const logger = createLogger('permiso-server:users');
@@ -16,16 +16,16 @@ export async function getUserProperty(
   orgId: string,
   userId: string,
   name: string
-): Promise<Result<UserProperty | null>> {
+): Promise<Result<Property | null>> {
   try {
-    const row = await db.oneOrNone<UserPropertyDbRow>(
-      `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+    const row = await db.oneOrNone<PropertyDbRow>(
+      `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
       { userId, orgId, name }
     );
 
     return {
       success: true,
-      data: row ? mapUserPropertyFromDb(row) : null
+      data: row ? mapPropertyFromDb(row) : null
     };
   } catch (error) {
     logger.error('Failed to get user property', { error, orgId, userId, name });

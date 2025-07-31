@@ -294,7 +294,7 @@ describe('Users', () => {
 
       // Set user properties
       const setPropMutation = gql`
-        mutation SetUserProperty($orgId: ID!, $userId: ID!, $name: String!, $value: String!, $hidden: Boolean) {
+        mutation SetUserProperty($orgId: ID!, $userId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
           setUserProperty(orgId: $orgId, userId: $userId, name: $name, value: $value, hidden: $hidden) {
             name
             value

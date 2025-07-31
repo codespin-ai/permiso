@@ -31,16 +31,16 @@ export async function createOrganization(
 
       if (input.properties && input.properties.length > 0) {
         const propertyValues = input.properties.map(p => ({
-          org_id: input.id,
+          parent_id: input.id,
           name: p.name,
-          value: p.value,
+          value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false
         }));
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO organization_property (org_id, name, value, hidden) VALUES ($(org_id), $(name), $(value), $(hidden))`,
-            { org_id: prop.org_id, name: prop.name, value: prop.value, hidden: prop.hidden }
+            `INSERT INTO organization_property (parent_id, name, value, hidden) VALUES ($(parent_id), $(name), $(value), $(hidden))`,
+            { parent_id: prop.parent_id, name: prop.name, value: prop.value, hidden: prop.hidden }
           );
         }
       }

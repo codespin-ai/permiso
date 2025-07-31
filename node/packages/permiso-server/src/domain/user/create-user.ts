@@ -28,16 +28,16 @@ export async function createUser(
 
       if (input.properties && input.properties.length > 0) {
         const propertyValues = input.properties.map(p => ({
-          user_id: input.id,
+          parent_id: input.id,
           org_id: input.orgId,
           name: p.name,
-          value: p.value,
+          value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false
         }));
 
         for (const prop of propertyValues) {
           await t.none(
-            `INSERT INTO user_property (user_id, org_id, name, value, hidden) VALUES ($(user_id), $(org_id), $(name), $(value), $(hidden))`,
+            `INSERT INTO user_property (parent_id, org_id, name, value, hidden) VALUES ($(parent_id), $(org_id), $(name), $(value), $(hidden))`,
             prop
           );
         }

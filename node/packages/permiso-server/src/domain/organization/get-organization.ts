@@ -38,7 +38,7 @@ export async function getOrganization(
       properties: properties.reduce((acc, prop) => {
         acc[prop.name] = prop.value;
         return acc;
-      }, {} as Record<string, string>)
+      }, {} as Record<string, unknown>)
     };
 
     return { success: true, data: result };

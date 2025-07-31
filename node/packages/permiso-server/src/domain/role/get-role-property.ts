@@ -2,11 +2,11 @@ import { createLogger } from '@codespin/permiso-logger';
 import { Result } from '@codespin/permiso-core';
 import type { Database } from '@codespin/permiso-db';
 import type {
-  RoleProperty,
-  RolePropertyDbRow
+  Property,
+  PropertyDbRow
 } from '../../types.js';
 import {
-  mapRolePropertyFromDb
+  mapPropertyFromDb
 } from '../../mappers.js';
 
 const logger = createLogger('permiso-server:roles');
@@ -16,16 +16,16 @@ export async function getRoleProperty(
   orgId: string,
   roleId: string,
   name: string
-): Promise<Result<RoleProperty | null>> {
+): Promise<Result<Property | null>> {
   try {
-    const row = await db.oneOrNone<RolePropertyDbRow>(
-      `SELECT * FROM role_property WHERE role_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
+    const row = await db.oneOrNone<PropertyDbRow>(
+      `SELECT * FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
       { roleId, orgId, name }
     );
 
     return {
       success: true,
-      data: row ? mapRolePropertyFromDb(row) : null
+      data: row ? mapPropertyFromDb(row) : null
     };
   } catch (error) {
     logger.error('Failed to get role property', { error, orgId, roleId, name });

@@ -29,13 +29,19 @@ export type OrganizationDbRow = {
   updated_at: Date;
 };
 
-export type OrganizationPropertyDbRow = {
-  org_id: string;
+export type PropertyDbRow = {
+  parent_id: string;
+  org_id?: string; // Only for user_property and role_property
   name: string;
-  value: string;
+  value: unknown; // JSONB value
   hidden: boolean;
   created_at: Date;
 };
+
+// Legacy type aliases for backward compatibility during migration
+export type OrganizationPropertyDbRow = PropertyDbRow;
+export type UserPropertyDbRow = PropertyDbRow;
+export type RolePropertyDbRow = PropertyDbRow;
 
 export type RoleDbRow = {
   id: string;
@@ -47,15 +53,6 @@ export type RoleDbRow = {
   updated_at: Date;
 };
 
-export type RolePropertyDbRow = {
-  role_id: string;
-  org_id: string;
-  name: string;
-  value: string;
-  hidden: boolean;
-  created_at: Date;
-};
-
 export type UserDbRow = {
   id: string;
   org_id: string;
@@ -64,15 +61,6 @@ export type UserDbRow = {
   data: string | null;
   created_at: Date;
   updated_at: Date;
-};
-
-export type UserPropertyDbRow = {
-  user_id: string;
-  org_id: string;
-  name: string;
-  value: string;
-  hidden: boolean;
-  created_at: Date;
 };
 
 export type ResourceDbRow = {
@@ -111,33 +99,6 @@ export type RolePermissionDbRow = {
 
 // Domain-specific types that bridge database and GraphQL
 
-// Property types for different entities (all map to GraphQL's Property type)
-export type OrganizationProperty = {
-  orgId: string;
-  name: string;
-  value: string;
-  hidden: boolean;
-  createdAt: Date;
-};
-
-export type RoleProperty = {
-  roleId: string;
-  orgId: string;
-  name: string;
-  value: string;
-  hidden: boolean;
-  createdAt: Date;
-};
-
-export type UserProperty = {
-  userId: string;
-  orgId: string;
-  name: string;
-  value: string;
-  hidden: boolean;
-  createdAt: Date;
-};
-
 // Join table type
 export type UserRole = {
   userId: string;
@@ -153,7 +114,7 @@ export type OrganizationWithProperties = {
   description?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  properties: Record<string, string>;
+  properties: Record<string, unknown>;
 };
 
 export type RoleWithProperties = {
@@ -163,7 +124,7 @@ export type RoleWithProperties = {
   description?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  properties: Record<string, string>;
+  properties: Record<string, unknown>;
 };
 
 export type UserWithProperties = {
@@ -174,7 +135,7 @@ export type UserWithProperties = {
   data?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  properties: Record<string, string>;
+  properties: Record<string, unknown>;
   roleIds: string[];
 };
 

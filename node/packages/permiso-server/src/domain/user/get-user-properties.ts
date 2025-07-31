@@ -2,11 +2,11 @@ import { createLogger } from '@codespin/permiso-logger';
 import { Result } from '@codespin/permiso-core';
 import type { Database } from '@codespin/permiso-db';
 import type {
-  UserProperty,
-  UserPropertyDbRow
+  Property,
+  PropertyDbRow
 } from '../../types.js';
 import {
-  mapUserPropertyFromDb
+  mapPropertyFromDb
 } from '../../mappers.js';
 
 const logger = createLogger('permiso-server:users');
@@ -16,14 +16,14 @@ export async function getUserProperties(
   orgId: string,
   userId: string,
   includeHidden: boolean = true
-): Promise<Result<UserProperty[]>> {
+): Promise<Result<Property[]>> {
   try {
     const query = includeHidden
-      ? `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId)`
-      : `SELECT * FROM user_property WHERE user_id = $(userId) AND org_id = $(orgId) AND hidden = false`;
+      ? `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId)`
+      : `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND hidden = false`;
 
-    const rows = await db.manyOrNone<UserPropertyDbRow>(query, { userId, orgId });
-    return { success: true, data: rows.map(mapUserPropertyFromDb) };
+    const rows = await db.manyOrNone<PropertyDbRow>(query, { userId, orgId });
+    return { success: true, data: rows.map(mapPropertyFromDb) };
   } catch (error) {
     logger.error('Failed to get user properties', { error, orgId, userId });
     return { success: false, error: error as Error };

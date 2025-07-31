@@ -260,7 +260,7 @@ describe('Roles', () => {
       
       // Set role property separately
       const setPropMutation = gql`
-        mutation SetRoleProperty($orgId: ID!, $roleId: ID!, $name: String!, $value: String!, $hidden: Boolean) {
+        mutation SetRoleProperty($orgId: ID!, $roleId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
           setRoleProperty(orgId: $orgId, roleId: $roleId, name: $name, value: $value, hidden: $hidden) {
             name
             value

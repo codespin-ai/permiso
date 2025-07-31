@@ -33,7 +33,7 @@ export async function getRoles(
     const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN role_property rp ON r.id = rp.role_id AND r.org_id = rp.org_id`;
+      query += ` LEFT JOIN role_property rp ON r.id = rp.parent_id AND r.org_id = rp.org_id`;
     }
 
     const conditions: string[] = [`r.org_id = $(orgId)`];
@@ -80,7 +80,7 @@ export async function getRoles(
           properties: propertiesResult.data.reduce((acc, prop) => {
             acc[prop.name] = prop.value;
             return acc;
-          }, {} as Record<string, string>)
+          }, {} as Record<string, unknown>)
         };
       })
     );

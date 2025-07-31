@@ -39,7 +39,7 @@ export async function getRole(
       properties: propertiesResult.data.reduce((acc, prop) => {
         acc[prop.name] = prop.value;
         return acc;
-      }, {} as Record<string, string>)
+      }, {} as Record<string, unknown>)
     };
 
     return { success: true, data: result };

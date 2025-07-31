@@ -1,16 +1,12 @@
 import type {
   Organization,
   OrganizationDbRow,
-  OrganizationProperty,
-  OrganizationPropertyDbRow,
+  Property,
+  PropertyDbRow,
   Role,
   RoleDbRow,
-  RoleProperty,
-  RolePropertyDbRow,
   User,
   UserDbRow,
-  UserProperty,
-  UserPropertyDbRow,
   Resource,
   ResourceDbRow,
   UserRole,
@@ -48,10 +44,9 @@ export function mapOrganizationToDb(org: Partial<Organization>): Partial<Organiz
   };
 }
 
-// Organization Property mappers
-export function mapOrganizationPropertyFromDb(row: OrganizationPropertyDbRow): OrganizationProperty {
+// Unified Property mapper
+export function mapPropertyFromDb(row: PropertyDbRow): Property {
   return {
-    orgId: row.org_id,
     name: row.name,
     value: row.value,
     hidden: row.hidden,
@@ -59,15 +54,10 @@ export function mapOrganizationPropertyFromDb(row: OrganizationPropertyDbRow): O
   };
 }
 
-export function mapOrganizationPropertyToDb(prop: OrganizationProperty): OrganizationPropertyDbRow {
-  return {
-    org_id: prop.orgId,
-    name: prop.name,
-    value: prop.value,
-    hidden: prop.hidden,
-    created_at: prop.createdAt
-  };
-}
+// Legacy mappers for backward compatibility
+export const mapOrganizationPropertyFromDb = mapPropertyFromDb;
+export const mapRolePropertyFromDb = mapPropertyFromDb;
+export const mapUserPropertyFromDb = mapPropertyFromDb;
 
 // Role mappers
 export function mapRoleFromDb(row: RoleDbRow): Role {
@@ -98,28 +88,6 @@ export function mapRoleToDb(role: Partial<Role>): Partial<RoleDbRow> {
   };
 }
 
-// Role Property mappers
-export function mapRolePropertyFromDb(row: RolePropertyDbRow): RoleProperty {
-  return {
-    roleId: row.role_id,
-    orgId: row.org_id,
-    name: row.name,
-    value: row.value,
-    hidden: row.hidden,
-    createdAt: row.created_at
-  };
-}
-
-export function mapRolePropertyToDb(prop: RoleProperty): RolePropertyDbRow {
-  return {
-    role_id: prop.roleId,
-    org_id: prop.orgId,
-    name: prop.name,
-    value: prop.value,
-    hidden: prop.hidden,
-    created_at: prop.createdAt
-  };
-}
 
 // User mappers
 export function mapUserFromDb(row: UserDbRow): User {
@@ -153,28 +121,6 @@ export function mapUserToDb(user: Partial<User>): Partial<UserDbRow> {
   };
 }
 
-// User Property mappers
-export function mapUserPropertyFromDb(row: UserPropertyDbRow): UserProperty {
-  return {
-    userId: row.user_id,
-    orgId: row.org_id,
-    name: row.name,
-    value: row.value,
-    hidden: row.hidden,
-    createdAt: row.created_at
-  };
-}
-
-export function mapUserPropertyToDb(prop: UserProperty): UserPropertyDbRow {
-  return {
-    user_id: prop.userId,
-    org_id: prop.orgId,
-    name: prop.name,
-    value: prop.value,
-    hidden: prop.hidden,
-    created_at: prop.createdAt
-  };
-}
 
 // Resource mappers
 export function mapResourceFromDb(row: ResourceDbRow): Resource {

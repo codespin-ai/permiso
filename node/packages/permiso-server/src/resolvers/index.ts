@@ -1,3 +1,5 @@
+import { scalarResolvers } from './scalars.js';
+
 import {
   getOrganizationResolver,
   getOrganizationsResolver,
@@ -83,6 +85,9 @@ function mergeResolvers(...resolvers: any[]) {
 }
 
 export const resolvers = mergeResolvers(
+  // Scalar resolvers
+  scalarResolvers,
+
   // Organization resolvers
   getOrganizationResolver,
   getOrganizationsResolver,
