@@ -35,10 +35,11 @@ npm install
 
 ### Database Setup
 
-To run the development environment, use the following scripts from the `devenv` directory:
+To run the development environment, use the following script from the `devenv` directory:
 
-- **For macOS:** `./run.sh up`
-- **For Linux:** `./run-rootless.sh up`
+```bash
+./run.sh up
+```
 
 This will start a PostgreSQL container.
 
@@ -404,13 +405,9 @@ docker run -p 5001:5001 \
 For local development with PostgreSQL:
 
 ```bash
-# macOS users
+# Start PostgreSQL container
 cd devenv
 ./run.sh up
-
-# Linux users
-cd devenv
-./run-rootless.sh up
 
 # Run the application (outside container)
 cd ..
