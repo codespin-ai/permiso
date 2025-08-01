@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix"
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
     "winston": "^3.17.0"
