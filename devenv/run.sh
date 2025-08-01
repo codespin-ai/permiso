@@ -33,7 +33,7 @@ fi
 
 # create pg data dir
 if [ ! -d pgdata ]; then
-  echo creating data dir...
+  echo creating pgdata dir...
   mkdir pgdata;
 fi
 
