@@ -5,7 +5,7 @@
 -- Dumped from database version 16.4 (Debian 16.4-1.pgdg120+1)
 -- Dumped by pg_dump version 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1)
 
--- Started on 2025-08-01 23:17:31 IST
+-- Started on 2025-08-01 23:22:41 IST
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -43,7 +43,7 @@ SET row_security = off;
 SET default_table_access_method = heap;
 
 --
--- TOC entry 216 (class 1259 OID 43238)
+-- TOC entry 216 (class 1259 OID 16390)
 -- Name: knex_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -56,7 +56,7 @@ CREATE TABLE public.knex_migrations (
 
 
 --
--- TOC entry 215 (class 1259 OID 43237)
+-- TOC entry 215 (class 1259 OID 16389)
 -- Name: knex_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -79,7 +79,7 @@ ALTER SEQUENCE public.knex_migrations_id_seq OWNED BY public.knex_migrations.id;
 
 
 --
--- TOC entry 218 (class 1259 OID 43245)
+-- TOC entry 218 (class 1259 OID 16397)
 -- Name: knex_migrations_lock; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -90,7 +90,7 @@ CREATE TABLE public.knex_migrations_lock (
 
 
 --
--- TOC entry 217 (class 1259 OID 43244)
+-- TOC entry 217 (class 1259 OID 16396)
 -- Name: knex_migrations_lock_index_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -113,7 +113,7 @@ ALTER SEQUENCE public.knex_migrations_lock_index_seq OWNED BY public.knex_migrat
 
 
 --
--- TOC entry 219 (class 1259 OID 43251)
+-- TOC entry 219 (class 1259 OID 16501)
 -- Name: organization; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -128,7 +128,7 @@ CREATE TABLE public.organization (
 
 
 --
--- TOC entry 220 (class 1259 OID 43261)
+-- TOC entry 220 (class 1259 OID 16513)
 -- Name: organization_property; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -142,7 +142,7 @@ CREATE TABLE public.organization_property (
 
 
 --
--- TOC entry 225 (class 1259 OID 43342)
+-- TOC entry 225 (class 1259 OID 16599)
 -- Name: resource; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -158,7 +158,7 @@ CREATE TABLE public.resource (
 
 
 --
--- TOC entry 221 (class 1259 OID 43277)
+-- TOC entry 221 (class 1259 OID 16530)
 -- Name: role; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -174,7 +174,7 @@ CREATE TABLE public.role (
 
 
 --
--- TOC entry 228 (class 1259 OID 43400)
+-- TOC entry 228 (class 1259 OID 16657)
 -- Name: role_permission; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -188,7 +188,7 @@ CREATE TABLE public.role_permission (
 
 
 --
--- TOC entry 222 (class 1259 OID 43293)
+-- TOC entry 222 (class 1259 OID 16548)
 -- Name: role_property; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -203,7 +203,7 @@ CREATE TABLE public.role_property (
 
 
 --
--- TOC entry 223 (class 1259 OID 43309)
+-- TOC entry 223 (class 1259 OID 16565)
 -- Name: user; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -219,7 +219,7 @@ CREATE TABLE public."user" (
 
 
 --
--- TOC entry 227 (class 1259 OID 43379)
+-- TOC entry 227 (class 1259 OID 16636)
 -- Name: user_permission; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -233,7 +233,7 @@ CREATE TABLE public.user_permission (
 
 
 --
--- TOC entry 224 (class 1259 OID 43326)
+-- TOC entry 224 (class 1259 OID 16582)
 -- Name: user_property; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -248,7 +248,7 @@ CREATE TABLE public.user_property (
 
 
 --
--- TOC entry 226 (class 1259 OID 43359)
+-- TOC entry 226 (class 1259 OID 16616)
 -- Name: user_role; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -261,7 +261,7 @@ CREATE TABLE public.user_role (
 
 
 --
--- TOC entry 3248 (class 2604 OID 43241)
+-- TOC entry 3248 (class 2604 OID 16393)
 -- Name: knex_migrations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -269,7 +269,7 @@ ALTER TABLE ONLY public.knex_migrations ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 3249 (class 2604 OID 43248)
+-- TOC entry 3249 (class 2604 OID 16400)
 -- Name: knex_migrations_lock index; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -277,7 +277,7 @@ ALTER TABLE ONLY public.knex_migrations_lock ALTER COLUMN index SET DEFAULT next
 
 
 --
--- TOC entry 3272 (class 2606 OID 43250)
+-- TOC entry 3272 (class 2606 OID 16402)
 -- Name: knex_migrations_lock knex_migrations_lock_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -286,7 +286,7 @@ ALTER TABLE ONLY public.knex_migrations_lock
 
 
 --
--- TOC entry 3270 (class 2606 OID 43243)
+-- TOC entry 3270 (class 2606 OID 16395)
 -- Name: knex_migrations knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -295,7 +295,7 @@ ALTER TABLE ONLY public.knex_migrations
 
 
 --
--- TOC entry 3276 (class 2606 OID 43259)
+-- TOC entry 3276 (class 2606 OID 16510)
 -- Name: organization organization_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -304,7 +304,7 @@ ALTER TABLE ONLY public.organization
 
 
 --
--- TOC entry 3281 (class 2606 OID 43269)
+-- TOC entry 3280 (class 2606 OID 16521)
 -- Name: organization_property organization_property_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -313,7 +313,7 @@ ALTER TABLE ONLY public.organization_property
 
 
 --
--- TOC entry 3307 (class 2606 OID 43350)
+-- TOC entry 3307 (class 2606 OID 16607)
 -- Name: resource resource_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -322,7 +322,7 @@ ALTER TABLE ONLY public.resource
 
 
 --
--- TOC entry 3319 (class 2606 OID 43407)
+-- TOC entry 3319 (class 2606 OID 16664)
 -- Name: role_permission role_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -331,7 +331,7 @@ ALTER TABLE ONLY public.role_permission
 
 
 --
--- TOC entry 3286 (class 2606 OID 43285)
+-- TOC entry 3286 (class 2606 OID 16539)
 -- Name: role role_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -340,7 +340,7 @@ ALTER TABLE ONLY public.role
 
 
 --
--- TOC entry 3291 (class 2606 OID 43301)
+-- TOC entry 3290 (class 2606 OID 16556)
 -- Name: role_property role_property_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -349,7 +349,7 @@ ALTER TABLE ONLY public.role_property
 
 
 --
--- TOC entry 3314 (class 2606 OID 43386)
+-- TOC entry 3314 (class 2606 OID 16643)
 -- Name: user_permission user_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -358,7 +358,7 @@ ALTER TABLE ONLY public.user_permission
 
 
 --
--- TOC entry 3296 (class 2606 OID 43317)
+-- TOC entry 3296 (class 2606 OID 16573)
 -- Name: user user_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -367,7 +367,7 @@ ALTER TABLE ONLY public."user"
 
 
 --
--- TOC entry 3301 (class 2606 OID 43334)
+-- TOC entry 3300 (class 2606 OID 16590)
 -- Name: user_property user_property_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -376,7 +376,7 @@ ALTER TABLE ONLY public.user_property
 
 
 --
--- TOC entry 3309 (class 2606 OID 43366)
+-- TOC entry 3309 (class 2606 OID 16623)
 -- Name: user_role user_role_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -385,31 +385,7 @@ ALTER TABLE ONLY public.user_role
 
 
 --
--- TOC entry 3277 (class 1259 OID 43453)
--- Name: idx_organization_property_value; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_organization_property_value ON public.organization_property USING gin (value);
-
-
---
--- TOC entry 3287 (class 1259 OID 43454)
--- Name: idx_role_property_value; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_role_property_value ON public.role_property USING gin (value);
-
-
---
--- TOC entry 3297 (class 1259 OID 43455)
--- Name: idx_user_property_value; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_user_property_value ON public.user_property USING gin (value);
-
-
---
--- TOC entry 3273 (class 1259 OID 43260)
+-- TOC entry 3273 (class 1259 OID 16511)
 -- Name: organization_created_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -417,7 +393,7 @@ CREATE INDEX organization_created_at_index ON public.organization USING btree (c
 
 
 --
--- TOC entry 3274 (class 1259 OID 43423)
+-- TOC entry 3274 (class 1259 OID 16512)
 -- Name: organization_name_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -425,7 +401,7 @@ CREATE INDEX organization_name_index ON public.organization USING btree (name);
 
 
 --
--- TOC entry 3278 (class 1259 OID 43275)
+-- TOC entry 3277 (class 1259 OID 16527)
 -- Name: organization_property_hidden_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -433,7 +409,7 @@ CREATE INDEX organization_property_hidden_index ON public.organization_property 
 
 
 --
--- TOC entry 3279 (class 1259 OID 43426)
+-- TOC entry 3278 (class 1259 OID 16528)
 -- Name: organization_property_name_value_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -441,7 +417,15 @@ CREATE INDEX organization_property_name_value_index ON public.organization_prope
 
 
 --
--- TOC entry 3302 (class 1259 OID 43357)
+-- TOC entry 3281 (class 1259 OID 16529)
+-- Name: organization_property_value_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX organization_property_value_index ON public.organization_property USING gin (value);
+
+
+--
+-- TOC entry 3302 (class 1259 OID 16613)
 -- Name: resource_created_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -449,7 +433,7 @@ CREATE INDEX resource_created_at_index ON public.resource USING btree (created_a
 
 
 --
--- TOC entry 3303 (class 1259 OID 43358)
+-- TOC entry 3303 (class 1259 OID 16678)
 -- Name: resource_id text_pattern_ops_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -457,7 +441,7 @@ CREATE INDEX "resource_id text_pattern_ops_index" ON public.resource USING btree
 
 
 --
--- TOC entry 3304 (class 1259 OID 43356)
+-- TOC entry 3304 (class 1259 OID 16614)
 -- Name: resource_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -465,7 +449,7 @@ CREATE INDEX resource_org_id_index ON public.resource USING btree (org_id);
 
 
 --
--- TOC entry 3305 (class 1259 OID 43425)
+-- TOC entry 3305 (class 1259 OID 16615)
 -- Name: resource_org_id_name_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -473,7 +457,7 @@ CREATE INDEX resource_org_id_name_index ON public.resource USING btree (org_id, 
 
 
 --
--- TOC entry 3282 (class 1259 OID 43292)
+-- TOC entry 3282 (class 1259 OID 16545)
 -- Name: role_created_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -481,7 +465,7 @@ CREATE INDEX role_created_at_index ON public.role USING btree (created_at);
 
 
 --
--- TOC entry 3283 (class 1259 OID 43291)
+-- TOC entry 3283 (class 1259 OID 16546)
 -- Name: role_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -489,7 +473,7 @@ CREATE INDEX role_org_id_index ON public.role USING btree (org_id);
 
 
 --
--- TOC entry 3284 (class 1259 OID 43424)
+-- TOC entry 3284 (class 1259 OID 16547)
 -- Name: role_org_id_name_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -497,7 +481,7 @@ CREATE INDEX role_org_id_name_index ON public.role USING btree (org_id, name);
 
 
 --
--- TOC entry 3317 (class 1259 OID 43420)
+-- TOC entry 3317 (class 1259 OID 16677)
 -- Name: role_permission_action_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -505,7 +489,7 @@ CREATE INDEX role_permission_action_index ON public.role_permission USING btree 
 
 
 --
--- TOC entry 3320 (class 1259 OID 43419)
+-- TOC entry 3320 (class 1259 OID 16676)
 -- Name: role_permission_resource_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -513,7 +497,7 @@ CREATE INDEX role_permission_resource_id_org_id_index ON public.role_permission 
 
 
 --
--- TOC entry 3321 (class 1259 OID 43418)
+-- TOC entry 3321 (class 1259 OID 16675)
 -- Name: role_permission_role_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -521,7 +505,7 @@ CREATE INDEX role_permission_role_id_org_id_index ON public.role_permission USIN
 
 
 --
--- TOC entry 3288 (class 1259 OID 43307)
+-- TOC entry 3287 (class 1259 OID 16562)
 -- Name: role_property_hidden_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -529,7 +513,7 @@ CREATE INDEX role_property_hidden_index ON public.role_property USING btree (hid
 
 
 --
--- TOC entry 3289 (class 1259 OID 43435)
+-- TOC entry 3288 (class 1259 OID 16563)
 -- Name: role_property_name_value_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -537,7 +521,15 @@ CREATE INDEX role_property_name_value_index ON public.role_property USING btree 
 
 
 --
--- TOC entry 3292 (class 1259 OID 43325)
+-- TOC entry 3291 (class 1259 OID 16564)
+-- Name: role_property_value_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX role_property_value_index ON public.role_property USING gin (value);
+
+
+--
+-- TOC entry 3292 (class 1259 OID 16579)
 -- Name: user_created_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -545,7 +537,7 @@ CREATE INDEX user_created_at_index ON public."user" USING btree (created_at);
 
 
 --
--- TOC entry 3293 (class 1259 OID 43324)
+-- TOC entry 3293 (class 1259 OID 16581)
 -- Name: user_identity_provider_identity_provider_user_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -553,7 +545,7 @@ CREATE INDEX user_identity_provider_identity_provider_user_id_index ON public."u
 
 
 --
--- TOC entry 3294 (class 1259 OID 43323)
+-- TOC entry 3294 (class 1259 OID 16580)
 -- Name: user_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -561,7 +553,7 @@ CREATE INDEX user_org_id_index ON public."user" USING btree (org_id);
 
 
 --
--- TOC entry 3312 (class 1259 OID 43399)
+-- TOC entry 3312 (class 1259 OID 16656)
 -- Name: user_permission_action_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -569,7 +561,7 @@ CREATE INDEX user_permission_action_index ON public.user_permission USING btree 
 
 
 --
--- TOC entry 3315 (class 1259 OID 43398)
+-- TOC entry 3315 (class 1259 OID 16655)
 -- Name: user_permission_resource_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -577,7 +569,7 @@ CREATE INDEX user_permission_resource_id_org_id_index ON public.user_permission 
 
 
 --
--- TOC entry 3316 (class 1259 OID 43397)
+-- TOC entry 3316 (class 1259 OID 16654)
 -- Name: user_permission_user_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -585,7 +577,7 @@ CREATE INDEX user_permission_user_id_org_id_index ON public.user_permission USIN
 
 
 --
--- TOC entry 3298 (class 1259 OID 43340)
+-- TOC entry 3297 (class 1259 OID 16596)
 -- Name: user_property_hidden_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -593,7 +585,7 @@ CREATE INDEX user_property_hidden_index ON public.user_property USING btree (hid
 
 
 --
--- TOC entry 3299 (class 1259 OID 43444)
+-- TOC entry 3298 (class 1259 OID 16597)
 -- Name: user_property_name_value_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -601,7 +593,15 @@ CREATE INDEX user_property_name_value_index ON public.user_property USING btree 
 
 
 --
--- TOC entry 3310 (class 1259 OID 43378)
+-- TOC entry 3301 (class 1259 OID 16598)
+-- Name: user_property_value_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_property_value_index ON public.user_property USING gin (value);
+
+
+--
+-- TOC entry 3310 (class 1259 OID 16635)
 -- Name: user_role_role_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -609,7 +609,7 @@ CREATE INDEX user_role_role_id_org_id_index ON public.user_role USING btree (rol
 
 
 --
--- TOC entry 3311 (class 1259 OID 43377)
+-- TOC entry 3311 (class 1259 OID 16634)
 -- Name: user_role_user_id_org_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -617,7 +617,7 @@ CREATE INDEX user_role_user_id_org_id_index ON public.user_role USING btree (use
 
 
 --
--- TOC entry 3322 (class 2606 OID 43456)
+-- TOC entry 3322 (class 2606 OID 16522)
 -- Name: organization_property organization_property_parent_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -626,7 +626,7 @@ ALTER TABLE ONLY public.organization_property
 
 
 --
--- TOC entry 3327 (class 2606 OID 43351)
+-- TOC entry 3327 (class 2606 OID 16608)
 -- Name: resource resource_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -635,7 +635,7 @@ ALTER TABLE ONLY public.resource
 
 
 --
--- TOC entry 3323 (class 2606 OID 43286)
+-- TOC entry 3323 (class 2606 OID 16540)
 -- Name: role role_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -644,7 +644,7 @@ ALTER TABLE ONLY public.role
 
 
 --
--- TOC entry 3332 (class 2606 OID 43413)
+-- TOC entry 3332 (class 2606 OID 16670)
 -- Name: role_permission role_permission_resource_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -653,7 +653,7 @@ ALTER TABLE ONLY public.role_permission
 
 
 --
--- TOC entry 3333 (class 2606 OID 43408)
+-- TOC entry 3333 (class 2606 OID 16665)
 -- Name: role_permission role_permission_role_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -662,7 +662,7 @@ ALTER TABLE ONLY public.role_permission
 
 
 --
--- TOC entry 3324 (class 2606 OID 43466)
+-- TOC entry 3324 (class 2606 OID 16557)
 -- Name: role_property role_property_parent_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -671,7 +671,7 @@ ALTER TABLE ONLY public.role_property
 
 
 --
--- TOC entry 3325 (class 2606 OID 43318)
+-- TOC entry 3325 (class 2606 OID 16574)
 -- Name: user user_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -680,7 +680,7 @@ ALTER TABLE ONLY public."user"
 
 
 --
--- TOC entry 3330 (class 2606 OID 43392)
+-- TOC entry 3330 (class 2606 OID 16649)
 -- Name: user_permission user_permission_resource_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -689,7 +689,7 @@ ALTER TABLE ONLY public.user_permission
 
 
 --
--- TOC entry 3331 (class 2606 OID 43387)
+-- TOC entry 3331 (class 2606 OID 16644)
 -- Name: user_permission user_permission_user_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -698,7 +698,7 @@ ALTER TABLE ONLY public.user_permission
 
 
 --
--- TOC entry 3326 (class 2606 OID 43461)
+-- TOC entry 3326 (class 2606 OID 16591)
 -- Name: user_property user_property_parent_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -707,7 +707,7 @@ ALTER TABLE ONLY public.user_property
 
 
 --
--- TOC entry 3328 (class 2606 OID 43372)
+-- TOC entry 3328 (class 2606 OID 16629)
 -- Name: user_role user_role_role_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -716,7 +716,7 @@ ALTER TABLE ONLY public.user_role
 
 
 --
--- TOC entry 3329 (class 2606 OID 43367)
+-- TOC entry 3329 (class 2606 OID 16624)
 -- Name: user_role user_role_user_id_org_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -724,7 +724,7 @@ ALTER TABLE ONLY public.user_role
     ADD CONSTRAINT user_role_user_id_org_id_foreign FOREIGN KEY (user_id, org_id) REFERENCES public."user"(id, org_id) ON DELETE CASCADE;
 
 
--- Completed on 2025-08-01 23:17:31 IST
+-- Completed on 2025-08-01 23:22:41 IST
 
 --
 -- PostgreSQL database dump complete
