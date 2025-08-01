@@ -5,7 +5,7 @@
 -- Dumped from database version 16.4 (Debian 16.4-1.pgdg120+1)
 -- Dumped by pg_dump version 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1)
 
--- Started on 2025-08-01 23:22:41 IST
+-- Started on 2025-08-01 23:26:32 IST
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -724,7 +724,7 @@ ALTER TABLE ONLY public.user_role
     ADD CONSTRAINT user_role_user_id_org_id_foreign FOREIGN KEY (user_id, org_id) REFERENCES public."user"(id, org_id) ON DELETE CASCADE;
 
 
--- Completed on 2025-08-01 23:22:41 IST
+-- Completed on 2025-08-01 23:26:32 IST
 
 --
 -- PostgreSQL database dump complete

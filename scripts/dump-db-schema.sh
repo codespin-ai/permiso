@@ -6,17 +6,22 @@
 # Set script options
 set -euo pipefail
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Get the project root directory (parent of scripts)
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Output file
-OUTPUT_FILE="docs/permiso-schema.sql"
+# Output file (relative to project root)
+OUTPUT_FILE="$PROJECT_ROOT/docs/permiso-schema.sql"
 
-# Load environment variables
-if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+# Load environment variables from project root
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    export $(cat "$PROJECT_ROOT/.env" | grep -v '^#' | xargs)
 fi
 
 # Database connection parameters
@@ -31,7 +36,7 @@ DB_PASSWORD="postgres"
 echo -e "${GREEN}Dumping database schema from $DB_NAME...${NC}"
 
 # Create docs directory if it doesn't exist
-mkdir -p docs
+mkdir -p "$PROJECT_ROOT/docs"
 
 # Set PGPASSWORD to avoid password prompt
 export PGPASSWORD="$DB_PASSWORD"

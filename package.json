@@ -18,6 +18,7 @@
     "migrate:permiso:status": "knex migrate:status --knexfile database/permiso/knexfile.js",
     "seed:permiso:make": "knex seed:make --knexfile database/permiso/knexfile.js",
     "seed:permiso:run": "knex seed:run --knexfile database/permiso/knexfile.js",
+    "db:dump-schema": "./scripts/dump-db-schema.sh",
     "test:integration:permiso": "cd node/packages/permiso-integration-tests && npm test",
     "test:integration:permiso:watch": "cd node/packages/permiso-integration-tests && npm run test:watch",
     "test:integration:all": "npm run test:integration:permiso"
