@@ -62,3 +62,7 @@ docker-push.sh
 
 # Integration tests (not needed in production image)
 node/packages/permiso-integration-tests
+
+# Development environment data
+devenv
+tmp

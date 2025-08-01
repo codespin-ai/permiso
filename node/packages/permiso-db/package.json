@@ -12,11 +12,11 @@
     "lint:fix": "eslint src --ext .ts --fix"
   },
   "dependencies": {
-    "pg-promise": "^11.5.4"
+    "pg-promise": "^11.15.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.4",
-    "typescript": "^5.3.3"
+    "@types/node": "^24.1.0",
+    "typescript": "^5.9.2"
   },
   "exports": {
     ".": {

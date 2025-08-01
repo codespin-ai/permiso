@@ -4,6 +4,7 @@
     "mocha": true
   },
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "@typescript-eslint/no-unused-expressions": "off"
   }
 }

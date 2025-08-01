@@ -23,7 +23,7 @@ export class TestServer {
         // Wait a bit for the process to die
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
-    } catch (error) {
+    } catch {
       // Ignore errors - port might already be free
     }
   }
@@ -106,7 +106,7 @@ export class TestServer {
         if (response.ok) {
           return;
         }
-      } catch (error) {
+      } catch {
         // Server not ready yet
       }
       
