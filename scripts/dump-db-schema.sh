@@ -41,7 +41,8 @@ mkdir -p "$PROJECT_ROOT/docs"
 # Set PGPASSWORD to avoid password prompt
 export PGPASSWORD="$DB_PASSWORD"
 
-# Dump schema only (no data) with all objects
+# Dump schema only (no data) with all objects to a temp file
+TEMP_FILE="$OUTPUT_FILE.tmp"
 pg_dump \
     -h "$DB_HOST" \
     -p "$DB_PORT" \
@@ -57,18 +58,31 @@ pg_dump \
     --create \
     --encoding=UTF8 \
     --verbose \
-    -f "$OUTPUT_FILE" 2>&1 | while read line; do
+    -f "$TEMP_FILE" 2>&1 | while read line; do
         echo -e "${GREEN}[pg_dump]${NC} $line"
     done
 
 # Check if dump was successful
 if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    # Remove timestamp and version-specific comments to avoid unnecessary diffs
+    sed -i \
+        -e '/^-- Dumped from database version/d' \
+        -e '/^-- Dumped by pg_dump version/d' \
+        -e '/^-- Started on/d' \
+        -e '/^-- Completed on/d' \
+        -e '/^-- TOC entry [0-9]* (class/d' \
+        "$TEMP_FILE"
+    
+    # Move the cleaned file to the final location
+    mv "$TEMP_FILE" "$OUTPUT_FILE"
+    
     echo -e "${GREEN}✓ Schema successfully dumped to $OUTPUT_FILE${NC}"
     echo -e "${GREEN}  File size: $(ls -lh "$OUTPUT_FILE" | awk '{print $5}')${NC}"
     echo -e "${GREEN}  Tables found: $(grep -c "CREATE TABLE" "$OUTPUT_FILE" || echo 0)${NC}"
     echo -e "${GREEN}  Indexes found: $(grep -c "CREATE.*INDEX" "$OUTPUT_FILE" || echo 0)${NC}"
 else
     echo -e "${RED}✗ Failed to dump schema${NC}"
+    rm -f "$TEMP_FILE"
     exit 1
 fi
 
