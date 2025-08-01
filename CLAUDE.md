@@ -287,6 +287,79 @@ await db.none(
    - Build errors often require code changes that may introduce lint issues
    - Always: lint → build → (if changes) → lint → build
 
+### Running Tests
+
+#### Prerequisites for Testing
+
+**IMPORTANT**: Before running any tests, you MUST have the PostgreSQL container running:
+
+```bash
+# From the project root
+cd devenv
+./run.sh up
+
+# Verify PostgreSQL is running
+./run.sh logs postgres
+```
+
+The development environment will:
+- Start a PostgreSQL 16 container on port 5432
+- Create the `permiso` database automatically via `init.sql`
+- Use credentials: `postgres:postgres`
+
+#### Integration Tests
+
+Integration tests are located in `/node/packages/permiso-integration-tests` and test the full GraphQL API:
+
+```bash
+# Run all integration tests (from project root)
+npm run test:integration:all
+```
+
+**Test Configuration**:
+- Tests automatically use a separate `permiso_test` database
+- Database is cleaned before each test run
+- Migrations are automatically applied to the test database
+- Default timeout: 30 seconds per test
+- Uses Mocha with TypeScript support via ts-node
+
+**Environment Variables for Tests**:
+Tests will use these defaults, or you can override them:
+```bash
+PERMISO_DB_HOST=localhost       # Default: localhost
+PERMISO_DB_PORT=5432           # Default: 5432
+PERMISO_DB_USER=postgres       # Default: postgres
+PERMISO_DB_PASSWORD=postgres   # Default: postgres
+# Note: Test database name is hardcoded to 'permiso_test'
+```
+
+**Test Coverage**:
+Integration tests cover:
+- Organization CRUD operations
+- User and Role management
+- Resource and Permission handling
+- Property operations with JSON support
+- Complex permission calculations
+- GraphQL API error handling
+
+#### Docker Image Testing
+
+To test Docker images before deployment:
+
+```bash
+# Automated testing
+./docker-test.sh                              # Test default image (permiso:latest)
+./docker-test.sh ghcr.io/codespin-ai/permiso:latest  # Test specific image
+./docker-test.sh permiso:latest 5001          # Test on specific port
+
+# The test script will:
+# - Create a temporary test database
+# - Run the container with auto-migration
+# - Execute comprehensive GraphQL tests
+# - Clean up automatically
+# - Return exit code 0 on success, 1 on failure
+```
+
 ## Common Tasks
 
 ### Adding a New Package
