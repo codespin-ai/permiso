@@ -266,10 +266,11 @@ await db.none(
 
 ## Key Documentation
 
-- Coding standards: `/CODING-STANDARDS.md`
+- API documentation: `/docs/api.md`
 - Architecture overview: `/docs/architecture.md`
-- API specification: `/docs/api-spec.md`
+- Database configuration: `/docs/database.md`
 - Database schema: `/database/permiso/migrations/`
+- Coding standards: `/CODING-STANDARDS.md`
 
 ## Testing & Quality
 

@@ -59,9 +59,11 @@ When running in development mode, you can access the GraphQL Playground at the s
 - Actions are arbitrary strings (e.g., "read", "write", "delete")
 
 ### Properties
-- Key-value metadata for organizations, users, and roles
-- Support hidden properties for sensitive data
-- Enable filtering and custom business logic
+- Key-value metadata stored as JSONB that can be attached to organizations, users, and roles
+- **Flexible JSON storage** - Store strings, numbers, booleans, objects, arrays, or null
+- **Hidden properties** - Mark sensitive data as hidden
+- **Filterable queries** - Query by property names and values
+- **Type-safe** - PostgreSQL JSONB validation and operations
 
 ## GraphQL Schema
 

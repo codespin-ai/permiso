@@ -67,268 +67,51 @@ npm run migrate:latest
 # The server will be available at http://localhost:5001/graphql
 ```
 
-## Architecture
-
-Permiso is built as a monorepo with the following packages:
-
-- **`@codespin/permiso-core`** - Core types and utilities (Result type, etc.)
-- **`@codespin/permiso-logger`** - Centralized logging with Winston
-- **`@codespin/permiso-server`** - GraphQL server for RBAC implementation
-
 ## Core Concepts
 
-### Organizations
-
-Root entities that provide isolated authorization contexts. All other entities belong to an organization.
-
-### Users
-
-Represent individuals who need access to resources. Users can:
-
-- Belong to one organization
-- Have multiple roles assigned
-- Have direct permissions on resources
-- Have custom properties for filtering
-
-### Roles
-
-Collections of permissions that can be assigned to users. Useful for common permission sets like "admin", "editor", "viewer".
-
-### Resources
-
-Entities identified by IDs in path-like format that permissions apply to:
-
-- `/documents/contracts/2023/acme.pdf`
-- `/features/billing`
-- `/api/users/*`
-
-### Permissions
-
-Define what actions can be performed on resources:
-
-- User permissions: Direct user → resource mappings
-- Role permissions: Role → resource mappings
-- Effective permissions: Combined view of user's direct + role permissions
-
-### Properties
-
-Key-value metadata stored as JSONB that can be attached to organizations, users, and roles:
-
-- **Flexible JSON storage** - Store strings, numbers, booleans, objects, arrays, or null
-- **Hidden properties** - Mark sensitive data as hidden
-- **Filterable queries** - Query by property names and values
-- **Type-safe** - PostgreSQL JSONB validation and operations
-
-#### Property Examples
-
-```graphql
-# Set a simple string property
-mutation {
-  setOrganizationProperty(
-    orgId: "acme-corp"
-    name: "tier"
-    value: "enterprise"
-  ) {
-    name
-    value
-  }
-}
-
-# Set a complex object property
-mutation {
-  setUserProperty(
-    orgId: "acme-corp"
-    userId: "john-doe"
-    name: "profile"
-    value: {
-      department: "engineering"
-      level: 3
-      skills: ["typescript", "graphql", "postgres"]
-      manager: "jane-smith"
-    }
-  ) {
-    name
-    value
-  }
-}
-
-# Set a hidden property (for sensitive data)
-mutation {
-  setOrganizationProperty(
-    orgId: "acme-corp"
-    name: "apiKey"
-    value: "sk_live_..."
-    hidden: true
-  ) {
-    name
-    value
-    hidden
-  }
-}
-```
-
-## Usage Example
-
-```typescript
-import {
-  initializeDatabase,
-  createOrganization,
-  createUser,
-  createRole,
-  grantRolePermission,
-  assignUserRole,
-} from "@codespin/permiso-server";
-
-// Initialize database
-const db = initializeDatabase();
-
-// Create an organization with properties
-const org = await createOrganization(db, {
-  id: "acme-corp",
-  name: "ACME Corporation",
-  properties: [
-    {
-      name: "tier",
-      value: "enterprise"
-    },
-    {
-      name: "settings",
-      value: {
-        maxUsers: 5000,
-        features: ["sso", "audit", "api"]
-      }
-    }
-  ]
-});
-
-// Create a role with properties
-const role = await createRole(db, {
-  id: "editor",
-  orgId: "acme-corp",
-  name: "Content Editor Role",
-  properties: [
-    {
-      name: "permissions",
-      value: {
-        canPublish: true,
-        canDelete: false,
-        maxDrafts: 10
-      }
-    }
-  ]
-});
-
-// Grant permissions to role
-await grantRolePermission(db, "acme-corp", "editor", "/documents/*", "read");
-await grantRolePermission(db, "acme-corp", "editor", "/documents/*", "write");
-
-// Create a user with properties
-const user = await createUser(db, {
-  id: "john-doe",
-  orgId: "acme-corp",
-  identityProvider: "google",
-  identityProviderUserId: "john@acme.com",
-  properties: [
-    {
-      name: "profile",
-      value: {
-        department: "engineering",
-        level: 3,
-        location: "San Francisco"
-      }
-    }
-  ]
-});
-
-// Assign role to user
-await assignUserRole(db, "acme-corp", "john-doe", "editor");
-
-// Check permissions
-const hasPermission = await hasPermission(
-  db,
-  "acme-corp",
-  "john-doe",
-  "/documents/report.pdf",
-  "write"
-);
-// Returns: true
-```
+See [Architecture Documentation](docs/architecture.md) for detailed information about:
+- Organizations and multi-tenancy
+- Users, Roles, and Resources
+- Permissions and access control
+- Properties and metadata
 
 ## GraphQL API
 
-Permiso provides a complete GraphQL schema for all RBAC operations. Key features:
+For complete API documentation, examples, and best practices, see [API Documentation](docs/api.md).
 
-- Full CRUD operations for all entities
-- Filtering and pagination support
-- Nested relationship queries
-- Batch operations
-- Real-time permission checking
+### Quick Example
 
-Example query:
+```bash
+# Create an organization
+curl -X POST http://localhost:5001/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "mutation { createOrganization(input: { id: \"acme-corp\", name: \"ACME Corporation\" }) { id name } }"}'
 
-```graphql
-query GetUserPermissions {
-  user(orgId: "acme-corp", userId: "john-doe") {
-    id
-    properties {
-      name
-      value
-      hidden
-    }
-    roles {
-      id
-      properties {
-        name
-        value
-      }
-      permissions {
-        resourceId
-        action
-      }
-    }
-    effectivePermissions(resourceId: "/documents/*") {
-      resourceId
-      action
-      source
-    }
-  }
-}
+# Create a user
+curl -X POST http://localhost:5001/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "mutation { createUser(input: { id: \"john-doe\", orgId: \"acme-corp\", identityProvider: \"google\", identityProviderUserId: \"john@acme.com\" }) { id } }"}'
 ```
+
+For complete examples and TypeScript usage, see [API Documentation](docs/api.md).
 
 ## Development
-
-### Project Structure
-
-```
-permiso/
-├── node/packages/
-│   ├── permiso-core/       # Core utilities
-│   ├── permiso-logger/     # Logging
-│   └── permiso-server/     # GraphQL server
-├── build.sh                # Build script
-├── clean.sh                # Clean script
-└── lint-all.sh            # Lint all packages
-```
-
-### Building
 
 ```bash
 # Build all packages
 ./build.sh
 
-# Clean build artifacts
-./clean.sh
-
 # Run linting
 ./lint-all.sh
+
+# Run integration tests
+npm run test:integration:all
+
+# Clean build artifacts
+./clean.sh
 ```
 
-### Testing
-
-```bash
-# Run tests (coming soon)
-npm test
-```
+See [Architecture Documentation](docs/architecture.md) for project structure and design details.
 
 ## Environment Variables
 
@@ -347,158 +130,53 @@ npm test
 
 ## Docker Support
 
-Permiso can be run as a Docker container for easy deployment and distribution.
-
-### Using Pre-built Images
+### Quick Start with Docker
 
 ```bash
-# Pull from GitHub Container Registry
+# Pull and run the official image
 docker pull ghcr.io/codespin-ai/permiso:latest
 
-# Run with automatic database setup (recommended for first run)
+# Run with environment variables
 docker run -p 5001:5001 \
   -e PERMISO_DB_HOST=your-db-host \
-  -e PERMISO_DB_PORT=5432 \
-  -e PERMISO_DB_NAME=permiso \
   -e PERMISO_DB_USER=postgres \
   -e PERMISO_DB_PASSWORD=your-password \
   -e PERMISO_AUTO_MIGRATE=true \
   ghcr.io/codespin-ai/permiso:latest
-
-# Run without automatic migrations (for production)
-docker run -p 5001:5001 \
-  -e PERMISO_DB_HOST=your-db-host \
-  -e PERMISO_DB_PORT=5432 \
-  -e PERMISO_DB_NAME=permiso \
-  -e PERMISO_DB_USER=postgres \
-  -e PERMISO_DB_PASSWORD=your-password \
-  ghcr.io/codespin-ai/permiso:latest
 ```
 
-#### Automatic Database Setup
+**Note**: Set `PERMISO_AUTO_MIGRATE=true` for automatic database setup on first run.
 
-The Docker image includes an intelligent entrypoint that can automatically set up your database:
-
-- **`PERMISO_AUTO_MIGRATE=true`** - Enables automatic database migrations
-- On first run: Creates all necessary tables
-- On subsequent runs: Applies any pending migrations
-- Safe for development and staging environments
-- For production: Run migrations manually or in a separate step
-
-### Building Your Own Image
+### Docker Compose
 
 ```bash
-# Build the Docker image
-./docker-build.sh
-
-# Or manually with Docker
-docker build -t permiso:latest .
-
-# Run the container
-docker run -p 5001:5001 \
-  --env-file .env \
-  permiso:latest
-```
-
-### Docker Compose for Development
-
-For local development with PostgreSQL:
-
-```bash
-# Start PostgreSQL container
-cd devenv
-./run.sh up
-
-# Run the application (outside container)
-cd ..
-./build.sh
-./start.sh
-```
-
-### Quick Start with Docker Compose
-
-For a complete setup with both PostgreSQL and Permiso:
-
-```bash
-# Copy the example file
+# Use the example configuration
 cp docker-compose.example.yml docker-compose.yml
-
-# Edit passwords and configuration as needed
-# Then start everything:
+# Edit configuration, then:
 docker-compose up -d
-
-# The application will be available at http://localhost:5001/graphql
-# Database migrations will run automatically on first start
 ```
 
-### Pushing to a Registry
+### Building and Deployment
 
 ```bash
-# Push to GitHub Container Registry (official)
-./docker-push.sh ghcr.io/codespin-ai/permiso latest
+# Build image
+./scripts/docker-build.sh
 
-# Push to your own registry
-./docker-push.sh docker.io/yourorg/permiso latest
+# Test image
+./scripts/docker-test.sh
 
-# Push to AWS ECR
-./docker-push.sh 123456789.dkr.ecr.us-east-1.amazonaws.com/permiso latest
+# Push to registry
+./scripts/docker-push.sh ghcr.io/codespin-ai/permiso latest
 ```
 
-### Environment Configuration
+For production deployment examples (Kubernetes, etc.), see the full Docker section in the documentation.
 
-Create a `.env` file based on `.env.example`:
+## Documentation
 
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-### Production Deployment
-
-The Docker image is optimized for production with:
-- Multi-stage build for smaller image size
-- Node 24 on Ubuntu 24.04 minimal base
-- Non-root user execution
-- Health checks included
-- Proper signal handling for graceful shutdown
-
-Example Kubernetes deployment:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: permiso
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: permiso
-  template:
-    metadata:
-      labels:
-        app: permiso
-    spec:
-      containers:
-      - name: permiso
-        image: ghcr.io/codespin-ai/permiso:latest
-        ports:
-        - containerPort: 5001
-        env:
-        - name: PERMISO_DB_HOST
-          value: postgres-service
-        - name: PERMISO_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: permiso-secrets
-              key: db-password
-        livenessProbe:
-          httpGet:
-            path: /graphql
-            port: 5001
-          initialDelaySeconds: 30
-          periodSeconds: 10
-```
+- [API Documentation](docs/api.md) - Complete GraphQL API reference with examples
+- [Architecture Overview](docs/architecture.md) - System design and architecture details
+- [Database Configuration](docs/database.md) - Multi-database setup and configuration
+- [Coding Standards](CODING-STANDARDS.md) - Development patterns and conventions
 
 ## API Authentication
 

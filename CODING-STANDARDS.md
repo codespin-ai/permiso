@@ -184,6 +184,7 @@ export default class UserService { ... }
 - **Types/Interfaces**: PascalCase (`User`, `CreateUserInput`)
 - **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`, `DEFAULT_TIMEOUT`)
 - **Files**: kebab-case (`user-service.ts`, `create-user.ts`)
+- **Acronyms**: Keep acronyms 3 letters or shorter in UPPERCASE (`totalMS`, `apiURL`, `getXMLData`) but longer acronyms use PascalCase (`HttpClient`, `JsonParser`)
 
 #### Database Naming
 - **Tables**: singular, snake_case (`user`, `role_permission`)
