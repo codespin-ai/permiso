@@ -17,12 +17,12 @@
     "@codespin/permiso-core": "file:../permiso-core",
     "@codespin/permiso-db": "file:../permiso-db",
     "@codespin/permiso-logger": "file:../permiso-logger",
-    "body-parser": "^1.20.2",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "graphql": "^16.8.1",
+    "express": "^4.21.2",
+    "graphql": "^16.11.0",
     "knex": "^3.1.0",
-    "pg": "^8.11.3"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.7",
