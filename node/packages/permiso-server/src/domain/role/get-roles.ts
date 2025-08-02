@@ -26,35 +26,54 @@ export async function getRoles(
   pagination?: PaginationInput
 ): Promise<Result<RoleWithProperties[]>> {
   try {
-    let query = `
-      SELECT DISTINCT r.* 
-      FROM role r
-    `;
+    let query: string;
     const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN role_property rp ON r.id = rp.parent_id AND r.org_id = rp.org_id`;
-    }
-
-    const conditions: string[] = [`r.org_id = $(orgId)`];
-
-    if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`r.id = ANY($(ids))`);
-      params.ids = filters.ids;
-    }
-
-    if (filters?.properties && filters.properties.length > 0) {
+      // Use a subquery to find roles that have ALL the requested properties
+      query = `
+        SELECT DISTINCT r.* 
+        FROM role r
+        WHERE r.org_id = $(orgId)
+          AND r.id IN (
+            SELECT parent_id 
+            FROM role_property
+            WHERE org_id = $(orgId)
+              AND (name, value) IN (
+      `;
+      
+      const propConditions: string[] = [];
       filters.properties.forEach((prop, index) => {
-        const nameParam = `propName${index}`;
-        const valueParam = `propValue${index}`;
-        conditions.push(`(rp.name = $(${nameParam}) AND rp.value = $(${valueParam}))`);
-        params[nameParam] = prop.name;
-        params[valueParam] = prop.value;
+        propConditions.push(`($(propName${index}), $(propValue${index}))`);
+        params[`propName${index}`] = prop.name;
+        params[`propValue${index}`] = JSON.stringify(prop.value);
       });
+      
+      query += propConditions.join(', ');
+      query += `)
+            GROUP BY parent_id
+            HAVING COUNT(DISTINCT name) = $(propCount)
+          )`;
+      params.propCount = filters.properties.length;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` AND r.id = ANY($(ids))`;
+        params.ids = filters.ids;
+      }
+    } else {
+      query = `
+        SELECT DISTINCT r.* 
+        FROM role r
+        WHERE r.org_id = $(orgId)
+      `;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` AND r.id = ANY($(ids))`;
+        params.ids = filters.ids;
+      }
     }
 
-    query += ` WHERE ${conditions.join(' AND ')}`;
-    query += ` ORDER BY r.created_at DESC`;
+    query += ` ORDER BY r.id ASC`;
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;

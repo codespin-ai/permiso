@@ -10,6 +10,11 @@ import './tests/resources.test.js';
 import './tests/permissions.test.js';
 import './tests/api-key-auth.test.js';
 import './tests/properties.test.js';
+import './tests/batch-queries.test.js';
+import './tests/pagination-filtering.test.js';
+import './tests/property-operations.test.js';
+import './tests/edge-cases.test.js';
+import './tests/field-resolvers.test.js';
 
 export let testDb: TestDatabase;
 export let server: TestServer;

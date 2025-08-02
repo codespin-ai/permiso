@@ -8,6 +8,7 @@ export { getRolePermissionsResolver } from './get-role-permissions.js';
 export { getEffectivePermissionsResolver } from './get-effective-permissions.js';
 export { getEffectivePermissionsByPrefixResolver } from './get-effective-permissions-by-prefix.js';
 export { hasPermissionResolver } from './has-permission.js';
+export { permissionFieldResolvers } from './permission-field-resolvers.js';
 
 // Export domain functions
 export { grantUserPermission } from '../../domain/permission/grant-user-permission.js';

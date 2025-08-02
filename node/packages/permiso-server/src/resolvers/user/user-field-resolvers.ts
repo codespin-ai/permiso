@@ -3,9 +3,19 @@ import type { UserWithProperties } from '../../types.js';
 import { getUserProperties } from '../../domain/user/get-user-properties.js';
 import { getRoles } from '../../domain/role/get-roles.js';
 import { getEffectivePermissions } from '../../domain/permission/get-effective-permissions.js';
+import { getOrganization } from '../../domain/organization/get-organization.js';
+import { getUserPermissions } from '../../domain/permission/get-user-permissions.js';
 
 export const userFieldResolvers = {
   User: {
+    organization: async (parent: UserWithProperties, _: any, context: { db: Database }) => {
+      const result = await getOrganization(context.db, parent.orgId);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+
     properties: async (parent: UserWithProperties, _: any, context: { db: Database }) => {
       const result = await getUserProperties(context.db, parent.orgId, parent.id);
       if (!result.success) {
@@ -26,16 +36,25 @@ export const userFieldResolvers = {
       return result.data;
     },
 
+    permissions: async (parent: UserWithProperties, _: any, context: { db: Database }) => {
+      const result = await getUserPermissions(context.db, parent.orgId, parent.id);
+      if (!result.success) {
+        throw result.error;
+      }
+      return result.data;
+    },
+
     effectivePermissions: async (
       parent: UserWithProperties,
-      args: { resourcePath?: string },
+      args: { resourceId?: string; action?: string },
       context: { db: Database }
     ) => {
       const result = await getEffectivePermissions(
         context.db,
         parent.orgId,
         parent.id,
-        args.resourcePath
+        args.resourceId,
+        args.action
       );
       if (!result.success) {
         throw result.error;

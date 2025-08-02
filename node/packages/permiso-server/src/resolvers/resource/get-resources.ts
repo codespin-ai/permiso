@@ -14,12 +14,30 @@ export const getResourcesResolver = {
       if (!result.success) {
         throw result.error;
       }
+      
+      // Get total count without pagination
+      let totalCount = result.data.length;
+      if (args.pagination && !args.filter?.idPrefix) {
+        const countResult = await getResources(context.db, args.orgId);
+        if (countResult.success) {
+          totalCount = countResult.data.length;
+        }
+      }
+      
+      const offset = args.pagination?.offset || 0;
+      const hasNextPage = args.pagination?.limit !== undefined
+        ? (offset + args.pagination.limit) < totalCount
+        : false;
+      const hasPreviousPage = args.pagination?.offset !== undefined 
+        ? args.pagination.offset > 0
+        : false;
+      
       return {
         nodes: result.data,
-        totalCount: result.data.length,
+        totalCount,
         pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
+          hasNextPage,
+          hasPreviousPage,
           startCursor: null,
           endCursor: null
         }

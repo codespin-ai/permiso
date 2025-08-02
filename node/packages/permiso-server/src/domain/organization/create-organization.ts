@@ -25,7 +25,7 @@ export async function createOrganization(
         { 
           id: input.id, 
           name: input.name,
-          description: input.description ?? null
+          description: input.description !== undefined ? input.description : null
         }
       );
 

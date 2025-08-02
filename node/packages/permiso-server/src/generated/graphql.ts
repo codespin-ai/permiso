@@ -590,7 +590,7 @@ export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
   data: Maybe<Scalars['String']['output']>;
-  effectivePermissions: Array<Permission>;
+  effectivePermissions: Array<EffectivePermission>;
   id: Scalars['ID']['output'];
   identityProvider: Scalars['String']['output'];
   identityProviderUserId: Scalars['String']['output'];
@@ -703,7 +703,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = ResolversObject<{
-  Permission: ( Omit<RolePermission, 'organization' | 'resource' | 'role'> & { organization: _RefType['Organization'], resource: _RefType['Resource'], role: _RefType['Role'] } ) | ( Omit<UserPermission, 'organization' | 'resource' | 'user'> & { organization: _RefType['Organization'], resource: _RefType['Resource'], user: _RefType['User'] } );
+  Permission: ( Omit<RolePermission, 'resource'> & { resource: _RefType['Resource'] } ) | ( Omit<UserPermission, 'resource'> & { resource: _RefType['Resource'] } );
 }>;
 
 /** Mapping between all available schema types and the resolvers types */
@@ -721,8 +721,8 @@ export type ResolversTypes = ResolversObject<{
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
-  Organization: ResolverTypeWrapper<Omit<Organization, 'resources' | 'roles' | 'users'> & { resources: ResolversTypes['ResourceConnection'], roles: ResolversTypes['RoleConnection'], users: ResolversTypes['UserConnection'] }>;
-  OrganizationConnection: ResolverTypeWrapper<Omit<OrganizationConnection, 'nodes'> & { nodes: Array<ResolversTypes['Organization']> }>;
+  Organization: ResolverTypeWrapper<Omit<Organization, 'resources'> & { resources: ResolversTypes['ResourceConnection'] }>;
+  OrganizationConnection: ResolverTypeWrapper<OrganizationConnection>;
   OrganizationFilter: OrganizationFilter;
   PageInfo: ResolverTypeWrapper<PageInfo>;
   PaginationInput: PaginationInput;
@@ -731,22 +731,22 @@ export type ResolversTypes = ResolversObject<{
   PropertyFilter: PropertyFilter;
   PropertyInput: PropertyInput;
   Query: ResolverTypeWrapper<{}>;
-  Resource: ResolverTypeWrapper<Omit<Resource, 'organization' | 'permissions'> & { organization: ResolversTypes['Organization'], permissions: Array<ResolversTypes['Permission']> }>;
+  Resource: ResolverTypeWrapper<Omit<Resource, 'permissions'> & { permissions: Array<ResolversTypes['Permission']> }>;
   ResourceConnection: ResolverTypeWrapper<Omit<ResourceConnection, 'nodes'> & { nodes: Array<ResolversTypes['Resource']> }>;
   ResourceFilter: ResourceFilter;
-  Role: ResolverTypeWrapper<Omit<Role, 'organization' | 'permissions' | 'users'> & { organization: ResolversTypes['Organization'], permissions: Array<ResolversTypes['RolePermission']>, users: Array<ResolversTypes['User']> }>;
-  RoleConnection: ResolverTypeWrapper<Omit<RoleConnection, 'nodes'> & { nodes: Array<ResolversTypes['Role']> }>;
+  Role: ResolverTypeWrapper<Role>;
+  RoleConnection: ResolverTypeWrapper<RoleConnection>;
   RoleFilter: RoleFilter;
-  RolePermission: ResolverTypeWrapper<Omit<RolePermission, 'organization' | 'resource' | 'role'> & { organization: ResolversTypes['Organization'], resource: ResolversTypes['Resource'], role: ResolversTypes['Role'] }>;
+  RolePermission: ResolverTypeWrapper<Omit<RolePermission, 'resource'> & { resource: ResolversTypes['Resource'] }>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateOrganizationInput: UpdateOrganizationInput;
   UpdateResourceInput: UpdateResourceInput;
   UpdateRoleInput: UpdateRoleInput;
   UpdateUserInput: UpdateUserInput;
-  User: ResolverTypeWrapper<Omit<User, 'effectivePermissions' | 'organization' | 'permissions' | 'roles'> & { effectivePermissions: Array<ResolversTypes['Permission']>, organization: ResolversTypes['Organization'], permissions: Array<ResolversTypes['UserPermission']>, roles: Array<ResolversTypes['Role']> }>;
-  UserConnection: ResolverTypeWrapper<Omit<UserConnection, 'nodes'> & { nodes: Array<ResolversTypes['User']> }>;
+  User: ResolverTypeWrapper<User>;
+  UserConnection: ResolverTypeWrapper<UserConnection>;
   UserFilter: UserFilter;
-  UserPermission: ResolverTypeWrapper<Omit<UserPermission, 'organization' | 'resource' | 'user'> & { organization: ResolversTypes['Organization'], resource: ResolversTypes['Resource'], user: ResolversTypes['User'] }>;
+  UserPermission: ResolverTypeWrapper<Omit<UserPermission, 'resource'> & { resource: ResolversTypes['Resource'] }>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -764,8 +764,8 @@ export type ResolversParentTypes = ResolversObject<{
   Int: Scalars['Int']['output'];
   JSON: Scalars['JSON']['output'];
   Mutation: {};
-  Organization: Omit<Organization, 'resources' | 'roles' | 'users'> & { resources: ResolversParentTypes['ResourceConnection'], roles: ResolversParentTypes['RoleConnection'], users: ResolversParentTypes['UserConnection'] };
-  OrganizationConnection: Omit<OrganizationConnection, 'nodes'> & { nodes: Array<ResolversParentTypes['Organization']> };
+  Organization: Omit<Organization, 'resources'> & { resources: ResolversParentTypes['ResourceConnection'] };
+  OrganizationConnection: OrganizationConnection;
   OrganizationFilter: OrganizationFilter;
   PageInfo: PageInfo;
   PaginationInput: PaginationInput;
@@ -774,22 +774,22 @@ export type ResolversParentTypes = ResolversObject<{
   PropertyFilter: PropertyFilter;
   PropertyInput: PropertyInput;
   Query: {};
-  Resource: Omit<Resource, 'organization' | 'permissions'> & { organization: ResolversParentTypes['Organization'], permissions: Array<ResolversParentTypes['Permission']> };
+  Resource: Omit<Resource, 'permissions'> & { permissions: Array<ResolversParentTypes['Permission']> };
   ResourceConnection: Omit<ResourceConnection, 'nodes'> & { nodes: Array<ResolversParentTypes['Resource']> };
   ResourceFilter: ResourceFilter;
-  Role: Omit<Role, 'organization' | 'permissions' | 'users'> & { organization: ResolversParentTypes['Organization'], permissions: Array<ResolversParentTypes['RolePermission']>, users: Array<ResolversParentTypes['User']> };
-  RoleConnection: Omit<RoleConnection, 'nodes'> & { nodes: Array<ResolversParentTypes['Role']> };
+  Role: Role;
+  RoleConnection: RoleConnection;
   RoleFilter: RoleFilter;
-  RolePermission: Omit<RolePermission, 'organization' | 'resource' | 'role'> & { organization: ResolversParentTypes['Organization'], resource: ResolversParentTypes['Resource'], role: ResolversParentTypes['Role'] };
+  RolePermission: Omit<RolePermission, 'resource'> & { resource: ResolversParentTypes['Resource'] };
   String: Scalars['String']['output'];
   UpdateOrganizationInput: UpdateOrganizationInput;
   UpdateResourceInput: UpdateResourceInput;
   UpdateRoleInput: UpdateRoleInput;
   UpdateUserInput: UpdateUserInput;
-  User: Omit<User, 'effectivePermissions' | 'organization' | 'permissions' | 'roles'> & { effectivePermissions: Array<ResolversParentTypes['Permission']>, organization: ResolversParentTypes['Organization'], permissions: Array<ResolversParentTypes['UserPermission']>, roles: Array<ResolversParentTypes['Role']> };
-  UserConnection: Omit<UserConnection, 'nodes'> & { nodes: Array<ResolversParentTypes['User']> };
+  User: User;
+  UserConnection: UserConnection;
   UserFilter: UserFilter;
-  UserPermission: Omit<UserPermission, 'organization' | 'resource' | 'user'> & { organization: ResolversParentTypes['Organization'], resource: ResolversParentTypes['Resource'], user: ResolversParentTypes['User'] };
+  UserPermission: Omit<UserPermission, 'resource'> & { resource: ResolversParentTypes['Resource'] };
 }>;
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -959,7 +959,7 @@ export type RolePermissionResolvers<ContextType = GraphQLContext, ParentType ext
 export type UserResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   data?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  effectivePermissions?: Resolver<Array<ResolversTypes['Permission']>, ParentType, ContextType, Partial<UserEffectivePermissionsArgs>>;
+  effectivePermissions?: Resolver<Array<ResolversTypes['EffectivePermission']>, ParentType, ContextType, Partial<UserEffectivePermissionsArgs>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identityProvider?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   identityProviderUserId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

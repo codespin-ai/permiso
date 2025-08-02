@@ -30,7 +30,7 @@ type User {
   organization: Organization!
   roles: [Role!]!
   permissions: [UserPermission!]!
-  effectivePermissions(resourceId: String, action: String): [Permission!]!
+  effectivePermissions(resourceId: String, action: String): [EffectivePermission!]!
 }
 
 type Role {

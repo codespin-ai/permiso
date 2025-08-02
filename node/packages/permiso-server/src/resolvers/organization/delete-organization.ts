@@ -3,9 +3,10 @@ import { deleteOrganization } from '../../domain/organization/delete-organizatio
 
 export const deleteOrganizationResolver = {
   Mutation: {
-    deleteOrganization: async (_: any, args: { id: string; safetyKey?: string }, context: { db: Database; safetyKey?: string }) => {
-      if (context.safetyKey && context.safetyKey !== args.safetyKey) {
-        throw new Error('Invalid safety key');
+    deleteOrganization: async (_: any, args: { id: string; safetyKey?: string }, context: { db: Database }) => {
+      // If safetyKey is provided, it must match the organization ID
+      if (args.safetyKey !== undefined && args.safetyKey !== args.id) {
+        throw new Error('Invalid safety key - must match organization ID');
       }
       
       const result = await deleteOrganization(context.db, args.id);

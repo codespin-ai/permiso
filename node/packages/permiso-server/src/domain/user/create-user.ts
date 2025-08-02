@@ -21,9 +21,15 @@ export async function createUser(
   try {
     const user = await db.tx(async (t) => {
       const userRow = await t.one<UserDbRow>(
-        `INSERT INTO "user" (id, org_id, identity_provider, identity_provider_user_id) 
-         VALUES ($(id), $(orgId), $(identityProvider), $(identityProviderUserId)) RETURNING *`,
-        { id: input.id, orgId: input.orgId, identityProvider: input.identityProvider, identityProviderUserId: input.identityProviderUserId }
+        `INSERT INTO "user" (id, org_id, identity_provider, identity_provider_user_id, data) 
+         VALUES ($(id), $(orgId), $(identityProvider), $(identityProviderUserId), $(data)) RETURNING *`,
+        { 
+          id: input.id, 
+          orgId: input.orgId, 
+          identityProvider: input.identityProvider, 
+          identityProviderUserId: input.identityProviderUserId,
+          data: input.data !== undefined ? input.data : null
+        }
       );
 
       if (input.properties && input.properties.length > 0) {

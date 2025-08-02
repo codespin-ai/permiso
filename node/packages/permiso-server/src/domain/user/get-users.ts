@@ -30,43 +30,74 @@ export async function getUsers(
   pagination?: PaginationInput
 ): Promise<Result<UserWithProperties[]>> {
   try {
-    let query = `
-      SELECT DISTINCT u.* 
-      FROM "user" u
-    `;
+    let query: string;
     const params: Record<string, any> = { orgId };
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN user_property up ON u.id = up.parent_id AND u.org_id = up.org_id`;
-    }
-
-    const conditions: string[] = [`u.org_id = $(orgId)`];
-
-    if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`u.id = ANY($(userIds))`);
-      params.userIds = filters.ids;
-    }
-
-    if (filters?.identityProvider) {
-      conditions.push(`u.identity_provider = $(identityProvider)`);
-      params.identityProvider = filters.identityProvider;
-    }
-
-    if (filters?.identityProviderUserId) {
-      conditions.push(`u.identity_provider_user_id = $(identityProviderUserId)`);
-      params.identityProviderUserId = filters.identityProviderUserId;
-    }
-
-    if (filters?.properties && filters.properties.length > 0) {
+      // Use a subquery to find users that have ALL the requested properties
+      query = `
+        SELECT DISTINCT u.* 
+        FROM "user" u
+        WHERE u.org_id = $(orgId)
+          AND u.id IN (
+            SELECT parent_id 
+            FROM user_property
+            WHERE org_id = $(orgId)
+              AND (name, value) IN (
+      `;
+      
+      const propConditions: string[] = [];
       filters.properties.forEach((prop, index) => {
-        conditions.push(`(up.name = $(propName${index}) AND up.value = $(propValue${index}))`);
+        propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
-        params[`propValue${index}`] = prop.value;
+        params[`propValue${index}`] = JSON.stringify(prop.value);
       });
+      
+      query += propConditions.join(', ');
+      query += `)
+            GROUP BY parent_id
+            HAVING COUNT(DISTINCT name) = $(propCount)
+          )`;
+      params.propCount = filters.properties.length;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` AND u.id = ANY($(userIds))`;
+        params.userIds = filters.ids;
+      }
+      
+      if (filters?.identityProvider) {
+        query += ` AND u.identity_provider = $(identityProvider)`;
+        params.identityProvider = filters.identityProvider;
+      }
+      
+      if (filters?.identityProviderUserId) {
+        query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
+        params.identityProviderUserId = filters.identityProviderUserId;
+      }
+    } else {
+      query = `
+        SELECT DISTINCT u.* 
+        FROM "user" u
+        WHERE u.org_id = $(orgId)
+      `;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` AND u.id = ANY($(userIds))`;
+        params.userIds = filters.ids;
+      }
+      
+      if (filters?.identityProvider) {
+        query += ` AND u.identity_provider = $(identityProvider)`;
+        params.identityProvider = filters.identityProvider;
+      }
+      
+      if (filters?.identityProviderUserId) {
+        query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
+        params.identityProviderUserId = filters.identityProviderUserId;
+      }
     }
 
-    query += ` WHERE ${conditions.join(' AND ')}`;
-    query += ` ORDER BY u.created_at DESC`;
+    query += ` ORDER BY u.id ASC`;
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;

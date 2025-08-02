@@ -10,11 +10,11 @@ export async function deleteOrganizationProperty(
   name: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(
+    const result = await db.result(
       `DELETE FROM organization_property WHERE parent_id = $(orgId) AND name = $(name)`,
       { orgId, name }
     );
-    return { success: true, data: true };
+    return { success: true, data: result.rowCount > 0 };
   } catch (error) {
     logger.error('Failed to delete organization property', { error, orgId, name });
     return { success: false, error: error as Error };

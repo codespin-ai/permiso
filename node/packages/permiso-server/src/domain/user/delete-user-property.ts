@@ -11,11 +11,11 @@ export async function deleteUserProperty(
   name: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(
+    const result = await db.result(
       `DELETE FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
       { userId, orgId, name }
     );
-    return { success: true, data: true };
+    return { success: true, data: result.rowCount > 0 };
   } catch (error) {
     logger.error('Failed to delete user property', { error, orgId, userId, name });
     return { success: false, error: error as Error };

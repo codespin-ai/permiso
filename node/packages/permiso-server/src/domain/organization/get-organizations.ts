@@ -25,36 +25,51 @@ export async function getOrganizations(
   pagination?: PaginationInput
 ): Promise<Result<OrganizationWithProperties[]>> {
   try {
-    let query = `
-      SELECT DISTINCT o.* 
-      FROM organization o
-    `;
+    let query: string;
     const params: Record<string, any> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
-      query += ` LEFT JOIN organization_property op ON o.id = op.parent_id`;
-    }
-
-    const conditions: string[] = [];
-
-    if (filters?.ids && filters.ids.length > 0) {
-      conditions.push(`o.id = ANY($(ids))`);
-      params.ids = filters.ids;
-    }
-
-    if (filters?.properties && filters.properties.length > 0) {
+      // Use a subquery to find organizations that have ALL the requested properties
+      query = `
+        SELECT DISTINCT o.* 
+        FROM organization o
+        WHERE o.id IN (
+          SELECT parent_id 
+          FROM organization_property
+          WHERE (name, value) IN (
+      `;
+      
+      const propConditions: string[] = [];
       filters.properties.forEach((prop, index) => {
-        conditions.push(`(op.name = $(propName${index}) AND op.value = $(propValue${index}))`);
+        propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
-        params[`propValue${index}`] = prop.value;
+        params[`propValue${index}`] = JSON.stringify(prop.value);
       });
+      
+      query += propConditions.join(', ');
+      query += `)
+          GROUP BY parent_id
+          HAVING COUNT(DISTINCT name) = $(propCount)
+        )`;
+      params.propCount = filters.properties.length;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` AND o.id = ANY($(ids))`;
+        params.ids = filters.ids;
+      }
+    } else {
+      query = `
+        SELECT DISTINCT o.* 
+        FROM organization o
+      `;
+      
+      if (filters?.ids && filters.ids.length > 0) {
+        query += ` WHERE o.id = ANY($(ids))`;
+        params.ids = filters.ids;
+      }
     }
 
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    query += ` ORDER BY o.created_at DESC`;
+    query += ` ORDER BY o.id ASC`;
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;

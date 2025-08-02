@@ -42,6 +42,7 @@ import {
 import {
   getResourceResolver,
   getResourcesResolver,
+  resourcesByIdPrefixResolver,
   createResourceResolver,
   updateResourceResolver,
   deleteResourceResolver,
@@ -57,7 +58,8 @@ import {
   getRolePermissionsResolver,
   getEffectivePermissionsResolver,
   getEffectivePermissionsByPrefixResolver,
-  hasPermissionResolver
+  hasPermissionResolver,
+  permissionFieldResolvers
 } from './permission/index.js';
 
 function mergeResolvers(...resolvers: any[]) {
@@ -127,6 +129,7 @@ export const resolvers = mergeResolvers(
   // Resource resolvers
   getResourceResolver,
   getResourcesResolver,
+  resourcesByIdPrefixResolver,
   createResourceResolver,
   updateResourceResolver,
   deleteResourceResolver,
@@ -141,5 +144,6 @@ export const resolvers = mergeResolvers(
   getRolePermissionsResolver,
   getEffectivePermissionsResolver,
   getEffectivePermissionsByPrefixResolver,
-  hasPermissionResolver
+  hasPermissionResolver,
+  permissionFieldResolvers
 );

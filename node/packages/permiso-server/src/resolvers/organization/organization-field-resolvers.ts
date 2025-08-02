@@ -20,12 +20,29 @@ export const organizationFieldResolvers = {
       if (!result.success) {
         throw result.error;
       }
+      
+      // Get total count without pagination
+      let totalCount = result.data.length;
+      if (args.pagination) {
+        const countResult = await getUsers(context.db, parent.id, args.filter);
+        if (countResult.success) {
+          totalCount = countResult.data.length;
+        }
+      }
+      
+      const hasNextPage = args.pagination?.offset !== undefined && args.pagination?.limit !== undefined
+        ? (args.pagination.offset + args.pagination.limit) < totalCount
+        : false;
+      const hasPreviousPage = args.pagination?.offset !== undefined 
+        ? args.pagination.offset > 0
+        : false;
+      
       return {
         nodes: result.data,
-        totalCount: result.data.length,
+        totalCount,
         pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
+          hasNextPage,
+          hasPreviousPage,
           startCursor: null,
           endCursor: null
         }
@@ -37,12 +54,29 @@ export const organizationFieldResolvers = {
       if (!result.success) {
         throw result.error;
       }
+      
+      // Get total count without pagination
+      let totalCount = result.data.length;
+      if (args.pagination) {
+        const countResult = await getRoles(context.db, parent.id, args.filter);
+        if (countResult.success) {
+          totalCount = countResult.data.length;
+        }
+      }
+      
+      const hasNextPage = args.pagination?.offset !== undefined && args.pagination?.limit !== undefined
+        ? (args.pagination.offset + args.pagination.limit) < totalCount
+        : false;
+      const hasPreviousPage = args.pagination?.offset !== undefined 
+        ? args.pagination.offset > 0
+        : false;
+      
       return {
         nodes: result.data,
-        totalCount: result.data.length,
+        totalCount,
         pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
+          hasNextPage,
+          hasPreviousPage,
           startCursor: null,
           endCursor: null
         }
@@ -60,12 +94,29 @@ export const organizationFieldResolvers = {
       if (!result.success) {
         throw result.error;
       }
+      
+      // Get total count without pagination
+      let totalCount = result.data.length;
+      if (args.pagination && !args.filter?.idPrefix) {
+        const countResult = await getResources(context.db, parent.id);
+        if (countResult.success) {
+          totalCount = countResult.data.length;
+        }
+      }
+      
+      const hasNextPage = args.pagination?.offset !== undefined && args.pagination?.limit !== undefined
+        ? (args.pagination.offset + args.pagination.limit) < totalCount
+        : false;
+      const hasPreviousPage = args.pagination?.offset !== undefined 
+        ? args.pagination.offset > 0
+        : false;
+      
       return {
         nodes: result.data,
-        totalCount: result.data.length,
+        totalCount,
         pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
+          hasNextPage,
+          hasPreviousPage,
           startCursor: null,
           endCursor: null
         }

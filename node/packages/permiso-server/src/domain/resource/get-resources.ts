@@ -20,7 +20,7 @@ export async function getResources(
   pagination?: PaginationInput
 ): Promise<Result<Resource[]>> {
   try {
-    let query = `SELECT * FROM resource WHERE org_id = $(orgId) ORDER BY created_at DESC`;
+    let query = `SELECT * FROM resource WHERE org_id = $(orgId) ORDER BY id ASC`;
     const params: Record<string, any> = { orgId };
 
     if (pagination?.limit) {

@@ -12,12 +12,12 @@ export async function revokeRolePermission(
   action: string
 ): Promise<Result<boolean>> {
   try {
-    await db.none(
+    const result = await db.result(
       `DELETE FROM role_permission 
        WHERE role_id = $(roleId) AND org_id = $(orgId) AND resource_id = $(resourceId) AND action = $(action)`,
       { roleId, orgId, resourceId, action }
     );
-    return { success: true, data: true };
+    return { success: true, data: result.rowCount > 0 };
   } catch (error) {
     logger.error('Failed to revoke role permission', { error, orgId, roleId, resourceId, action });
     return { success: false, error: error as Error };
