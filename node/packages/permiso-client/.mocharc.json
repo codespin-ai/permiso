@@ -1,0 +1,17 @@
+{
+  "extension": [
+    "ts"
+  ],
+  "spec": "src/tests/index.test.ts",
+  "require": [
+    "ts-node/register"
+  ],
+  "recursive": true,
+  "timeout": 30000,
+  "exit": true,
+  "loader": "ts-node/esm",
+  "node-option": [
+    "experimental-specifier-resolution=node",
+    "loader=ts-node/esm"
+  ]
+}
