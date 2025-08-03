@@ -8,15 +8,11 @@ export const testDb = new TestDatabase();
 before(async function() {
   this.timeout(60000); // 60 seconds for setup
   
-  console.log('Starting test setup...');
-  
   // Setup database
   await testDb.setup();
   
   // Start server
   await testServer.start();
-  
-  console.log('Test setup complete');
 });
 
 // Cleanup after each test
@@ -28,13 +24,9 @@ afterEach(async function() {
 after(async function() {
   this.timeout(30000); // 30 seconds for teardown
   
-  console.log('Starting test teardown...');
-  
   // Stop server
   await testServer.stop();
   
   // Note: We're not dropping the database here to allow for debugging
   // The database will be cleaned up on the next test run
-  
-  console.log('Test teardown complete');
 });

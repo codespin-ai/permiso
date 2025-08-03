@@ -15,7 +15,7 @@ export class TestDatabase {
   }
 
   async setup(): Promise<void> {
-    console.log('Setting up test database...');
+    // Setting up test database
     
     // Create database if it doesn't exist
     const adminConfig = {
@@ -35,7 +35,7 @@ export class TestDatabase {
       );
       
       if (result.rows.length === 0) {
-        console.log(`Creating database ${this.dbName}...`);
+        // Creating database
         await adminDb.raw(`CREATE DATABASE ${this.dbName}`);
       }
     } finally {
@@ -57,16 +57,16 @@ export class TestDatabase {
     const testDb = knex(testDbConfig);
     
     try {
-      console.log('Running migrations...');
+      // Running migrations
       await testDb.migrate.latest();
-      console.log('Test database setup complete');
+      // Test database setup complete
     } finally {
       await testDb.destroy();
     }
   }
 
   async cleanup(): Promise<void> {
-    console.log('Cleaning up test database...');
+    // Cleaning up test database
     
     const testDb = knex({
       ...this.config,
@@ -95,14 +95,14 @@ export class TestDatabase {
         await testDb.raw(`TRUNCATE TABLE "${table}" CASCADE`);
       }
       
-      console.log('Test database cleaned');
+      // Test database cleaned
     } finally {
       await testDb.destroy();
     }
   }
 
   async teardown(): Promise<void> {
-    console.log('Tearing down test database...');
+    // Tearing down test database
     
     const adminConfig = {
       ...this.config,
@@ -123,7 +123,7 @@ export class TestDatabase {
       
       // Drop the database
       await adminDb.raw(`DROP DATABASE IF EXISTS ${this.dbName}`);
-      console.log('Test database dropped');
+      // Test database dropped
     } finally {
       await adminDb.destroy();
     }

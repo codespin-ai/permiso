@@ -17,7 +17,7 @@ export class TestServer {
       const pid = execSync(`lsof -ti:${this.port} || true`).toString().trim();
       
       if (pid) {
-        console.log(`Killing process ${pid} using port ${this.port}...`);
+        // Killing process using port
         execSync(`kill -9 ${pid}`);
         // Wait a bit for the process to die
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -32,7 +32,7 @@ export class TestServer {
     await this.killProcessOnPort();
     
     return new Promise((resolve, reject) => {
-      console.log(`Starting test server on port ${this.port}...`);
+      // Starting test server
       
       // Set environment variables for test server
       const env = {
@@ -48,7 +48,7 @@ export class TestServer {
 
       // Start the server from the project root
       const projectRoot = new URL('../../../../../../', import.meta.url).pathname;
-      console.log('Project root:', projectRoot);
+      // Project root set
       
       this.process = spawn('./start.sh', [], {
         env,
@@ -61,7 +61,7 @@ export class TestServer {
 
       this.process.stdout?.on('data', (data) => {
         const output = data.toString();
-        console.log('Server output:', output);
+        // Server output received
         
         // Check if server is ready
         if (output.includes('GraphQL server running') || output.includes('Server running at')) {
@@ -84,7 +84,7 @@ export class TestServer {
       // Wait for server to be ready
       this.waitForServer()
         .then(() => {
-          console.log('Test server is ready');
+          // Test server is ready
           resolve();
         })
         .catch(reject);
@@ -114,7 +114,7 @@ export class TestServer {
 
   async stop(): Promise<void> {
     if (this.process) {
-      console.log('Stopping test server...');
+      // Stopping test server
       
       return new Promise((resolve) => {
         let resolved = false;
@@ -122,7 +122,7 @@ export class TestServer {
         const cleanup = () => {
           if (!resolved) {
             resolved = true;
-            console.log('Test server stopped');
+            // Test server stopped
             this.process = null;
             resolve();
           }
@@ -137,7 +137,7 @@ export class TestServer {
         // Force kill after 2 seconds and resolve
         setTimeout(() => {
           if (this.process && !resolved) {
-            console.log('Force killing test server...');
+            // Force killing test server
             this.process.kill('SIGKILL');
             setTimeout(cleanup, 100);
           }
