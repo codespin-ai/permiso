@@ -17,6 +17,7 @@ PACKAGES=(
   "permiso-logger"
   "permiso-db"
   "permiso-server"
+  "permiso-client"
   "permiso-integration-tests"
 )
 

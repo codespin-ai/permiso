@@ -17,3 +17,16 @@ generates:
         inputValue: false
         object: false
         defaultValue: false
+  ../permiso-client/src/generated/types.ts:
+    plugins:
+      - "typescript"
+    config:
+      scalars:
+        DateTime: "string"
+        JSON: "unknown"
+      enumsAsTypes: true
+      avoidOptionals:
+        field: true
+        inputValue: false
+        object: false
+        defaultValue: false
