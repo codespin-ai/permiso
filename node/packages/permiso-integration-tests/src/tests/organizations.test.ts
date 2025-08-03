@@ -7,6 +7,7 @@ describe('Organizations', () => {
     await testDb.truncateAllTables();
   });
 
+
   describe('createOrganization', () => {
     it('should create a new organization', async () => {
       const mutation = gql`
@@ -57,27 +58,39 @@ describe('Organizations', () => {
       `;
 
       // Create first organization
-      await client.mutate(mutation, {
+      const firstResult = await client.mutate(mutation, {
         input: {
           id: 'org-dup-test',
           name: 'First Organization'
         }
       });
+      
+      expect(firstResult.data?.createOrganization?.id).to.equal('org-dup-test');
 
       // Try to create duplicate
       try {
-        const dupResult = await client.mutate(mutation, {
+        const result = await client.mutate(mutation, {
           input: {
             id: 'org-dup-test',
             name: 'Duplicate Organization'
           }
         });
-        // Duplicate result received
+        
+        // Check if there are errors in the result (due to errorPolicy: 'all')
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message || '';
+          expect(errorMessage.toLowerCase()).to.satisfy((msg: string) => 
+            msg.includes('duplicate') || msg.includes('already exists') || msg.includes('23505')
+          );
+          return; // Test passes if we got the expected error
+        }
+        
+        // If we get here, the duplicate was created when it shouldn't have been
+        expect.fail('Should have thrown an error for duplicate organization ID');
       } catch (error: any) {
-        // The mutation succeeded when it should have failed
-        // This might mean the test needs to be run in isolation
-        if (error.message === 'Should have thrown an error') {
-          throw error; // Re-throw the expect.fail error
+        // If this is our expect.fail error, re-throw it
+        if (error.message?.includes('Should have thrown an error for duplicate organization ID')) {
+          throw error;
         }
         // Otherwise check for duplicate key error
         const errorMessage = error.graphQLErrors?.[0]?.message || error.message || '';
