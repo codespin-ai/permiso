@@ -62,7 +62,7 @@ export class TestDatabase {
       // Create fresh database
       await adminKnex.raw(`CREATE DATABASE "${this.dbName}"`);
       
-      console.log(`Created test database: ${this.dbName}`);
+      // Created test database
     } finally {
       await adminKnex.destroy();
     }
@@ -78,7 +78,7 @@ export class TestDatabase {
       await this.knexInstance.migrate.latest({
         directory: migrationsPath.pathname
       });
-      console.log('Migrations completed');
+      // Migrations completed
     } finally {
       await this.knexInstance.destroy();
       this.knexInstance = null;
@@ -121,7 +121,7 @@ export class TestDatabase {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
-      console.log(`Dropped test database: ${this.dbName}`);
+      // Dropped test database
     } catch (error) {
       console.error('Error dropping test database:', error);
     } finally {

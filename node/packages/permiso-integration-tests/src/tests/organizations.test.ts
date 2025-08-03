@@ -72,7 +72,7 @@ describe('Organizations', () => {
             name: 'Duplicate Organization'
           }
         });
-        console.log('Duplicate result:', JSON.stringify(dupResult, null, 2));
+        // Duplicate result received
       } catch (error: any) {
         // The mutation succeeded when it should have failed
         // This might mean the test needs to be run in isolation

@@ -22,7 +22,7 @@ export let client: GraphQLClient;
 
 before(async function() {
   this.timeout(60000);
-  console.log('🚀 Starting test environment...');
+  // Starting test environment
   
   // Setup database
   testDb = TestDatabase.getInstance();
@@ -35,12 +35,12 @@ before(async function() {
   // Initialize GraphQL client
   client = new GraphQLClient('http://localhost:5002/graphql');
   
-  console.log('✅ Test environment ready');
+  // Test environment ready
 });
 
 after(async function() {
   this.timeout(30000);
-  console.log('🧹 Cleaning up test environment...');
+  // Cleaning up test environment
   
   try {
     // Stop GraphQL client first
@@ -61,7 +61,7 @@ after(async function() {
       await testDb.teardown();
     }
     
-    console.log('✅ Cleanup complete');
+    // Cleanup complete
     
     // Force exit after cleanup to ensure test process terminates
     // This is needed because some connections might still be lingering
