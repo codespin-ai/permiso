@@ -37,7 +37,7 @@ npm run migrate:rollback
 
 ## Architecture
 
-The package follows functional programming patterns:
+The package follows these patterns:
 
 - **No classes**: All exports are pure functions
 - **Result types**: Error handling using `Result<T, E>` pattern

@@ -2,15 +2,15 @@
 
 ## Overview
 
-Permiso is a comprehensive Role-Based Access Control (RBAC) system designed to provide fine-grained permission management for multi-tenant applications. It follows a functional programming paradigm and provides a GraphQL API for all operations.
+Permiso is a comprehensive Role-Based Access Control (RBAC) system designed to provide fine-grained permission management for multi-tenant applications. It provides a GraphQL API for all operations.
 
 ## Core Design Principles
 
 ### 1. Multi-Tenant Isolation
 Every entity in Permiso is scoped to an organization, ensuring complete data isolation between tenants.
 
-### 2. Functional Programming
-The entire codebase follows functional programming principles:
+### 2. Code Organization
+The codebase follows these principles:
 - No classes, only pure functions
 - Explicit dependency injection
 - Immutable data structures

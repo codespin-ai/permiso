@@ -1,5 +1,5 @@
 /**
- * Result<T,E> union type for functional error handling.
+ * Result<T,E> union type for explicit error handling.
  * 
  * Instead of throwing exceptions, functions return either a Success<T> or Failure<E>.
  * This makes error handling explicit and type-safe.
