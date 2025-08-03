@@ -9,6 +9,7 @@ A comprehensive Role-Based Access Control (RBAC) system with GraphQL API, built 
 - 🔐 **Fine-grained Permissions** - Resource-based access control with path-like IDs
 - 🏷️ **Properties & Filtering** - Custom metadata with query capabilities
 - 🚀 **GraphQL API** - Modern, type-safe API with full CRUD operations
+- 📦 **TypeScript Client** - Official client library for easy integration
 - 📊 **Effective Permissions** - Combined user and role permission calculation
 
 ## Quick Start
@@ -94,6 +95,46 @@ curl -X POST http://localhost:5001/graphql \
 ```
 
 For complete examples and TypeScript usage, see [API Documentation](docs/api.md).
+
+## TypeScript Client
+
+For TypeScript/JavaScript applications, use the official client library that provides a simple, type-safe interface without needing to write GraphQL queries:
+
+```bash
+npm install @codespin/permiso-client
+```
+
+### Quick Example
+
+```typescript
+import { 
+  createOrganization,
+  createUser,
+  hasPermission,
+  PermisoConfig 
+} from '@codespin/permiso-client';
+
+const config: PermisoConfig = {
+  endpoint: 'http://localhost:5001',
+  apiKey: 'your-api-key' // optional
+};
+
+// Create an organization
+const org = await createOrganization(config, {
+  id: 'acme-corp',
+  name: 'ACME Corporation'
+});
+
+// Check permissions
+const canAccess = await hasPermission(config, {
+  orgId: 'acme-corp',
+  userId: 'john-doe',
+  resourceId: '/api/users/*',
+  action: 'read'
+});
+```
+
+See the [permiso-client README](node/packages/permiso-client/README.md) for full documentation.
 
 ## Development
 
