@@ -713,4 +713,333 @@ describe('Pagination and Filtering', () => {
       });
     });
   });
+
+  describe('Sorting', () => {
+    describe('organizations sorting', () => {
+      beforeEach(async () => {
+        // Create organizations with specific IDs to test sorting
+        const mutation = gql`
+          mutation CreateOrganization($input: CreateOrganizationInput!) {
+            createOrganization(input: $input) {
+              id
+            }
+          }
+        `;
+
+        const orgs = ['org-charlie', 'org-alpha', 'org-delta', 'org-bravo'];
+        for (const orgId of orgs) {
+          await client.mutate(mutation, {
+            input: {
+              id: orgId,
+              name: `Organization ${orgId}`
+            }
+          });
+        }
+      });
+
+      it('should sort organizations by id ASC (default)', async () => {
+        const query = gql`
+          query ListOrganizations($pagination: PaginationInput) {
+            organizations(pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        const result = await client.query(query, {
+          pagination: { limit: 10 }
+        });
+
+        const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
+        expect(ids).to.deep.equal(['org-alpha', 'org-bravo', 'org-charlie', 'org-delta']);
+      });
+
+      it('should sort organizations by id DESC', async () => {
+        const query = gql`
+          query ListOrganizations($pagination: PaginationInput) {
+            organizations(pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        const result = await client.query(query, {
+          pagination: { limit: 10, sortDirection: 'DESC' }
+        });
+
+        const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
+        expect(ids).to.deep.equal(['org-delta', 'org-charlie', 'org-bravo', 'org-alpha']);
+      });
+    });
+
+    describe('users sorting', () => {
+      beforeEach(async () => {
+        // Create test organization
+        const orgMutation = gql`
+          mutation CreateOrganization($input: CreateOrganizationInput!) {
+            createOrganization(input: $input) {
+              id
+            }
+          }
+        `;
+
+        await client.mutate(orgMutation, {
+          input: { id: 'test-org', name: 'Test Organization' }
+        });
+
+        // Create users with specific IDs to test sorting
+        const userMutation = gql`
+          mutation CreateUser($input: CreateUserInput!) {
+            createUser(input: $input) {
+              id
+            }
+          }
+        `;
+
+        const users = ['user-zulu', 'user-alpha', 'user-mike', 'user-bravo'];
+        for (const userId of users) {
+          await client.mutate(userMutation, {
+            input: {
+              id: userId,
+              orgId: 'test-org',
+              identityProvider: 'auth0',
+              identityProviderUserId: userId
+            }
+          });
+        }
+      });
+
+      it('should sort users by id ASC', async () => {
+        const query = gql`
+          query ListUsers($orgId: ID!, $pagination: PaginationInput) {
+            users(orgId: $orgId, pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        const result = await client.query(query, {
+          orgId: 'test-org',
+          pagination: { limit: 10, sortDirection: 'ASC' }
+        });
+
+        const ids = result.data?.users?.nodes.map((u: any) => u.id);
+        expect(ids).to.deep.equal(['user-alpha', 'user-bravo', 'user-mike', 'user-zulu']);
+      });
+
+      it('should sort users by id DESC', async () => {
+        const query = gql`
+          query ListUsers($orgId: ID!, $pagination: PaginationInput) {
+            users(orgId: $orgId, pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        const result = await client.query(query, {
+          orgId: 'test-org',
+          pagination: { limit: 10, sortDirection: 'DESC' }
+        });
+
+        const ids = result.data?.users?.nodes.map((u: any) => u.id);
+        expect(ids).to.deep.equal(['user-zulu', 'user-mike', 'user-bravo', 'user-alpha']);
+      });
+    });
+
+    describe('roles sorting', () => {
+      beforeEach(async () => {
+        // Create test organization
+        const orgMutation = gql`
+          mutation CreateOrganization($input: CreateOrganizationInput!) {
+            createOrganization(input: $input) {
+              id
+            }
+          }
+        `;
+
+        await client.mutate(orgMutation, {
+          input: { id: 'test-org', name: 'Test Organization' }
+        });
+
+        // Create roles with specific IDs to test sorting
+        const roleMutation = gql`
+          mutation CreateRole($input: CreateRoleInput!) {
+            createRole(input: $input) {
+              id
+            }
+          }
+        `;
+
+        const roles = ['role-viewer', 'role-admin', 'role-editor', 'role-contributor'];
+        for (const roleId of roles) {
+          await client.mutate(roleMutation, {
+            input: {
+              id: roleId,
+              orgId: 'test-org',
+              name: roleId
+            }
+          });
+        }
+      });
+
+      it('should sort roles by id with pagination', async () => {
+        const query = gql`
+          query ListRoles($orgId: ID!, $pagination: PaginationInput) {
+            roles(orgId: $orgId, pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        // Test DESC with limit
+        const result = await client.query(query, {
+          orgId: 'test-org',
+          pagination: { limit: 2, sortDirection: 'DESC' }
+        });
+
+        const ids = result.data?.roles?.nodes.map((r: any) => r.id);
+        expect(ids).to.deep.equal(['role-viewer', 'role-editor']);
+      });
+    });
+
+    describe('resources sorting', () => {
+      beforeEach(async () => {
+        // Create test organization
+        const orgMutation = gql`
+          mutation CreateOrganization($input: CreateOrganizationInput!) {
+            createOrganization(input: $input) {
+              id
+            }
+          }
+        `;
+
+        await client.mutate(orgMutation, {
+          input: { id: 'test-org', name: 'Test Organization' }
+        });
+
+        // Create resources with specific IDs to test sorting
+        const resourceMutation = gql`
+          mutation CreateResource($input: CreateResourceInput!) {
+            createResource(input: $input) {
+              id
+            }
+          }
+        `;
+
+        const resources = ['/api/zoo', '/api/aardvark', '/api/monkey', '/api/bear'];
+        for (const resourceId of resources) {
+          await client.mutate(resourceMutation, {
+            input: {
+              id: resourceId,
+              orgId: 'test-org',
+              name: resourceId
+            }
+          });
+        }
+      });
+
+      it('should sort resources by id ASC and DESC', async () => {
+        const query = gql`
+          query ListResources($orgId: ID!, $pagination: PaginationInput) {
+            resources(orgId: $orgId, pagination: $pagination) {
+              nodes {
+                id
+              }
+            }
+          }
+        `;
+
+        // Test ASC
+        const ascResult = await client.query(query, {
+          orgId: 'test-org',
+          pagination: { sortDirection: 'ASC' }
+        });
+
+        const ascIds = ascResult.data?.resources?.nodes.map((r: any) => r.id);
+        expect(ascIds).to.deep.equal(['/api/aardvark', '/api/bear', '/api/monkey', '/api/zoo']);
+
+        // Test DESC
+        const descResult = await client.query(query, {
+          orgId: 'test-org',
+          pagination: { sortDirection: 'DESC' }
+        });
+
+        const descIds = descResult.data?.resources?.nodes.map((r: any) => r.id);
+        expect(descIds).to.deep.equal(['/api/zoo', '/api/monkey', '/api/bear', '/api/aardvark']);
+      });
+    });
+
+    describe('combined sorting, filtering, and pagination', () => {
+      beforeEach(async () => {
+        // Create organizations with properties
+        const mutation = gql`
+          mutation CreateOrganization($input: CreateOrganizationInput!) {
+            createOrganization(input: $input) {
+              id
+            }
+          }
+        `;
+
+        const orgs = [
+          'premium-zulu', 'free-alpha', 'premium-alpha', 'free-zulu',
+          'premium-mike', 'free-mike', 'premium-bravo', 'free-bravo'
+        ];
+        
+        for (const orgId of orgs) {
+          const tier = orgId.startsWith('premium') ? 'premium' : 'free';
+          await client.mutate(mutation, {
+            input: {
+              id: orgId,
+              name: `Organization ${orgId}`,
+              properties: [
+                { name: 'tier', value: tier }
+              ]
+            }
+          });
+        }
+      });
+
+      it('should apply filtering, sorting DESC, and pagination together', async () => {
+        const query = gql`
+          query ListOrganizations($filter: OrganizationFilter, $pagination: PaginationInput) {
+            organizations(filter: $filter, pagination: $pagination) {
+              nodes {
+                id
+              }
+              totalCount
+            }
+          }
+        `;
+
+        // Filter for premium tier, sort DESC, paginate
+        const result = await client.query(query, {
+          filter: {
+            properties: [{ name: 'tier', value: 'premium' }]
+          },
+          pagination: { 
+            offset: 1, 
+            limit: 2,
+            sortDirection: 'DESC'
+          }
+        });
+
+        expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
+        expect(result.data?.organizations?.totalCount).to.equal(4); // Total premium orgs
+        
+        // Should get premium-mike and premium-bravo (skipping premium-zulu due to offset)
+        const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
+        expect(ids).to.deep.equal(['premium-mike', 'premium-bravo']);
+      });
+    });
+  });
 });

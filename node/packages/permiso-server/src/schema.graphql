@@ -321,7 +321,13 @@ input PropertyFilter {
   value: JSON
 }
 
+enum SortDirection {
+  ASC
+  DESC
+}
+
 input PaginationInput {
   offset: Int
   limit: Int
+  sortDirection: SortDirection # Optional, defaults to ASC if not provided
 }

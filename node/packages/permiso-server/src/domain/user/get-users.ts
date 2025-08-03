@@ -97,7 +97,9 @@ export async function getUsers(
       }
     }
 
-    query += ` ORDER BY u.id ASC`;
+    // Apply sorting - validate and default to ASC if not specified
+    const sortDirection = pagination?.sortDirection === 'DESC' ? 'DESC' : 'ASC';
+    query += ` ORDER BY u.id ${sortDirection}`;
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;

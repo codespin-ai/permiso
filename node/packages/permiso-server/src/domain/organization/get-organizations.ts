@@ -69,7 +69,9 @@ export async function getOrganizations(
       }
     }
 
-    query += ` ORDER BY o.id ASC`;
+    // Apply sorting - validate and default to ASC if not specified
+    const sortDirection = pagination?.sortDirection === 'DESC' ? 'DESC' : 'ASC';
+    query += ` ORDER BY o.id ${sortDirection}`;
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;

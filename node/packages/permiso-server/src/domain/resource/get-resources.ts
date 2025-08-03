@@ -20,7 +20,9 @@ export async function getResources(
   pagination?: PaginationInput
 ): Promise<Result<Resource[]>> {
   try {
-    let query = `SELECT * FROM resource WHERE org_id = $(orgId) ORDER BY id ASC`;
+    // Apply sorting - validate and default to ASC if not specified
+    const sortDirection = pagination?.sortDirection === 'DESC' ? 'DESC' : 'ASC';
+    let query = `SELECT * FROM resource WHERE org_id = $(orgId) ORDER BY id ${sortDirection}`;
     const params: Record<string, any> = { orgId };
 
     if (pagination?.limit) {

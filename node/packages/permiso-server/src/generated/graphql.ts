@@ -313,6 +313,7 @@ export type PageInfo = {
 export type PaginationInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+  sortDirection?: InputMaybe<SortDirection>;
 };
 
 export type Permission = {
@@ -565,6 +566,10 @@ export type RolePermission = Permission & {
   roleId: Scalars['ID']['output'];
 };
 
+export type SortDirection =
+  | 'ASC'
+  | 'DESC';
+
 export type UpdateOrganizationInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -738,6 +743,7 @@ export type ResolversTypes = ResolversObject<{
   RoleConnection: ResolverTypeWrapper<RoleConnection>;
   RoleFilter: RoleFilter;
   RolePermission: ResolverTypeWrapper<Omit<RolePermission, 'resource'> & { resource: ResolversTypes['Resource'] }>;
+  SortDirection: SortDirection;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateOrganizationInput: UpdateOrganizationInput;
   UpdateResourceInput: UpdateResourceInput;
