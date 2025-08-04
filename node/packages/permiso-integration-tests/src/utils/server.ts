@@ -51,14 +51,13 @@ export class TestServer {
         PERMISO_API_KEY_ENABLED: process.env.PERMISO_API_KEY_ENABLED || 'false',
       };
 
-      // Start the server from the project root
-      const projectRoot = new URL('../../../../../', import.meta.url).pathname;
+      // Start the server directly without shell script
+      const serverPath = new URL('../../../permiso-server/dist/bin/server.js', import.meta.url).pathname;
       
-      this.process = spawn('./start.sh', [], {
+      this.process = spawn('node', [serverPath], {
         env,
         stdio: ['ignore', 'pipe', 'inherit'], // Show stderr output directly
-        shell: true,
-        cwd: projectRoot
+        cwd: new URL('../../../permiso-server/', import.meta.url).pathname
       });
 
       let serverStarted = false;
@@ -118,15 +117,12 @@ export class TestServer {
 
   async stop(): Promise<void> {
     if (this.process) {
-      // Stopping test server
-      
       return new Promise((resolve) => {
         let resolved = false;
         
         const cleanup = () => {
           if (!resolved) {
             resolved = true;
-            // Test server stopped
             this.process = null;
             resolve();
           }
@@ -139,10 +135,11 @@ export class TestServer {
         this.process!.kill('SIGTERM');
         
         // Force kill after 2 seconds and resolve
-        setTimeout(() => {
+        setTimeout(async () => {
           if (this.process && !resolved) {
-            // Force killing test server
             this.process.kill('SIGKILL');
+            // Also kill any process on the port just to be sure
+            await this.killProcessOnPort();
             // Give it a moment to actually die
             setTimeout(cleanup, 100);
           }

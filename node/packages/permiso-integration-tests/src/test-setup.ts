@@ -42,11 +42,6 @@ export async function teardownTests() {
     }
     
     console.log('Cleanup complete');
-    
-    // Force exit after cleanup
-    setTimeout(() => {
-      process.exit(0);
-    }, 100);
   } catch (error) {
     console.error('Error during cleanup:', error);
     process.exit(1);

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "mocha --exit",
     "test:watch": "mocha --watch",
-    "test:grep": "mocha --grep",
+    "test:grep": "mocha --exit --grep",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
