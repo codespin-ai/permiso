@@ -19,6 +19,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
+    "@codespin/permiso-test-utils": "file:../permiso-test-utils",
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.1.0",

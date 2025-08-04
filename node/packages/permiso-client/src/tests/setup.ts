@@ -1,8 +1,7 @@
-import { TestServer } from './utils/server.js';
-import { TestDatabase } from './utils/test-db.js';
+import { TestServer, TestDatabase } from '@codespin/permiso-test-utils';
 
-export const testServer = new TestServer(5003);
-export const testDb = new TestDatabase();
+export const testServer = new TestServer({ port: 5003, dbName: 'permiso_client_test' });
+export const testDb = new TestDatabase({ dbName: 'permiso_client_test' });
 
 // Setup before all tests
 before(async function() {
@@ -17,7 +16,7 @@ before(async function() {
 
 // Cleanup after each test
 afterEach(async function() {
-  await testDb.cleanup();
+  await testDb.truncateAllTables();
 });
 
 // Teardown after all tests

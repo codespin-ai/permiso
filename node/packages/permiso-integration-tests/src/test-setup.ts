@@ -1,5 +1,4 @@
-import { TestDatabase } from './utils/test-db.js';
-import { TestServer } from './utils/server.js';
+import { TestDatabase, TestServer } from '@codespin/permiso-test-utils';
 import { GraphQLClient } from './utils/graphql-client.js';
 
 export let testDb: TestDatabase;
@@ -12,7 +11,7 @@ export async function setupTests() {
   await testDb.setup();
   
   // Start server
-  server = new TestServer(5002);
+  server = new TestServer({ port: 5002, dbName: 'permiso_test' });
   await server.start();
   
   // Initialize GraphQL client

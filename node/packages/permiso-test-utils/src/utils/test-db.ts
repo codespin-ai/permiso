@@ -4,15 +4,19 @@ import knex, { Knex } from 'knex';
 const rootPath = new URL('../../../../../knexfile.js', import.meta.url);
 const { createDbConfig } = await import(rootPath.href);
 
+export interface TestDatabaseOptions {
+  dbName?: string;
+}
+
 export class TestDatabase {
-  private static instance: TestDatabase | null = null;
+  private static instances = new Map<string, TestDatabase>();
   private knexInstance: Knex | null = null;
   private dbName: string;
   private config: any;
 
-  private constructor() {
+  constructor(options: TestDatabaseOptions = {}) {
     // Use the main PERMISO database config but with a test database name
-    this.dbName = 'permiso_test';
+    this.dbName = options.dbName || 'permiso_test';
     this.config = {
       ...createDbConfig('permiso'),
       connection: {
@@ -22,11 +26,11 @@ export class TestDatabase {
     };
   }
 
-  static getInstance(): TestDatabase {
-    if (!TestDatabase.instance) {
-      TestDatabase.instance = new TestDatabase();
+  static getInstance(dbName: string = 'permiso_test'): TestDatabase {
+    if (!TestDatabase.instances.has(dbName)) {
+      TestDatabase.instances.set(dbName, new TestDatabase({ dbName }));
     }
-    return TestDatabase.instance;
+    return TestDatabase.instances.get(dbName)!;
   }
 
   async createDatabase(): Promise<void> {

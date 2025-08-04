@@ -14,10 +14,12 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "test": "mocha --exit",
-    "test:watch": "mocha --watch"
+    "test:watch": "mocha --watch",
+    "test:grep": "mocha --exit --grep"
   },
   "dependencies": {},
   "devDependencies": {
+    "@codespin/permiso-test-utils": "file:../permiso-test-utils",
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.2",

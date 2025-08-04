@@ -1,14 +1,24 @@
 import { spawn, ChildProcess } from 'child_process';
-import fetch from 'node-fetch';
+
+export interface TestServerOptions {
+  port?: number;
+  dbName?: string;
+  maxRetries?: number;
+  retryDelay?: number;
+}
 
 export class TestServer {
   private process: ChildProcess | null = null;
   private port: number;
-  private maxRetries: number = 30;
-  private retryDelay: number = 1000;
+  private dbName: string;
+  private maxRetries: number;
+  private retryDelay: number;
 
-  constructor(port: number = 5002) {
-    this.port = port;
+  constructor(options: TestServerOptions = {}) {
+    this.port = options.port || 5002;
+    this.dbName = options.dbName || 'permiso_test';
+    this.maxRetries = options.maxRetries || 30;
+    this.retryDelay = options.retryDelay || 1000;
   }
 
   private async killProcessOnPort(): Promise<void> {
@@ -43,7 +53,7 @@ export class TestServer {
         PERMISO_SERVER_PORT: this.port.toString(),
         PERMISO_DB_HOST: process.env.PERMISO_DB_HOST || 'localhost',
         PERMISO_DB_PORT: process.env.PERMISO_DB_PORT || '5432',
-        PERMISO_DB_NAME: 'permiso_test', // Use test database
+        PERMISO_DB_NAME: this.dbName, // Use test database
         PERMISO_DB_USER: process.env.PERMISO_DB_USER || 'postgres',
         PERMISO_DB_PASSWORD: process.env.PERMISO_DB_PASSWORD || 'postgres',
         // Include API key settings if present

@@ -24,6 +24,7 @@
     "test:grep": "cd node/packages/permiso-integration-tests && npm run test:grep",
     "test:client": "cd node/packages/permiso-client && npm test",
     "test:client:watch": "cd node/packages/permiso-client && npm run test:watch",
+    "test:client:grep": "cd node/packages/permiso-client && npm run test:grep",
     "test:integration:all": "npm run test:integration:permiso && npm run test:client"
   },
   "devDependencies": {

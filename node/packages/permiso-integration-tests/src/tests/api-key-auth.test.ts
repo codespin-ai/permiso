@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
 import { testDb } from '../index.js';
 import { GraphQLClient } from '../utils/graphql-client.js';
-import { TestServer } from '../utils/server.js';
+import { TestServer } from '@codespin/permiso-test-utils';
 
 describe('API Key Authentication', () => {
   let authServer: TestServer;
@@ -13,7 +13,7 @@ describe('API Key Authentication', () => {
     this.timeout(60000);
     
     // Start a server with API key authentication enabled
-    authServer = new TestServer(5003);
+    authServer = new TestServer({ port: 5003, dbName: 'permiso_test' });
     
     // Set API key for test server
     process.env.PERMISO_API_KEY = 'test-secret-key-123';
