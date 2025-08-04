@@ -97,7 +97,6 @@ export function mapUserFromDb(row: UserDbRow): User {
     orgId: row.org_id,
     identityProvider: row.identity_provider,
     identityProviderUserId: row.identity_provider_user_id,
-    data: row.data,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     // These will be populated by GraphQL resolvers
@@ -115,7 +114,6 @@ export function mapUserToDb(user: Partial<User>): Partial<UserDbRow> {
     org_id: user.orgId,
     identity_provider: user.identityProvider,
     identity_provider_user_id: user.identityProviderUserId,
-    data: user.data ?? null,
     created_at: user.createdAt,
     updated_at: user.updatedAt
   };

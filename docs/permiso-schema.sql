@@ -108,7 +108,6 @@ ALTER SEQUENCE public.knex_migrations_lock_index_seq OWNED BY public.knex_migrat
 
 CREATE TABLE public.organization (
     id character varying(255) NOT NULL,
-    data text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
@@ -136,7 +135,6 @@ CREATE TABLE public.organization_property (
 CREATE TABLE public.resource (
     id character varying(255) NOT NULL,
     org_id character varying(255) NOT NULL,
-    data text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     name character varying(255),
@@ -151,7 +149,6 @@ CREATE TABLE public.resource (
 CREATE TABLE public.role (
     id character varying(255) NOT NULL,
     org_id character varying(255) NOT NULL,
-    data text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
@@ -195,7 +192,6 @@ CREATE TABLE public."user" (
     org_id character varying(255) NOT NULL,
     identity_provider character varying(255) NOT NULL,
     identity_provider_user_id character varying(255) NOT NULL,
-    data text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

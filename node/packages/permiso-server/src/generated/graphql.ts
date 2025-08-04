@@ -43,7 +43,6 @@ export type CreateRoleInput = {
 };
 
 export type CreateUserInput = {
-  data?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   identityProvider: Scalars['String']['input'];
   identityProviderUserId: Scalars['String']['input'];
@@ -586,7 +585,6 @@ export type UpdateRoleInput = {
 };
 
 export type UpdateUserInput = {
-  data?: InputMaybe<Scalars['String']['input']>;
   identityProvider?: InputMaybe<Scalars['String']['input']>;
   identityProviderUserId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -594,7 +592,6 @@ export type UpdateUserInput = {
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
-  data: Maybe<Scalars['String']['output']>;
   effectivePermissions: Array<EffectivePermission>;
   id: Scalars['ID']['output'];
   identityProvider: Scalars['String']['output'];
@@ -964,7 +961,6 @@ export type RolePermissionResolvers<ContextType = GraphQLContext, ParentType ext
 
 export type UserResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
-  data?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   effectivePermissions?: Resolver<Array<ResolversTypes['EffectivePermission']>, ParentType, ContextType, Partial<UserEffectivePermissionsArgs>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identityProvider?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

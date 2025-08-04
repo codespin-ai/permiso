@@ -34,7 +34,6 @@ export async function updateUser(
       params.identityProviderUserId = input.identityProviderUserId;
     }
 
-
     updates.push(`updated_at = NOW()`);
 
     const query = `

@@ -89,9 +89,7 @@ The tests cover all API operations:
 
 ## Known Issues
 
-1. **User Update Test**: Currently skipped due to a server issue with updating the `data` field. This needs to be fixed in the server implementation.
-
-2. **Duplicate Permission Grant**: The server handles duplicate permission grants as idempotent operations (returns success) rather than errors. The test has been updated to handle both cases.
+1. **Duplicate Permission Grant**: The server handles duplicate permission grants as idempotent operations (returns success) rather than errors. The test has been updated to handle both cases.
 
 ## Environment Variables
 

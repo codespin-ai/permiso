@@ -21,7 +21,6 @@ type User {
   orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
-  data: String
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -241,7 +240,6 @@ input CreateUserInput {
   orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
-  data: String
   properties: [PropertyInput!]
   roleIds: [ID!]
 }
@@ -249,7 +247,6 @@ input CreateUserInput {
 input UpdateUserInput {
   identityProvider: String
   identityProviderUserId: String
-  data: String
 }
 
 input CreateRoleInput {

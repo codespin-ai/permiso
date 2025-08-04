@@ -24,7 +24,6 @@ export async function getUser(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -89,7 +88,6 @@ export async function listUsers(
           orgId
           identityProvider
           identityProviderUserId
-          data
           properties {
             name
             value
@@ -151,7 +149,6 @@ export async function getUsersByIds(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -204,7 +201,6 @@ export async function getUsersByIdentity(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -253,7 +249,6 @@ export async function createUser(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -304,7 +299,6 @@ export async function updateUser(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -506,7 +500,6 @@ export async function assignUserRole(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value
@@ -557,7 +550,6 @@ export async function unassignUserRole(
         orgId
         identityProvider
         identityProviderUserId
-        data
         properties {
           name
           value

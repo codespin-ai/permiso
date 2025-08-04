@@ -99,7 +99,6 @@ type User {
   orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
-  data: String
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -308,7 +307,6 @@ input CreateUserInput {
   orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
-  data: String
   properties: [PropertyInput!]
   roleIds: [ID!]
 }
@@ -316,7 +314,6 @@ input CreateUserInput {
 input UpdateUserInput {
   identityProvider: String
   identityProviderUserId: String
-  data: String
 }
 
 input CreateRoleInput {
@@ -596,11 +593,11 @@ mutation CreateUserWithRoles {
     orgId: "acme-corp"
     identityProvider: "google"
     identityProviderUserId: "john@acme.com"
-    data: "{\"email\": \"john@acme.com\"}"
     roleIds: ["admin", "editor"]
     properties: [
       { name: "department", value: "engineering" }
       { name: "employee_id", value: "E12345", hidden: true }
+      { name: "email", value: "john@acme.com" }
     ]
   }) {
     id

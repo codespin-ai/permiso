@@ -1440,27 +1440,33 @@ describe('Edge Cases and Error Scenarios', () => {
 
       expect(orgResult.data?.createOrganization?.description).to.equal('');
 
-      // Create user with empty data field
+      // Create user with empty property value
       const userMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
             id
-            data
+            properties {
+              name
+              value
+            }
           }
         }
       `;
 
       const userResult = await client.mutate(userMutation, {
         input: {
-          id: 'empty-data-user',
+          id: 'empty-property-user',
           orgId: 'test-org',
           identityProvider: 'auth0',
           identityProviderUserId: 'auth0|empty',
-          data: ''
+          properties: [
+            { name: 'notes', value: '' }
+          ]
         }
       });
 
-      expect(userResult.data?.createUser?.data).to.equal('');
+      const notesProperty = userResult.data?.createUser?.properties.find((p: any) => p.name === 'notes');
+      expect(notesProperty?.value).to.equal('');
     });
 
     it('should handle very long strings', async () => {

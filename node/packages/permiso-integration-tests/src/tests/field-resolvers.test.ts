@@ -96,10 +96,10 @@ describe('Field Resolvers and Nested Queries', () => {
         orgId: 'acme-corp',
         identityProvider: 'google',
         identityProviderUserId: 'google|john',
-        data: '{"email": "john@acme.com"}',
         properties: [
           { name: 'department', value: 'engineering' },
-          { name: 'level', value: 'senior' }
+          { name: 'level', value: 'senior' },
+          { name: 'email', value: 'john@acme.com' }
         ],
         roleIds: ['admin', 'editor']
       }

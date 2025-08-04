@@ -286,6 +286,21 @@ await db.none(
 - Follow functional testing patterns from CODING-STANDARDS.md
 - Each package builds independently with `tsc`
 
+### Testing Guidelines for Debugging and Fixes
+
+**IMPORTANT**: When fixing bugs or debugging issues:
+1. **Always run individual tests** when fixing specific issues
+2. Use `npm run test:grep -- "test name"` to run specific test suites
+3. Use `npm run test:client:grep -- "test name"` for client-specific tests
+4. Test incrementally - run the specific failing test after each change
+5. Only run the full test suite after individual tests pass
+
+This approach:
+- Provides faster feedback loops
+- Makes debugging easier
+- Prevents breaking other tests while fixing one
+- Saves time during development
+
 ### Important Build & Lint Workflow
 
 **ALWAYS follow this sequence:**

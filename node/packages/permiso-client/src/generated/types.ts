@@ -39,7 +39,6 @@ export type CreateRoleInput = {
 };
 
 export type CreateUserInput = {
-  data?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   identityProvider: Scalars['String']['input'];
   identityProviderUserId: Scalars['String']['input'];
@@ -582,7 +581,6 @@ export type UpdateRoleInput = {
 };
 
 export type UpdateUserInput = {
-  data?: InputMaybe<Scalars['String']['input']>;
   identityProvider?: InputMaybe<Scalars['String']['input']>;
   identityProviderUserId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -590,7 +588,6 @@ export type UpdateUserInput = {
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime']['output'];
-  data: Maybe<Scalars['String']['output']>;
   effectivePermissions: Array<EffectivePermission>;
   id: Scalars['ID']['output'];
   identityProvider: Scalars['String']['output'];

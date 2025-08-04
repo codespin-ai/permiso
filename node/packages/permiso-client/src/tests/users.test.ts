@@ -40,7 +40,6 @@ describe('Users API', () => {
         orgId: testOrgId,
         identityProvider: 'google',
         identityProviderUserId: 'user@example.com',
-        data: JSON.stringify({ email: 'user@example.com' }),
         properties: [
           { name: 'department', value: 'engineering' },
           { name: 'level', value: 3 }
@@ -251,7 +250,7 @@ describe('Users API', () => {
   });
 
   describe('updateUser', () => {
-    it.skip('should update a user - server issue with data field update', async () => {
+    it('should update a user', async () => {
       const userId = generateTestId('user');
       
       // Create user
@@ -259,20 +258,17 @@ describe('Users API', () => {
         id: userId,
         orgId: testOrgId,
         identityProvider: 'google',
-        identityProviderUserId: 'old@example.com',
-        data: JSON.stringify({ status: 'active' })
+        identityProviderUserId: 'old@example.com'
       });
       expect(createResult.success).to.be.true;
 
       // Update user
       const updateResult = await updateUser(config, testOrgId, userId, {
-        identityProviderUserId: 'new@example.com',
-        data: JSON.stringify({ status: 'inactive' })
+        identityProviderUserId: 'new@example.com'
       });
       expect(updateResult.success).to.be.true;
       if (updateResult.success) {
         expect(updateResult.data.identityProviderUserId).to.equal('new@example.com');
-        expect(updateResult.data.data).to.equal(JSON.stringify({ status: 'inactive' }));
       }
     });
   });

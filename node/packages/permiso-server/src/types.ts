@@ -24,7 +24,6 @@ export type OrganizationDbRow = {
   id: string;
   name: string;
   description: string | null;
-  data: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -48,7 +47,6 @@ export type RoleDbRow = {
   org_id: string;
   name: string;
   description: string | null;
-  data: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -58,7 +56,6 @@ export type UserDbRow = {
   org_id: string;
   identity_provider: string;
   identity_provider_user_id: string;
-  data: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -68,7 +65,6 @@ export type ResourceDbRow = {
   org_id: string;
   name: string | null;
   description: string | null;
-  data: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -132,7 +128,6 @@ export type UserWithProperties = {
   orgId: string;
   identityProvider: string;
   identityProviderUserId: string;
-  data?: string | null;
   createdAt: Date;
   updatedAt: Date;
   properties: Record<string, unknown>;

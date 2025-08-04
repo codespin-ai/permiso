@@ -77,7 +77,6 @@ type User = {
   orgId: string;
   identityProvider: string;
   identityProviderUserId: string;
-  data?: string;
   properties: Property[];
   createdAt: Date;
   updatedAt: Date;
