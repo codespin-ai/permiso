@@ -145,8 +145,14 @@ See the [permiso-client README](node/packages/permiso-client/README.md) for full
 # Run linting
 ./lint-all.sh
 
-# Run integration tests
-npm run test:integration:all
+# Run tests
+npm run test:integration:permiso  # Run all integration tests
+npm run test:client               # Run all client tests
+npm run test:integration:all      # Run both integration and client tests
+
+# Run specific test suites
+npm run test:grep -- "Organizations"        # Integration tests matching pattern
+npm run test:client:grep -- "Permissions"   # Client tests matching pattern
 
 # Clean build artifacts
 ./clean.sh

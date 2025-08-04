@@ -99,9 +99,15 @@ cd node/packages/[package-name] && npm run lint
 cd node/packages/[package-name] && npm run lint:fix
 
 # Integration tests
-npm run test:integration:permiso      # Run integration tests for permiso database
-npm run test:integration:permiso:watch # Run integration tests in watch mode
-npm run test:integration:all          # Run all integration tests
+npm run test:integration:permiso       # Run all integration tests
+npm run test:integration:permiso:watch  # Run integration tests in watch mode
+npm run test:grep -- "Pattern"         # Run specific integration test suite
+npm run test:integration:all           # Run all tests (integration + client)
+
+# Client tests
+npm run test:client                    # Run all client tests
+npm run test:client:watch              # Run client tests in watch mode
+npm run test:client:grep -- "Pattern"  # Run specific client test suite
 ```
 
 ## Critical Architecture Decisions
@@ -139,8 +145,10 @@ Located in `/node/packages/`, build order matters:
 1. **@codespin/permiso-core** - Core types, utilities, and Result type
 2. **@codespin/permiso-logger** - Centralized logging for all packages
 3. **@codespin/permiso-db** - Database connection and management utilities
-4. **@codespin/permiso-server** - GraphQL server for RBAC implementation
-5. **@codespin/permiso-integration-tests** - Integration tests using GraphQL API (separate from production build)
+4. **@codespin/permiso-test-utils** - Shared test utilities for integration and client tests (dev only)
+5. **@codespin/permiso-server** - GraphQL server for RBAC implementation
+6. **@codespin/permiso-client** - TypeScript client library for the GraphQL API (published to npm)
+7. **@codespin/permiso-integration-tests** - Integration tests using GraphQL API (separate from production build)
 
 ## Environment Variables
 
@@ -288,6 +296,14 @@ await db.none(
    - Build errors often require code changes that may introduce lint issues
    - Always: lint → build → (if changes) → lint → build
 
+### Shared Test Utilities
+
+The `@codespin/permiso-test-utils` package provides shared test infrastructure:
+- **TestServer**: Manages GraphQL server lifecycle for tests
+- **TestDatabase**: Handles test database setup/teardown
+
+This package is used by both integration tests and client tests as a devDependency, eliminating code duplication while keeping the client package independent for npm publishing.
+
 ### Running Tests
 
 #### Prerequisites for Testing
@@ -314,6 +330,14 @@ Integration tests are located in `/node/packages/permiso-integration-tests` and 
 
 ```bash
 # Run all integration tests (from project root)
+npm run test:integration:permiso
+
+# Run specific test suite
+npm run test:grep -- "Organizations"
+npm run test:grep -- "Permissions"
+npm run test:grep -- "Users"
+
+# Run all tests (integration + client)
 npm run test:integration:all
 ```
 
@@ -323,6 +347,7 @@ npm run test:integration:all
 - Migrations are automatically applied to the test database
 - Default timeout: 30 seconds per test
 - Uses Mocha with TypeScript support via ts-node
+- Tests exit properly after completion (no hanging processes)
 
 **Environment Variables for Tests**:
 Tests will use these defaults, or you can override them:
@@ -342,6 +367,28 @@ Integration tests cover:
 - Property operations with JSON support
 - Complex permission calculations
 - GraphQL API error handling
+
+#### Client Tests
+
+Client tests are located in `/node/packages/permiso-client` and test the TypeScript client library:
+
+```bash
+# Run all client tests (from project root)
+npm run test:client
+
+# Run specific client test suite
+npm run test:client:grep -- "Organizations"
+npm run test:client:grep -- "Permissions"
+
+# Watch mode
+npm run test:client:watch
+```
+
+**Client Test Configuration**:
+- Uses a separate `permiso_client_test` database
+- Runs server on port 5003 (different from integration tests)
+- Tests the client API functions directly
+- Validates Result types and error handling
 
 #### Docker Image Testing
 
