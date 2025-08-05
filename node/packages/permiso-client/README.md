@@ -590,6 +590,39 @@ if (result.success) {
 }
 ```
 
+## Testing
+
+The client package includes comprehensive integration tests that verify all API operations against a real Permiso server.
+
+### Running Tests
+
+```bash
+# From the project root
+npm run test:client
+
+# Run specific test suite
+npm run test:client:grep -- "Organizations"
+
+# Run in watch mode
+npm run test:client:watch
+```
+
+### Test Coverage
+
+The test suite covers all API operations:
+- **Organizations** (12 tests): CRUD, properties, pagination
+- **Users** (11 tests): CRUD, role assignment, properties, search
+- **Roles** (13 tests): CRUD, hidden properties, filtering
+- **Resources** (13 tests): CRUD, wildcards, hierarchical paths
+- **Permissions** (15 tests): Grants, effective permissions, inheritance
+
+### Test Infrastructure
+
+- Uses separate test database (`permiso_client_test`)
+- Runs on port 5003 (isolated from main server)
+- Database cleaned between tests
+- Migrations run automatically
+
 ## API Stability
 
 This client follows semantic versioning. The API is stable and breaking changes will only be introduced in major versions.
