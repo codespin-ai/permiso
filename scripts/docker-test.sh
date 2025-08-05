@@ -69,7 +69,7 @@ wait_for_service() {
                 return 0
             fi
         else
-            if curl -s http://$host:$port/graphql >/dev/null 2>&1; then
+            if curl -s http://$host:$port/health >/dev/null 2>&1; then
                 print_success "$service is ready"
                 return 0
             fi
@@ -195,8 +195,18 @@ print_info "Waiting for server to fully initialize..."
 sleep 5
 
 echo
-print_info "=== Running GraphQL Tests ==="
+print_info "=== Running Tests ==="
 echo
+
+# Test 0: Health check
+HEALTH_RESPONSE=$(curl -s http://localhost:$TEST_PORT/health)
+if echo "$HEALTH_RESPONSE" | grep -q "\"status\":\"healthy\""; then
+    print_success "Health check"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+else
+    print_error "Health check failed: $HEALTH_RESPONSE"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+fi
 
 # Test 1: Create organization
 if run_graphql_query \

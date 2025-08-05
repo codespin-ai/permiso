@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { expressMiddleware } from '@as-integrations/express5';
 import { createDatabaseConnection } from '@codespin/permiso-db';
 import { createLogger } from '@codespin/permiso-logger';
+import express, { Request, Response } from 'express';
+import cors from 'cors';
 import { GraphQLError } from 'graphql';
 import { getTypeDefs } from '../index.js';
 import { resolvers } from '../resolvers/index.js';
@@ -28,35 +30,75 @@ async function startServer() {
     logger.info('API key authentication is enabled');
   }
   
+  // Create Express app
+  const app = express();
+  
   // Create GraphQL server
   const server = new ApolloServer({
     typeDefs: getTypeDefs(),
     resolvers,
   });
   
-  const port = parseInt(process.env.PERMISO_SERVER_PORT || '5001');
-  
-  const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => {
-      // Validate API key if enabled
-      const apiKey = req.headers[apiKeyConfig.headerName] as string | undefined;
-      const validationResult = validateApiKey(apiKey, apiKeyConfig);
-      
-      if (!validationResult.success) {
-        throw new GraphQLError(validationResult.error.message, {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-            http: { status: 401 }
-          }
-        });
-      }
-      
-      return { db };
-    },
-    listen: { port },
+  // Health check endpoint (no auth required) - before GraphQL setup
+  app.get('/health', async (_req: Request, res: Response) => {
+    const services: Record<string, string> = {};
+    
+    // Check database connection
+    try {
+      await db.one('SELECT 1 as ok');
+      services.database = 'connected';
+    } catch (error) {
+      services.database = 'disconnected';
+      logger.error('Database health check failed:', error);
+    }
+    
+    const isHealthy = services.database === 'connected';
+    
+    res.status(isHealthy ? 200 : 503).json({
+      status: isHealthy ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      services
+    });
   });
   
-  logger.info(`🚀 GraphQL server running at ${url}`);
+  // Start Apollo Server
+  await server.start();
+  
+  // Apply GraphQL middleware
+  app.use('/graphql',
+    cors<cors.CorsRequest>(),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }: { req: Request }) => {
+        // Validate API key if enabled
+        const apiKey = req.headers[apiKeyConfig.headerName] as string | undefined;
+        const validationResult = validateApiKey(apiKey, apiKeyConfig);
+        
+        if (!validationResult.success) {
+          throw new GraphQLError(validationResult.error.message, {
+            extensions: {
+              code: 'UNAUTHENTICATED',
+              http: { status: 401 }
+            }
+          });
+        }
+        
+        return { db };
+      },
+    })
+  );
+  
+  const port = parseInt(process.env.PERMISO_SERVER_PORT || '5001');
+  
+  await new Promise<void>((resolve) => {
+    app.listen(port, () => {
+      resolve();
+    });
+  });
+  
+  logger.info(`🚀 GraphQL server running at http://localhost:${port}/graphql`);
+  logger.info(`💚 Health endpoint available at http://localhost:${port}/health`);
 }
 
 startServer().catch((error) => {

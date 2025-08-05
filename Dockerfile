@@ -71,7 +71,7 @@ ENV NODE_ENV=production \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:' + (process.env.PERMISO_SERVER_PORT || 5001) + '/graphql', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
+    CMD node -e "require('http').get('http://localhost:' + (process.env.PERMISO_SERVER_PORT || 5001) + '/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
 
 # Use entrypoint for automatic setup
 ENTRYPOINT ["./docker-entrypoint.sh"]

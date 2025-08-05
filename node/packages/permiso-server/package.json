@@ -14,12 +14,13 @@
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
+    "@as-integrations/express5": "^1.1.2",
     "@codespin/permiso-core": "file:../permiso-core",
     "@codespin/permiso-db": "file:../permiso-db",
     "@codespin/permiso-logger": "file:../permiso-logger",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "express": "^5.0.1",
     "graphql": "^16.11.0",
     "knex": "^3.1.0",
     "pg": "^8.16.3"
