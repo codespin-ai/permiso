@@ -2,148 +2,12 @@ import { expect } from 'chai';
 import { gql } from '@apollo/client/core/index.js';
 import { testDb, client } from '../index.js';
 
-describe('Properties', () => {
+describe('Properties - Complex JSON and Initial Values', () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
   });
 
-  describe('Organization Properties', () => {
-    beforeEach(async () => {
-      // Create test organization
-      const mutation = gql`
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
-          }
-        }
-      `;
-      await client.mutate(mutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
-      });
-    });
-
-    it('should store and retrieve different JSON types', async () => {
-      const setPropMutation = gql`
-        mutation SetOrganizationProperty($orgId: ID!, $name: String!, $value: JSON, $hidden: Boolean) {
-          setOrganizationProperty(orgId: $orgId, name: $name, value: $value, hidden: $hidden) {
-            name
-            value
-            hidden
-          }
-        }
-      `;
-
-      // Test string value
-      const stringResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'stringProp',
-        value: 'hello world'
-      });
-      expect(stringResult.data?.setOrganizationProperty.value).to.equal('hello world');
-
-      // Test number value
-      const numberResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'numberProp',
-        value: 42
-      });
-      expect(numberResult.data?.setOrganizationProperty.value).to.equal(42);
-
-      // Test boolean value
-      const boolResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'boolProp',
-        value: true
-      });
-      expect(boolResult.data?.setOrganizationProperty.value).to.equal(true);
-
-      // Test null value
-      const nullResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'nullProp',
-        value: null
-      });
-      expect(nullResult.data?.setOrganizationProperty.value).to.equal(null);
-
-      // Test array value
-      const arrayResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'arrayProp',
-        value: ['item1', 'item2', 3, true]
-      });
-      expect(arrayResult.data?.setOrganizationProperty.value).to.deep.equal(['item1', 'item2', 3, true]);
-
-      // Test object value
-      const objectResult = await client.mutate(setPropMutation, {
-        orgId: 'test-org',
-        name: 'objectProp',
-        value: {
-          name: 'Test',
-          count: 10,
-          enabled: true,
-          metadata: {
-            tags: ['tag1', 'tag2']
-          }
-        }
-      });
-      expect(objectResult.data?.setOrganizationProperty.value).to.deep.equal({
-        name: 'Test',
-        count: 10,
-        enabled: true,
-        metadata: {
-          tags: ['tag1', 'tag2']
-        }
-      });
-    });
-
-    it('should retrieve properties with correct JSON types', async () => {
-      // Set various properties
-      const setPropMutation = gql`
-        mutation SetOrganizationProperty($orgId: ID!, $name: String!, $value: JSON) {
-          setOrganizationProperty(orgId: $orgId, name: $name, value: $value) {
-            name
-          }
-        }
-      `;
-
-      await client.mutate(setPropMutation, { orgId: 'test-org', name: 'str', value: 'text' });
-      await client.mutate(setPropMutation, { orgId: 'test-org', name: 'num', value: 123.45 });
-      await client.mutate(setPropMutation, { orgId: 'test-org', name: 'bool', value: false });
-      await client.mutate(setPropMutation, { orgId: 'test-org', name: 'arr', value: [1, 2, 3] });
-      await client.mutate(setPropMutation, { orgId: 'test-org', name: 'obj', value: { key: 'value' } });
-
-      // Query organization with properties
-      const query = gql`
-        query GetOrganization($id: ID!) {
-          organization(id: $id) {
-            id
-            properties {
-              name
-              value
-            }
-          }
-        }
-      `;
-
-      const result = await client.query(query, { id: 'test-org' });
-      const props = result.data?.organization.properties;
-      expect(props).to.have.lengthOf(5);
-
-      // Check each property maintains its type
-      const propMap = props.reduce((acc: any, p: any) => {
-        acc[p.name] = p.value;
-        return acc;
-      }, {});
-
-      expect(propMap.str).to.equal('text');
-      expect(propMap.num).to.equal(123.45);
-      expect(propMap.bool).to.equal(false);
-      expect(propMap.arr).to.deep.equal([1, 2, 3]);
-      expect(propMap.obj).to.deep.equal({ key: 'value' });
-    });
-  });
-
-  describe('User Properties', () => {
+  describe('User Properties - Complex JSON', () => {
     beforeEach(async () => {
       // Create test organization and user
       const createOrgMutation = gql`
@@ -212,7 +76,7 @@ describe('Properties', () => {
     });
   });
 
-  describe('Role Properties', () => {
+  describe('Role Properties - Complex Arrays', () => {
     beforeEach(async () => {
       // Create test organization and role
       const createOrgMutation = gql`
