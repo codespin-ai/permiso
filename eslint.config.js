@@ -99,6 +99,32 @@ export default [
     },
   },
   {
+    files: ['**/permiso-test-utils/**/*.ts'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: 'module',
+      },
+      globals: {
+        ...globals.node,
+        ...globals.es2021,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+    },
+    rules: {
+      ...typescript.configs.recommended.rules,
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-console': 'off', // Test utilities need access to all console methods
+      'prefer-const': 'error',
+      'no-var': 'error',
+    },
+  },
+  {
     ignores: [
       'node_modules/**',
       'dist/**',
