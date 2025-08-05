@@ -35,7 +35,8 @@ export async function getResource(
       query,
       variables: { orgId, resourceId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -98,7 +99,8 @@ export async function listResources(
         pagination: options?.pagination
       },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -136,7 +138,8 @@ export async function getResourcesByIdPrefix(
       query,
       variables: { orgId, idPrefix },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -173,7 +176,8 @@ export async function createResource(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -212,7 +216,8 @@ export async function updateResource(
       query: mutation,
       variables: { orgId, resourceId, input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -243,7 +248,8 @@ export async function deleteResource(
       query: mutation,
       variables: { orgId, resourceId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 

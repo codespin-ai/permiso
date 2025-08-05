@@ -42,7 +42,8 @@ export async function getRole(
       query,
       variables: { orgId, roleId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -111,7 +112,8 @@ export async function listRoles(
         pagination: options?.pagination
       },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -155,7 +157,8 @@ export async function getRolesByIds(
       query,
       variables: { orgId, ids },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -198,7 +201,8 @@ export async function createRole(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -243,7 +247,8 @@ export async function updateRole(
       query: mutation,
       variables: { orgId, roleId, input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -274,7 +279,8 @@ export async function deleteRole(
       query: mutation,
       variables: { orgId, roleId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -311,7 +317,8 @@ export async function getRoleProperty(
       query,
       variables: { orgId, roleId, propertyName },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -362,7 +369,8 @@ export async function setRoleProperty(
       query: mutation,
       variables: { orgId, roleId, name, value, hidden },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -394,7 +402,8 @@ export async function deleteRoleProperty(
       query: mutation,
       variables: { orgId, roleId, name },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 

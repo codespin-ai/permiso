@@ -1,10 +1,12 @@
 import { spawn, ChildProcess } from 'child_process';
+import { Logger, testLogger } from './test-logger.js';
 
 export interface TestServerOptions {
   port?: number;
   dbName?: string;
   maxRetries?: number;
   retryDelay?: number;
+  logger?: Logger;
 }
 
 export class TestServer {
@@ -13,12 +15,14 @@ export class TestServer {
   private dbName: string;
   private maxRetries: number;
   private retryDelay: number;
+  private logger: Logger;
 
   constructor(options: TestServerOptions = {}) {
     this.port = options.port || 5002;
     this.dbName = options.dbName || 'permiso_test';
     this.maxRetries = options.maxRetries || 30;
     this.retryDelay = options.retryDelay || 1000;
+    this.logger = options.logger || testLogger;
   }
 
   private async killProcessOnPort(): Promise<void> {
@@ -28,7 +32,7 @@ export class TestServer {
       const pid = execSync(`lsof -ti:${this.port} || true`).toString().trim();
       
       if (pid) {
-        // Killing process using port
+        this.logger.debug(`Killing process ${pid} using port ${this.port}`);
         execSync(`kill -9 ${pid}`);
         // Wait a bit for the process to die
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -43,7 +47,7 @@ export class TestServer {
     await this.killProcessOnPort();
     
     return new Promise((resolve, reject) => {
-      // Starting test server
+      this.logger.info(`Starting test server on port ${this.port} with database ${this.dbName}`);
       
       // Set environment variables for test server
       // Override the PERMISO database name for tests
@@ -74,7 +78,7 @@ export class TestServer {
 
       this.process.stdout?.on('data', (data) => {
         const output = data.toString();
-        // Server output received
+        this.logger.debug('Server output:', output.trim());
         
         // Check if server is ready
         if (output.includes('GraphQL server running') || output.includes('Server running at')) {
@@ -84,7 +88,7 @@ export class TestServer {
       });
 
       this.process.on('error', (error) => {
-        console.error('Failed to start server:', error);
+        this.logger.error('Failed to start server:', error);
         reject(error);
       });
 
@@ -97,7 +101,7 @@ export class TestServer {
       // Wait for server to be ready
       this.waitForServer()
         .then(() => {
-          // Test server is ready
+          this.logger.info('Test server is ready');
           resolve();
         })
         .catch(reject);

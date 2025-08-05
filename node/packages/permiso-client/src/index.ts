@@ -7,7 +7,7 @@
  */
 
 // Export types
-export type { PermisoConfig, Result, GraphQLError, GraphQLResponse } from './types.js';
+export type { PermisoConfig, Logger, Result, GraphQLError, GraphQLResponse } from './types.js';
 export { success, failure } from './types.js';
 
 // Export generated types

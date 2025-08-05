@@ -40,7 +40,8 @@ export async function getOrganization(
       query,
       variables: { id },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -106,7 +107,8 @@ export async function listOrganizations(
         pagination: options?.pagination
       },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -148,7 +150,8 @@ export async function getOrganizationsByIds(
       query,
       variables: { ids },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -190,7 +193,8 @@ export async function createOrganization(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -233,7 +237,8 @@ export async function updateOrganization(
       query: mutation,
       variables: { id, input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -264,7 +269,8 @@ export async function deleteOrganization(
       query: mutation,
       variables: { id, safetyKey },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -300,7 +306,8 @@ export async function getOrganizationProperty(
       query,
       variables: { orgId, propertyName },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -348,7 +355,8 @@ export async function setOrganizationProperty(
       query: mutation,
       variables: { orgId, name, value, hidden },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -379,7 +387,8 @@ export async function deleteOrganizationProperty(
       query: mutation,
       variables: { orgId, name },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 

@@ -1,3 +1,10 @@
+export type Logger = {
+  debug: (...args: unknown[]) => void;
+  info: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+};
+
 /**
  * Permiso client configuration
  */
@@ -8,6 +15,8 @@ export type PermisoConfig = {
   apiKey?: string;
   /** Request timeout in milliseconds */
   timeout?: number;
+  /** Optional logger for debugging */
+  logger?: Logger;
 };
 
 /**

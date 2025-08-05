@@ -1,4 +1,4 @@
-import { Result, success, failure, GraphQLResponse, GraphQLError } from './types.js';
+import { Result, success, failure, GraphQLResponse, GraphQLError, Logger } from './types.js';
 
 export type GraphQLRequestOptions = {
   endpoint: string;
@@ -6,6 +6,7 @@ export type GraphQLRequestOptions = {
   variables?: Record<string, unknown>;
   headers?: Record<string, string>;
   timeout?: number;
+  logger?: Logger;
 };
 
 /**
@@ -15,6 +16,11 @@ export async function graphqlRequest<T>(
   options: GraphQLRequestOptions
 ): Promise<Result<T, Error>> {
   try {
+    options.logger?.debug('GraphQL request:', {
+      endpoint: options.endpoint,
+      query: options.query.trim().split('\n')[0] + '...',
+      variables: options.variables
+    });
     const controller = new AbortController();
     const timeoutId = options.timeout 
       ? setTimeout(() => controller.abort(), options.timeout)
@@ -38,12 +44,19 @@ export async function graphqlRequest<T>(
     }
 
     const result = await response.json() as GraphQLResponse<T>;
+    
+    options.logger?.debug('GraphQL response:', {
+      status: response.status,
+      hasData: !!result.data,
+      hasErrors: !!(result.errors && result.errors.length > 0)
+    });
 
     // Check for GraphQL errors
     if (result.errors && result.errors.length > 0) {
       const error = result.errors[0];
       if (error) {
         const errorMessage = formatGraphQLError(error);
+        options.logger?.error('GraphQL error:', errorMessage, error);
         return failure(new Error(errorMessage));
       }
       return failure(new Error('Unknown GraphQL error'));
@@ -58,10 +71,13 @@ export async function graphqlRequest<T>(
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
+        options.logger?.error('Request timeout');
         return failure(new Error('Request timeout'));
       }
+      options.logger?.error('Request error:', error.message);
       return failure(error);
     }
+    options.logger?.error('Unknown error:', error);
     return failure(new Error('Unknown error'));
   }
 }

@@ -1,7 +1,7 @@
-import { TestServer, TestDatabase } from '@codespin/permiso-test-utils';
+import { TestServer, TestDatabase, testLogger } from '@codespin/permiso-test-utils';
 
-export const testServer = new TestServer({ port: 5003, dbName: 'permiso_client_test' });
-export const testDb = new TestDatabase({ dbName: 'permiso_client_test' });
+export const testServer = new TestServer({ port: 5003, dbName: 'permiso_client_test', logger: testLogger });
+export const testDb = new TestDatabase({ dbName: 'permiso_client_test', logger: testLogger });
 
 // Setup before all tests
 before(async function() {

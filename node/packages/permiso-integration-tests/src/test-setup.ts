@@ -1,4 +1,4 @@
-import { TestDatabase, TestServer } from '@codespin/permiso-test-utils';
+import { TestDatabase, TestServer, testLogger } from '@codespin/permiso-test-utils';
 import { GraphQLClient } from './utils/graphql-client.js';
 
 export let testDb: TestDatabase;
@@ -7,17 +7,17 @@ export let client: GraphQLClient;
 
 export async function setupTests() {
   // Setup database
-  testDb = TestDatabase.getInstance();
+  testDb = TestDatabase.getInstance('permiso_test', testLogger);
   await testDb.setup();
   
   // Start server
-  server = new TestServer({ port: 5002, dbName: 'permiso_test' });
+  server = new TestServer({ port: 5002, dbName: 'permiso_test', logger: testLogger });
   await server.start();
   
   // Initialize GraphQL client
-  client = new GraphQLClient('http://localhost:5002/graphql');
+  client = new GraphQLClient('http://localhost:5002/graphql', { logger: testLogger });
   
-  console.log('Test environment ready');
+  testLogger.info('Test environment ready');
 }
 
 export async function teardownTests() {
@@ -40,9 +40,9 @@ export async function teardownTests() {
       await testDb.teardown();
     }
     
-    console.log('Cleanup complete');
+    testLogger.info('Cleanup complete');
   } catch (error) {
-    console.error('Error during cleanup:', error);
+    testLogger.error('Error during cleanup:', error);
     process.exit(1);
   }
 }

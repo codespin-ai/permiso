@@ -1,10 +1,12 @@
 import { ApolloClient, InMemoryCache, DocumentNode, NormalizedCacheObject, createHttpLink } from '@apollo/client/core/index.js';
 import type { ApolloQueryResult, FetchResult } from '@apollo/client/core/index.js';
+import { Logger, testLogger } from '@codespin/permiso-test-utils';
 
 export class GraphQLClient {
   private client: ApolloClient<NormalizedCacheObject>;
+  private logger: Logger;
 
-  constructor(uri: string, options?: { headers?: Record<string, string> }) {
+  constructor(uri: string, options?: { headers?: Record<string, string>; logger?: Logger }) {
     const httpLink = createHttpLink({
       uri,
       fetch,
@@ -25,6 +27,7 @@ export class GraphQLClient {
         },
       },
     });
+    this.logger = options?.logger || testLogger;
   }
 
   async query<T = any>(queryDoc: DocumentNode, variables?: Record<string, any>): Promise<ApolloQueryResult<T>> {
@@ -35,7 +38,7 @@ export class GraphQLClient {
       });
     } catch (error: any) {
       if (error.networkError?.result?.errors) {
-        console.error('GraphQL Errors:', JSON.stringify(error.networkError.result.errors, null, 2));
+        this.logger.error('GraphQL Errors:', JSON.stringify(error.networkError.result.errors, null, 2));
       }
       throw error;
     }
@@ -49,7 +52,7 @@ export class GraphQLClient {
       });
     } catch (error: any) {
       if (error.networkError?.result?.errors) {
-        console.error('GraphQL Errors:', JSON.stringify(error.networkError.result.errors, null, 2));
+        this.logger.error('GraphQL Errors:', JSON.stringify(error.networkError.result.errors, null, 2));
       }
       throw error;
     }

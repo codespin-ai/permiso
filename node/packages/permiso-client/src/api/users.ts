@@ -49,7 +49,8 @@ export async function getUser(
       query,
       variables: { orgId, userId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -123,7 +124,8 @@ export async function listUsers(
         pagination: options?.pagination
       },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -172,7 +174,8 @@ export async function getUsersByIds(
       query,
       variables: { orgId, ids },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -224,7 +227,8 @@ export async function getUsersByIdentity(
       query,
       variables: { identityProvider, identityProviderUserId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -272,7 +276,8 @@ export async function createUser(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -322,7 +327,8 @@ export async function updateUser(
       query: mutation,
       variables: { orgId, userId, input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -353,7 +359,8 @@ export async function deleteUser(
       query: mutation,
       variables: { orgId, userId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -390,7 +397,8 @@ export async function getUserProperty(
       query,
       variables: { orgId, userId, propertyName },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -441,7 +449,8 @@ export async function setUserProperty(
       query: mutation,
       variables: { orgId, userId, name, value, hidden },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -473,7 +482,8 @@ export async function deleteUserProperty(
       query: mutation,
       variables: { orgId, userId, name },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -523,7 +533,8 @@ export async function assignUserRole(
       query: mutation,
       variables: { orgId, userId, roleId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -573,7 +584,8 @@ export async function unassignUserRole(
       query: mutation,
       variables: { orgId, userId, roleId },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 

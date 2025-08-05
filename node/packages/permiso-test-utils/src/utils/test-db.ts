@@ -1,4 +1,5 @@
 import knex, { Knex } from 'knex';
+import { Logger, testLogger } from './test-logger.js';
 
 // Import the base config helper from root knexfile
 const rootPath = new URL('../../../../../knexfile.js', import.meta.url);
@@ -6,6 +7,7 @@ const { createDbConfig } = await import(rootPath.href);
 
 export interface TestDatabaseOptions {
   dbName?: string;
+  logger?: Logger;
 }
 
 export class TestDatabase {
@@ -13,6 +15,7 @@ export class TestDatabase {
   private knexInstance: Knex | null = null;
   private dbName: string;
   private config: any;
+  private logger: Logger;
 
   constructor(options: TestDatabaseOptions = {}) {
     // Use the main PERMISO database config but with a test database name
@@ -24,11 +27,12 @@ export class TestDatabase {
         database: this.dbName
       }
     };
+    this.logger = options.logger || testLogger;
   }
 
-  static getInstance(dbName: string = 'permiso_test'): TestDatabase {
+  static getInstance(dbName: string = 'permiso_test', logger?: Logger): TestDatabase {
     if (!TestDatabase.instances.has(dbName)) {
-      TestDatabase.instances.set(dbName, new TestDatabase({ dbName }));
+      TestDatabase.instances.set(dbName, new TestDatabase({ dbName, logger }));
     }
     return TestDatabase.instances.get(dbName)!;
   }
@@ -66,7 +70,7 @@ export class TestDatabase {
       // Create fresh database
       await adminKnex.raw(`CREATE DATABASE "${this.dbName}"`);
       
-      // Created test database
+      this.logger.info(`Created test database ${this.dbName}`);
     } finally {
       await adminKnex.destroy();
     }
@@ -82,7 +86,7 @@ export class TestDatabase {
       await this.knexInstance.migrate.latest({
         directory: migrationsPath.pathname
       });
-      // Migrations completed
+      this.logger.info('Migrations completed');
     } finally {
       await this.knexInstance.destroy();
       this.knexInstance = null;
@@ -125,9 +129,9 @@ export class TestDatabase {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
-      // Dropped test database
+      this.logger.info(`Dropped test database ${this.dbName}`);
     } catch (error) {
-      console.error('Error dropping test database:', error);
+      this.logger.error('Error dropping test database:', error);
     } finally {
       await adminKnex.destroy();
     }

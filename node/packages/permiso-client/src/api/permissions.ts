@@ -42,7 +42,8 @@ export async function hasPermission(
       query,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -102,7 +103,8 @@ export async function getUserPermissions(
       query,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -162,7 +164,8 @@ export async function getRolePermissions(
       query,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -213,7 +216,8 @@ export async function getEffectivePermissions(
       query,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -264,7 +268,8 @@ export async function getEffectivePermissionsByPrefix(
       query,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -309,7 +314,8 @@ export async function grantUserPermission(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -354,7 +360,8 @@ export async function revokeUserPermission(
       query: mutation,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -399,7 +406,8 @@ export async function grantRolePermission(
       query: mutation,
       variables: { input },
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
@@ -444,7 +452,8 @@ export async function revokeRolePermission(
       query: mutation,
       variables: params,
       headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout
+      timeout: config.timeout,
+      logger: config.logger
     }
   );
 
