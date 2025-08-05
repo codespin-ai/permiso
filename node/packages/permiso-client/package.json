@@ -1,6 +1,6 @@
 {
   "name": "@codespin/permiso-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Client library for Permiso RBAC API",
   "type": "module",
   "main": "./dist/index.js",
