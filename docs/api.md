@@ -2,9 +2,12 @@
 
 Permiso provides a comprehensive GraphQL API for managing Role-Based Access Control (RBAC) in multi-tenant applications. This document covers the complete API schema, query/mutation examples, and best practices.
 
+For TypeScript/JavaScript applications, we recommend using the official client library instead of writing GraphQL queries directly. See [TypeScript Client Documentation](../node/packages/permiso-client/README.md).
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [TypeScript Client](#typescript-client)
 - [Core Concepts](#core-concepts)
 - [GraphQL Schema](#graphql-schema)
 - [Query Examples](#query-examples)
@@ -29,6 +32,54 @@ When running in development mode, you can access the GraphQL Playground at the s
 ### Authentication
 
 **Note**: The current implementation does not include authentication. In production, you should implement proper authentication and ensure users can only access data within their organization context.
+
+## TypeScript Client
+
+For TypeScript/JavaScript applications, we provide an official client library that offers:
+
+- **Type-safe API** - Full TypeScript support with exported types
+- **No GraphQL required** - Simple function calls instead of query strings
+- **Result types** - Explicit error handling with discriminated unions
+- **Auto-completion** - IDE support for all operations
+
+### Installation
+
+```bash
+npm install @codespin/permiso-client
+```
+
+### Quick Example
+
+```typescript
+import { createUser, hasPermission, PermisoConfig } from '@codespin/permiso-client';
+
+const config: PermisoConfig = {
+  endpoint: 'http://localhost:5001',
+  apiKey: 'your-api-key' // optional
+};
+
+// Create a user
+const result = await createUser(config, {
+  id: 'john-doe',
+  orgId: 'acme-corp',
+  identityProvider: 'google',
+  identityProviderUserId: 'john@example.com'
+});
+
+if (result.success) {
+  console.log('User created:', result.data.id);
+}
+
+// Check permission
+const hasAccess = await hasPermission(config, {
+  orgId: 'acme-corp',
+  userId: 'john-doe',
+  resourceId: '/api/users/*',
+  action: 'read'
+});
+```
+
+For complete client documentation, see [TypeScript Client README](../node/packages/permiso-client/README.md).
 
 ## Core Concepts
 
@@ -71,6 +122,7 @@ When running in development mode, you can access the GraphQL Playground at the s
 
 ```graphql
 scalar DateTime
+scalar JSON
 ```
 
 ### Core Types
@@ -149,7 +201,7 @@ type Resource {
 ```graphql
 type Property {
   name: String!
-  value: String!
+  value: JSON
   hidden: Boolean!
   createdAt: DateTime!
 }
@@ -248,7 +300,7 @@ type Mutation {
   deleteOrganization(id: ID!, safetyKey: String): Boolean!
   
   # Organization Properties
-  setOrganizationProperty(orgId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setOrganizationProperty(orgId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteOrganizationProperty(orgId: ID!, name: String!): Boolean!
   
   # Users
@@ -257,7 +309,7 @@ type Mutation {
   deleteUser(orgId: ID!, userId: ID!): Boolean!
   
   # User Properties
-  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteUserProperty(orgId: ID!, userId: ID!, name: String!): Boolean!
   
   # User Roles
@@ -270,7 +322,7 @@ type Mutation {
   deleteRole(orgId: ID!, roleId: ID!): Boolean!
   
   # Role Properties
-  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: String!, hidden: Boolean): Property!
+  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteRoleProperty(orgId: ID!, roleId: ID!, name: String!): Boolean!
   
   # Resources
@@ -343,7 +395,7 @@ input UpdateResourceInput {
 
 input PropertyInput {
   name: String!
-  value: String!
+  value: JSON
   hidden: Boolean
 }
 

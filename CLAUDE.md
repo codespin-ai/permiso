@@ -17,7 +17,7 @@ Only after reading these documents should you proceed with any implementation or
 
 ## Overview
 
-Permiso is a comprehensive Role-Based Access Control (RBAC) system built with Node.js/TypeScript, providing fine-grained permission management for multi-tenant applications. It's a monorepo that deliberately avoids npm workspaces in favor of a custom build system.
+This guide helps AI assistants work effectively with the Permiso codebase. For project overview, see [README.md](../README.md).
 
 ## Essential Commands
 
@@ -140,28 +140,11 @@ npm run test:client:grep -- "Pattern"  # Run specific client test suite
 
 ## Package Structure
 
-Located in `/node/packages/`, build order matters:
+See [Architecture Documentation](docs/architecture.md) for package details. Key point: When adding new packages, you MUST update the `PACKAGES` array in `./build.sh`.
 
-1. **@codespin/permiso-core** - Core types, utilities, and Result type
-2. **@codespin/permiso-logger** - Centralized logging for all packages
-3. **@codespin/permiso-db** - Database connection and management utilities
-4. **@codespin/permiso-test-utils** - Shared test utilities for integration and client tests (dev only)
-5. **@codespin/permiso-server** - GraphQL server for RBAC implementation
-6. **@codespin/permiso-client** - TypeScript client library for the GraphQL API (published to npm)
-7. **@codespin/permiso-integration-tests** - Integration tests using GraphQL API (separate from production build)
+## Configuration
 
-## Environment Variables
-
-Required PostgreSQL connection variables:
-- `PERMISO_DB_HOST`
-- `PERMISO_DB_PORT`
-- `PERMISO_DB_NAME`
-- `PERMISO_DB_USER`
-- `PERMISO_DB_PASSWORD`
-
-Optional:
-- `PERMISO_SERVER_PORT` - GraphQL server port (default: 5001)
-- `PERMISO_LOG_LEVEL` - Logging level (default: info)
+See [Configuration Documentation](docs/configuration.md) for all environment variables and settings.
 
 ## Code Patterns
 
@@ -256,35 +239,18 @@ await db.none(
 );
 ```
 
-## RBAC Concepts
+## Key Documentation References
 
-### Core Entities
-1. **Organizations** - Top-level tenant isolation
-2. **Users** - Authenticated principals within an organization
-3. **Roles** - Named collections of permissions
-4. **Resources** - Protected entities with IDs in path-like format (e.g., `/api/users/*`)
-5. **Permissions** - Actions allowed on resources (e.g., `read`, `write`, `delete`)
-6. **Custom Properties** - Key-value metadata attached to any entity
+- **Project Overview**: See [README.md](../README.md)
+- **Architecture**: See [docs/architecture.md](docs/architecture.md) for RBAC concepts and data model
+- **API Reference**: See [docs/api.md](docs/api.md) for GraphQL schema and examples
+- **Database**: See [docs/database.md](docs/database.md) for multi-database setup
+- **Configuration**: See [docs/configuration.md](docs/configuration.md) for environment variables
+- **Deployment**: See [docs/deployment.md](docs/deployment.md) for Docker and production deployment
+- **Coding Standards**: See [CODING-STANDARDS.md](../CODING-STANDARDS.md) for development patterns
 
-### Permission Model
-- **User Permissions** - Direct permissions assigned to users
-- **Role Permissions** - Permissions assigned to roles
-- **Effective Permissions** - Computed combination of user and role permissions
-- **Resource IDs** - Support wildcards (`*`) and hierarchical matching in path-like format
 
-## Key Documentation
-
-- API documentation: `/docs/api.md`
-- Architecture overview: `/docs/architecture.md`
-- Database configuration: `/docs/database.md`
-- Database schema: `/database/permiso/migrations/`
-- Coding standards: `/CODING-STANDARDS.md`
-
-## Testing & Quality
-
-- TypeScript strict mode enabled
-- Follow functional testing patterns from CODING-STANDARDS.md
-- Each package builds independently with `tsc`
+## Testing Guidelines
 
 ### Testing Guidelines for Debugging and Fixes
 
@@ -311,179 +277,22 @@ This approach:
    - Build errors often require code changes that may introduce lint issues
    - Always: lint → build → (if changes) → lint → build
 
-### Shared Test Utilities
 
-The `@codespin/permiso-test-utils` package provides shared test infrastructure:
-- **TestServer**: Manages GraphQL server lifecycle for tests
-- **TestDatabase**: Handles test database setup/teardown
+See [README.md](../README.md#development) for testing commands and [deployment.md](docs/deployment.md#testing-docker-images) for Docker testing.
 
-This package is used by both integration tests and client tests as a devDependency, eliminating code duplication while keeping the client package independent for npm publishing.
-
-### Running Tests
-
-#### Prerequisites for Testing
-
-**IMPORTANT**: Before running any tests, you MUST have the PostgreSQL container running:
-
-```bash
-# From the project root
-cd devenv
-./run.sh up
-
-# Verify PostgreSQL is running
-./run.sh logs postgres
-```
-
-The development environment will:
-- Start a PostgreSQL 16 container on port 5432
-- Create the `permiso` database automatically via `init.sql`
-- Use credentials: `postgres:postgres`
-
-#### Integration Tests
-
-Integration tests are located in `/node/packages/permiso-integration-tests` and test the full GraphQL API:
-
-```bash
-# Run all integration tests (from project root)
-npm run test:integration:permiso
-
-# Run specific test suite
-npm run test:grep -- "Organizations"
-npm run test:grep -- "Permissions"
-npm run test:grep -- "Users"
-
-# Run all tests (integration + client)
-npm run test:integration:all
-```
-
-**Test Configuration**:
-- Tests automatically use a separate `permiso_test` database
-- Database is cleaned before each test run
-- Migrations are automatically applied to the test database
-- Default timeout: 30 seconds per test
-- Uses Mocha with TypeScript support via ts-node
-- Tests exit properly after completion (no hanging processes)
-
-**Environment Variables for Tests**:
-Tests will use these defaults, or you can override them:
-```bash
-PERMISO_DB_HOST=localhost       # Default: localhost
-PERMISO_DB_PORT=5432           # Default: 5432
-PERMISO_DB_USER=postgres       # Default: postgres
-PERMISO_DB_PASSWORD=postgres   # Default: postgres
-# Note: Test database name is hardcoded to 'permiso_test'
-```
-
-**Test Coverage**:
-Integration tests cover:
-- Organization CRUD operations
-- User and Role management
-- Resource and Permission handling
-- Property operations with JSON support
-- Complex permission calculations
-- GraphQL API error handling
-
-#### Client Tests
-
-Client tests are located in `/node/packages/permiso-client` and test the TypeScript client library:
-
-```bash
-# Run all client tests (from project root)
-npm run test:client
-
-# Run specific client test suite
-npm run test:client:grep -- "Organizations"
-npm run test:client:grep -- "Permissions"
-
-# Watch mode
-npm run test:client:watch
-```
-
-**Client Test Configuration**:
-- Uses a separate `permiso_client_test` database
-- Runs server on port 5003 (different from integration tests)
-- Tests the client API functions directly
-- Validates Result types and error handling
-
-#### Docker Image Testing
-
-To test Docker images before deployment:
-
-```bash
-# Automated testing
-./docker-test.sh                              # Test default image (permiso:latest)
-./docker-test.sh ghcr.io/codespin-ai/permiso:latest  # Test specific image
-./docker-test.sh permiso:latest 5001          # Test on specific port
-
-# The test script will:
-# - Create a temporary test database
-# - Run the container with auto-migration
-# - Execute comprehensive GraphQL tests
-# - Clean up automatically
-# - Return exit code 0 on success, 1 on failure
-```
-
-## Common Tasks
+## Common Development Tasks
 
 ### Adding a New Package
 1. Create directory in `/node/packages/`
 2. Add package.json with `file:` dependencies
-3. Add to `PACKAGES` array in `./build.sh` (respect dependency order)
+3. **CRITICAL**: Add to `PACKAGES` array in `./build.sh` (respect dependency order)
 4. Create `src/` directory and `tsconfig.json`
 5. Run `./build.sh --install`
 
-### Docker Deployment
-1. Build image: `./docker-build.sh`
-2. Test locally: `docker run -p 5001:5001 --env-file .env permiso:latest`
-3. Push to registry: `./docker-push.sh ghcr.io/codespin-ai/permiso latest`
-4. Official images available at: `ghcr.io/codespin-ai/permiso`
-
-### Testing Docker Images
-
-**Automated Testing**: Use the `./docker-test.sh` script to validate Docker images:
-
-```bash
-# Test default image (permiso:latest) on default port (5099)
-./docker-test.sh
-
-# Test specific image
-./docker-test.sh ghcr.io/codespin-ai/permiso:latest
-
-# Test on specific port
-./docker-test.sh permiso:latest 5001
-
-# Show help
-./docker-test.sh --help
-```
-
-The test script:
-- Creates a temporary test database
-- Runs the container with auto-migration
-- Executes comprehensive GraphQL tests including:
-  - Organization creation
-  - All JSON property types (string, number, boolean, null, array, object)
-  - User and Role creation with properties
-  - Complex nested JSON structures
-- Cleans up automatically after tests
-- Returns exit code 0 on success, 1 on failure
-
-**Manual Testing**: For debugging or custom testing:
-```bash
-# Run with host networking (Linux)
-docker run --rm -p 5001:5001 \
-  --add-host=host.docker.internal:host-gateway \
-  -e PERMISO_DB_HOST=host.docker.internal \
-  -e PERMISO_DB_PORT=5432 \
-  -e PERMISO_DB_NAME=permiso \
-  -e PERMISO_DB_USER=postgres \
-  -e PERMISO_DB_PASSWORD=postgres \
-  permiso:latest
-```
-
 ### Database Changes
-1. Create migration: `npm run migrate:make your_migration_name`
+1. Create migration: `npm run migrate:permiso:make your_migration_name`
 2. Edit migration file in `/database/permiso/migrations/`
-3. Run migration: `npm run migrate:latest`
+3. Run migration: `npm run migrate:permiso:latest` (only when user explicitly asks)
 4. Update types in `@codespin/permiso-server`
 5. Update persistence layer functions
 
@@ -493,30 +302,9 @@ docker run --rm -p 5001:5001 \
 3. Add/update persistence functions as needed
 4. Test with GraphQL playground at `http://localhost:5001/graphql`
 
-## GraphQL API Overview
+For Docker deployment, see [deployment.md](docs/deployment.md).
 
-The permiso-server package provides a complete GraphQL API for RBAC operations:
+## GraphQL API
 
-### Key Queries
-- `organization(id)` - Get organization details
-- `organizations` - List all organizations
-- `users(orgId)` - List users in an organization
-- `roles(orgId)` - List roles in an organization
-- `resources(orgId)` - List resources in an organization
-- `effectivePermissions(orgId, userId, resourceId)` - Calculate user's permissions
+See [API Documentation](docs/api.md) for complete GraphQL schema, queries, mutations, and examples.
 
-### Key Mutations
-- `createOrganization` - Create new organization
-- `createUser` - Create user in organization
-- `createRole` - Create role
-- `createResource` - Create protected resource
-- `assignUserRole` - Assign role to user
-- `grantUserPermission` - Grant direct permission to user
-- `grantRolePermission` - Grant permission to role
-
-## Performance Considerations
-
-- Use database indexes on frequently queried columns (already included in migrations)
-- Batch operations when possible to reduce database round trips
-- Cache effective permissions calculations when appropriate
-- Use transactions for operations that modify multiple tables

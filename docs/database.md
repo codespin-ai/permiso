@@ -43,30 +43,14 @@ npm run migrate:all:status
 
 ### Environment Variables
 
-Each database must have its own connection settings with no shared defaults:
+See [Configuration Documentation](configuration.md) for database connection settings.
 
-```bash
-# Permiso database
-export PERMISO_DB_HOST=localhost
-export PERMISO_DB_PORT=5432
-export PERMISO_DB_NAME=permiso
-export PERMISO_DB_USER=postgres
-export PERMISO_DB_PASSWORD=postgres
-
-# Analytics database (example)
-export ANALYTICS_DB_HOST=analytics-server
-export ANALYTICS_DB_PORT=5432
-export ANALYTICS_DB_NAME=analytics_prod
-export ANALYTICS_DB_USER=analytics_user
-export ANALYTICS_DB_PASSWORD=analytics_pass
-```
-
-If environment variables are not set, the following defaults are used:
-- Host: `localhost`
-- Port: `5432`
-- Database: lowercase database name (e.g., `permiso`, `analytics`)
-- User: `postgres`
-- Password: `postgres`
+Each database uses its own set of environment variables following the pattern:
+- `{DATABASE_NAME}_DB_HOST`
+- `{DATABASE_NAME}_DB_PORT`
+- `{DATABASE_NAME}_DB_NAME`
+- `{DATABASE_NAME}_DB_USER`
+- `{DATABASE_NAME}_DB_PASSWORD`
 
 ### Adding a New Database
 

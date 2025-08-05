@@ -369,17 +369,9 @@ Support for multiple identity providers:
 
 ## Deployment Architecture
 
-### Environment Variables
+### Configuration
 
-```bash
-PERMISO_DB_HOST=localhost
-PERMISO_DB_PORT=5432
-PERMISO_DB_NAME=permiso
-PERMISO_DB_USER=permiso_user
-PERMISO_DB_PASSWORD=secure_password
-PERMISO_SERVER_PORT=5001
-PERMISO_LOG_LEVEL=info
-```
+See [Configuration Documentation](configuration.md) for all environment variables and settings.
 
 ### Scalability
 
