@@ -155,6 +155,9 @@ print_info "Creating test database..."
 docker exec devenv-postgres-1 psql -U postgres -c "CREATE DATABASE $TEST_DB_NAME;" >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     print_success "Created test database: $TEST_DB_NAME"
+    # Give PostgreSQL a moment to fully commit the database creation
+    sleep 2
+    print_info "Waiting for database to be fully available..."
 else
     print_warning "Test database might already exist"
 fi

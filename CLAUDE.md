@@ -52,7 +52,7 @@ This guide helps AI assistants work effectively with the Permiso codebase. For p
 # Docker commands
 ./docker-build.sh       # Build Docker image
 ./docker-test.sh        # Test Docker image (see Docker section for options)
-./docker-push.sh ghcr.io/codespin-ai/permiso latest  # Push to registry
+./docker-push.sh latest ghcr.io/codespin-ai  # Push to registry
 ```
 
 ### Database Commands

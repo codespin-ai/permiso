@@ -84,7 +84,7 @@ Push your image to a container registry:
 
 ```bash
 # Push to GitHub Container Registry
-./docker-push.sh ghcr.io/codespin-ai/permiso latest
+./docker-push.sh latest ghcr.io/codespin-ai
 
 # Or manually
 docker tag permiso:latest ghcr.io/codespin-ai/permiso:latest
