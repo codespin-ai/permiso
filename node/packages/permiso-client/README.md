@@ -602,9 +602,6 @@ npm run test:client
 
 # Run specific test suite
 npm run test:client:grep -- "Organizations"
-
-# Run in watch mode
-npm run test:client:watch
 ```
 
 ### Test Coverage

@@ -98,15 +98,16 @@ cd node && npm run lint:fix    # Run ESLint with auto-fix on all packages
 cd node/packages/[package-name] && npm run lint
 cd node/packages/[package-name] && npm run lint:fix
 
+# Testing
+npm test                               # Run full integration test suite (recommended)
+
 # Integration tests
 npm run test:integration:permiso       # Run all integration tests
-npm run test:integration:permiso:watch  # Run integration tests in watch mode
-npm run test:grep -- "Pattern"         # Run specific integration test suite
+npm run test:integration:grep -- "Pattern"         # Run specific integration test suite
 npm run test:integration:all           # Run all tests (integration + client)
 
 # Client tests
 npm run test:client                    # Run all client tests
-npm run test:client:watch              # Run client tests in watch mode
 npm run test:client:grep -- "Pattern"  # Run specific client test suite
 ```
 
@@ -256,10 +257,10 @@ await db.none(
 
 **IMPORTANT**: When fixing bugs or debugging issues:
 1. **Always run individual tests** when fixing specific issues
-2. Use `npm run test:grep -- "test name"` to run specific test suites
+2. Use `npm run test:integration:grep -- "test name"` to run specific integration test suites
 3. Use `npm run test:client:grep -- "test name"` for client-specific tests
 4. Test incrementally - run the specific failing test after each change
-5. Only run the full test suite after individual tests pass
+5. Run `npm test` for the full test suite after individual tests pass
 
 This approach:
 - Provides faster feedback loops

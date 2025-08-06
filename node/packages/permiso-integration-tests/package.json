@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "test": "mocha --exit",
-    "test:watch": "mocha --watch",
     "test:grep": "mocha --exit --grep",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

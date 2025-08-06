@@ -14,7 +14,6 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "test": "mocha --exit",
-    "test:watch": "mocha --watch",
     "test:grep": "mocha --exit --grep"
   },
   "dependencies": {},
