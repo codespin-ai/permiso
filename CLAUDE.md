@@ -24,6 +24,7 @@ This guide helps AI assistants work effectively with the Permiso codebase. For p
 ### Git Workflow Rules
 
 **IMPORTANT**: NEVER commit or push changes without explicit user instruction
+
 - Only run `git add`, `git commit`, or `git push` when the user explicitly asks
 - Common explicit instructions include: "commit", "push", "commit and push", "save to git"
 - If unsure, ask the user if they want to commit the changes
@@ -32,7 +33,14 @@ This guide helps AI assistants work effectively with the Permiso codebase. For p
 - **DO NOT** commit/push even if you think the task is complete
 - The user will explicitly tell you when they want to commit/push
 
+When the user asks you to commit and push:
+
+1. Run `./format-all.sh` to format all files with Prettier
+2. Run `./lint-all.sh` to ensure code passes linting
+3. Follow the git commit guidelines in the main Claude system prompt
+
 ### Build Commands
+
 ```bash
 # Build entire project (from root)
 ./build.sh              # Standard build
@@ -48,6 +56,11 @@ This guide helps AI assistants work effectively with the Permiso codebase. For p
 
 # Lint entire project (from root)
 ./lint-all.sh           # Run ESLint on all packages
+./lint-all.sh --fix     # Run ESLint with auto-fix
+
+# Format code with Prettier (MUST run before committing)
+./format-all.sh         # Format all files
+./format-all.sh --check # Check formatting without changing files
 
 # Docker commands
 ./docker-build.sh       # Build Docker image
@@ -58,6 +71,7 @@ This guide helps AI assistants work effectively with the Permiso codebase. For p
 ### Database Commands
 
 **IMPORTANT**: NEVER run database migrations or seeds unless explicitly instructed by the user
+
 - Only run migration/seed commands that modify the database when the user specifically asks
 - You can run status checks and create new migration/seed files without explicit permission
 - There is NO DEFAULT database - all commands must specify the database name
@@ -83,6 +97,7 @@ npm run seed:permiso:run
 ```
 
 ### Development Commands
+
 ```bash
 # Start server
 npm start
@@ -114,17 +129,20 @@ npm run test:client:grep -- "Pattern"  # Run specific client test suite
 ## Critical Architecture Decisions
 
 ### 1. Monorepo Without Workspaces
+
 - **NO npm workspaces** - Uses custom `./build.sh` script instead
 - Dependencies between packages use `file:` protocol (e.g., `"@codespin/permiso-core": "file:../permiso-core"`)
 - **IMPORTANT**: When adding new packages, you MUST update the `PACKAGES` array in `./build.sh`
 
 ### 2. Functional Programming Only
+
 - **NO CLASSES** - Export functions from modules only
 - Use pure functions with explicit dependency injection
 - Prefer `type` over `interface` (use `interface` only for extensible contracts)
 - Use Result types for error handling instead of exceptions
 
 ### 3. Database Conventions
+
 - **PostgreSQL** with **Knex.js** for migrations
 - **pg-promise** for data access (NO ORMs)
 - Table names: **singular** and **snake_case** (e.g., `organization`, `user_role`)
@@ -135,7 +153,8 @@ npm run test:client:grep -- "Pattern"  # Run specific client test suite
 - **Type-safe Queries**: All queries use `db.one<XxxDbRow>()` with explicit type parameters
 
 ### 4. ESM Modules
-- All imports MUST include `.js` extension: `import { foo } from './bar.js'`
+
+- All imports MUST include `.js` extension: `import { foo } from "./bar.js"`
 - TypeScript configured for `"module": "NodeNext"`
 - Type: `"module"` in all package.json files
 
@@ -150,6 +169,7 @@ See [Configuration Documentation](docs/configuration.md) for all environment var
 ## Code Patterns
 
 ### Database Row Pattern (DbRow)
+
 ```typescript
 // ✅ Good - DbRow type mirrors exact database schema
 type UserDbRow = {
@@ -169,42 +189,46 @@ function mapUserFromDb(row: UserDbRow): User {
     identityProvider: row.identity_provider,
     identityProviderUserId: row.identity_provider_user_id,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   };
 }
 
 // ✅ Good - Type-safe queries with explicit type parameters and named parameters
 const result = await db.one<UserDbRow>(
   `SELECT * FROM "user" WHERE id = $(id)`,
-  { id }
+  { id },
 );
 return mapUserFromDb(result);
 ```
 
 ### Function Export Pattern
+
 ```typescript
 // ✅ Good - Pure function with explicit dependencies
 export async function createUser(
   db: Database,
-  input: CreateUserInput
+  input: CreateUserInput,
 ): Promise<Result<User, Error>> {
   // Implementation
 }
 
 // ❌ Bad - Class-based approach
-export class UserService { /* ... */ }
+export class UserService {
+  /* ... */
+}
 ```
 
 ### Result Type Pattern
+
 ```typescript
-import { createLogger } from '@codespin/permiso-logger';
+import { createLogger } from "@codespin/permiso-logger";
 
 export type Result<T, E = Error> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: E };
 
 // Usage
-const logger = createLogger('UserValidator');
+const logger = createLogger("UserValidator");
 const result = await validateUser(user);
 if (!result.success) {
   logger.error("Validation failed:", result.error);
@@ -214,6 +238,7 @@ const validUser = result.data; // Type-safe
 ```
 
 ### Import Pattern
+
 ```typescript
 // ✅ Good - Always include .js extension
 import { createUser } from "./users.js";
@@ -224,19 +249,20 @@ import { createUser } from "./users";
 ```
 
 ### Database Query Pattern
+
 ```typescript
 // ✅ Good - Named parameters
 await db.none(
   `INSERT INTO organization_property (org_id, name, value, hidden) 
    VALUES ($(orgId), $(name), $(value), $(hidden))`,
-  { orgId: input.id, name: p.name, value: p.value, hidden: p.hidden ?? false }
+  { orgId: input.id, name: p.name, value: p.value, hidden: p.hidden ?? false },
 );
 
 // ❌ Bad - Positional parameters
 await db.none(
   `INSERT INTO organization_property (org_id, name, value, hidden) 
    VALUES ($1, $2, $3, $4)`,
-  [input.id, p.name, p.value, p.hidden ?? false]
+  [input.id, p.name, p.value, p.hidden ?? false],
 );
 ```
 
@@ -250,12 +276,12 @@ await db.none(
 - **Deployment**: See [docs/deployment.md](docs/deployment.md) for Docker and production deployment
 - **Coding Standards**: See [CODING-STANDARDS.md](../CODING-STANDARDS.md) for development patterns
 
-
 ## Testing Guidelines
 
 ### Testing Guidelines for Debugging and Fixes
 
 **IMPORTANT**: When fixing bugs or debugging issues:
+
 1. **Always run individual tests** when fixing specific issues
 2. Use `npm run test:integration:grep -- "test name"` to run specific integration test suites
 3. Use `npm run test:client:grep -- "test name"` for client-specific tests
@@ -263,6 +289,7 @@ await db.none(
 5. Run `npm test` for the full test suite after individual tests pass
 
 This approach:
+
 - Provides faster feedback loops
 - Makes debugging easier
 - Prevents breaking other tests while fixing one
@@ -271,19 +298,20 @@ This approach:
 ### Important Build & Lint Workflow
 
 **ALWAYS follow this sequence:**
+
 1. Run `./lint-all.sh` first
 2. Run `./build.sh`
 3. **If build fails and you make changes**: You MUST run `./lint-all.sh` again before building
-   - Your new changes haven't been linted yet
+   - Your new changes haven"t been linted yet
    - Build errors often require code changes that may introduce lint issues
    - Always: lint → build → (if changes) → lint → build
-
 
 See [README.md](../README.md#development) for testing commands and [deployment.md](docs/deployment.md#testing-docker-images) for Docker testing.
 
 ## Common Development Tasks
 
 ### Adding a New Package
+
 1. Create directory in `/node/packages/`
 2. Add package.json with `file:` dependencies
 3. **CRITICAL**: Add to `PACKAGES` array in `./build.sh` (respect dependency order)
@@ -291,6 +319,7 @@ See [README.md](../README.md#development) for testing commands and [deployment.m
 5. Run `./build.sh --install`
 
 ### Database Changes
+
 1. Create migration: `npm run migrate:permiso:make your_migration_name`
 2. Edit migration file in `/database/permiso/migrations/`
 3. Run migration: `npm run migrate:permiso:latest` (only when user explicitly asks)
@@ -298,6 +327,7 @@ See [README.md](../README.md#development) for testing commands and [deployment.m
 5. Update persistence layer functions
 
 ### GraphQL Schema Changes
+
 1. Update schema in `/node/packages/permiso-server/src/schema.graphql`
 2. Update resolvers in `/node/packages/permiso-server/src/resolvers/`
 3. Add/update persistence functions as needed
@@ -308,4 +338,3 @@ For Docker deployment, see [deployment.md](docs/deployment.md).
 ## GraphQL API
 
 See [API Documentation](docs/api.md) for complete GraphQL schema, queries, mutations, and examples.
-

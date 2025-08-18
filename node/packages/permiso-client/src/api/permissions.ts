@@ -1,12 +1,12 @@
-import { graphqlRequest } from '../http-client.js';
-import { Result, PermisoConfig } from '../types.js';
+import { graphqlRequest } from "../http-client.js";
+import { Result, PermisoConfig } from "../types.js";
 import type {
   UserPermission,
   RolePermission,
   EffectivePermission,
   GrantUserPermissionInput,
-  GrantRolePermissionInput
-} from '../generated/types.js';
+  GrantRolePermissionInput,
+} from "../generated/types.js";
 
 /**
  * Check if a user has permission for a specific resource and action
@@ -18,7 +18,7 @@ export async function hasPermission(
     userId: string;
     resourceId: string;
     action: string;
-  }
+  },
 ): Promise<Result<boolean, Error>> {
   const query = `
     query HasPermission(
@@ -36,16 +36,14 @@ export async function hasPermission(
     }
   `;
 
-  const result = await graphqlRequest<{ hasPermission: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ hasPermission: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -64,7 +62,7 @@ export async function getUserPermissions(
     userId: string;
     resourceId?: string;
     action?: string;
-  }
+  },
 ): Promise<Result<UserPermission[], Error>> {
   const query = `
     query GetUserPermissions(
@@ -97,16 +95,14 @@ export async function getUserPermissions(
     }
   `;
 
-  const result = await graphqlRequest<{ userPermissions: UserPermission[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ userPermissions: UserPermission[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -125,7 +121,7 @@ export async function getRolePermissions(
     roleId: string;
     resourceId?: string;
     action?: string;
-  }
+  },
 ): Promise<Result<RolePermission[], Error>> {
   const query = `
     query GetRolePermissions(
@@ -158,16 +154,14 @@ export async function getRolePermissions(
     }
   `;
 
-  const result = await graphqlRequest<{ rolePermissions: RolePermission[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ rolePermissions: RolePermission[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -186,7 +180,7 @@ export async function getEffectivePermissions(
     userId: string;
     resourceId: string;
     action?: string;
-  }
+  },
 ): Promise<Result<EffectivePermission[], Error>> {
   const query = `
     query GetEffectivePermissions(
@@ -210,16 +204,16 @@ export async function getEffectivePermissions(
     }
   `;
 
-  const result = await graphqlRequest<{ effectivePermissions: EffectivePermission[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{
+    effectivePermissions: EffectivePermission[];
+  }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -238,7 +232,7 @@ export async function getEffectivePermissionsByPrefix(
     userId: string;
     resourceIdPrefix: string;
     action?: string;
-  }
+  },
 ): Promise<Result<EffectivePermission[], Error>> {
   const query = `
     query GetEffectivePermissionsByPrefix(
@@ -262,16 +256,16 @@ export async function getEffectivePermissionsByPrefix(
     }
   `;
 
-  const result = await graphqlRequest<{ effectivePermissionsByPrefix: EffectivePermission[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{
+    effectivePermissionsByPrefix: EffectivePermission[];
+  }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -285,7 +279,7 @@ export async function getEffectivePermissionsByPrefix(
  */
 export async function grantUserPermission(
   config: PermisoConfig,
-  input: GrantUserPermissionInput
+  input: GrantUserPermissionInput,
 ): Promise<Result<UserPermission, Error>> {
   const mutation = `
     mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -308,16 +302,14 @@ export async function grantUserPermission(
     }
   `;
 
-  const result = await graphqlRequest<{ grantUserPermission: UserPermission }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ grantUserPermission: UserPermission }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -336,7 +328,7 @@ export async function revokeUserPermission(
     userId: string;
     resourceId: string;
     action: string;
-  }
+  },
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation RevokeUserPermission(
@@ -354,16 +346,14 @@ export async function revokeUserPermission(
     }
   `;
 
-  const result = await graphqlRequest<{ revokeUserPermission: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ revokeUserPermission: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -377,7 +367,7 @@ export async function revokeUserPermission(
  */
 export async function grantRolePermission(
   config: PermisoConfig,
-  input: GrantRolePermissionInput
+  input: GrantRolePermissionInput,
 ): Promise<Result<RolePermission, Error>> {
   const mutation = `
     mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -400,16 +390,14 @@ export async function grantRolePermission(
     }
   `;
 
-  const result = await graphqlRequest<{ grantRolePermission: RolePermission }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ grantRolePermission: RolePermission }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -428,7 +416,7 @@ export async function revokeRolePermission(
     roleId: string;
     resourceId: string;
     action: string;
-  }
+  },
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation RevokeRolePermission(
@@ -446,16 +434,14 @@ export async function revokeRolePermission(
     }
   `;
 
-  const result = await graphqlRequest<{ revokeRolePermission: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: params,
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ revokeRolePermission: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: params,
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;

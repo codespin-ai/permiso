@@ -1,13 +1,13 @@
-import { graphqlRequest } from '../http-client.js';
-import { Result, PermisoConfig } from '../types.js';
+import { graphqlRequest } from "../http-client.js";
+import { Result, PermisoConfig } from "../types.js";
 import type {
   User,
   CreateUserInput,
   UpdateUserInput,
   UserFilter,
   PaginationInput,
-  Property
-} from '../generated/types.js';
+  Property,
+} from "../generated/types.js";
 
 /**
  * Get a user by organization and user ID
@@ -15,7 +15,7 @@ import type {
 export async function getUser(
   config: PermisoConfig,
   orgId: string,
-  userId: string
+  userId: string,
 ): Promise<Result<User | null, Error>> {
   const query = `
     query GetUser($orgId: ID!, $userId: ID!) {
@@ -43,16 +43,14 @@ export async function getUser(
     }
   `;
 
-  const result = await graphqlRequest<{ user: User | null }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, userId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ user: User | null }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, userId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -70,17 +68,22 @@ export async function listUsers(
   options?: {
     filter?: UserFilter;
     pagination?: PaginationInput;
-  }
-): Promise<Result<{
-  nodes: User[];
-  totalCount: number;
-  pageInfo: {
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    startCursor?: string;
-    endCursor?: string;
-  };
-}, Error>> {
+  },
+): Promise<
+  Result<
+    {
+      nodes: User[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    },
+    Error
+  >
+> {
   const query = `
     query ListUsers($orgId: ID!, $filter: UserFilter, $pagination: PaginationInput) {
       users(orgId: $orgId, filter: $filter, pagination: $pagination) {
@@ -114,20 +117,18 @@ export async function listUsers(
     }
   `;
 
-  const result = await graphqlRequest<{ users: any }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: {
-        orgId,
-        filter: options?.filter,
-        pagination: options?.pagination
-      },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ users: any }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: {
+      orgId,
+      filter: options?.filter,
+      pagination: options?.pagination,
+    },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -142,7 +143,7 @@ export async function listUsers(
 export async function getUsersByIds(
   config: PermisoConfig,
   orgId: string,
-  ids: string[]
+  ids: string[],
 ): Promise<Result<User[], Error>> {
   const query = `
     query GetUsersByIds($orgId: ID!, $ids: [ID!]!) {
@@ -168,16 +169,14 @@ export async function getUsersByIds(
     }
   `;
 
-  const result = await graphqlRequest<{ usersByIds: User[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, ids },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ usersByIds: User[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, ids },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -192,7 +191,7 @@ export async function getUsersByIds(
 export async function getUsersByIdentity(
   config: PermisoConfig,
   identityProvider: string,
-  identityProviderUserId: string
+  identityProviderUserId: string,
 ): Promise<Result<User[], Error>> {
   const query = `
     query GetUsersByIdentity($identityProvider: String!, $identityProviderUserId: String!) {
@@ -221,16 +220,14 @@ export async function getUsersByIdentity(
     }
   `;
 
-  const result = await graphqlRequest<{ usersByIdentity: User[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { identityProvider, identityProviderUserId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ usersByIdentity: User[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { identityProvider, identityProviderUserId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -244,7 +241,7 @@ export async function getUsersByIdentity(
  */
 export async function createUser(
   config: PermisoConfig,
-  input: CreateUserInput
+  input: CreateUserInput,
 ): Promise<Result<User, Error>> {
   const mutation = `
     mutation CreateUser($input: CreateUserInput!) {
@@ -270,16 +267,14 @@ export async function createUser(
     }
   `;
 
-  const result = await graphqlRequest<{ createUser: User }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ createUser: User }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -295,7 +290,7 @@ export async function updateUser(
   config: PermisoConfig,
   orgId: string,
   userId: string,
-  input: UpdateUserInput
+  input: UpdateUserInput,
 ): Promise<Result<User, Error>> {
   const mutation = `
     mutation UpdateUser($orgId: ID!, $userId: ID!, $input: UpdateUserInput!) {
@@ -321,16 +316,14 @@ export async function updateUser(
     }
   `;
 
-  const result = await graphqlRequest<{ updateUser: User }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId, input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ updateUser: User }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId, input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -345,7 +338,7 @@ export async function updateUser(
 export async function deleteUser(
   config: PermisoConfig,
   orgId: string,
-  userId: string
+  userId: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation DeleteUser($orgId: ID!, $userId: ID!) {
@@ -353,16 +346,14 @@ export async function deleteUser(
     }
   `;
 
-  const result = await graphqlRequest<{ deleteUser: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ deleteUser: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -378,7 +369,7 @@ export async function getUserProperty(
   config: PermisoConfig,
   orgId: string,
   userId: string,
-  propertyName: string
+  propertyName: string,
 ): Promise<Result<Property | null, Error>> {
   const query = `
     query GetUserProperty($orgId: ID!, $userId: ID!, $propertyName: String!) {
@@ -391,16 +382,14 @@ export async function getUserProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ userProperty: Property | null }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, userId, propertyName },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ userProperty: Property | null }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, userId, propertyName },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -418,7 +407,7 @@ export async function setUserProperty(
   userId: string,
   name: string,
   value: unknown,
-  hidden?: boolean
+  hidden?: boolean,
 ): Promise<Result<Property, Error>> {
   const mutation = `
     mutation SetUserProperty(
@@ -443,16 +432,14 @@ export async function setUserProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ setUserProperty: Property }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId, name, value, hidden },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ setUserProperty: Property }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId, name, value, hidden },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -468,7 +455,7 @@ export async function deleteUserProperty(
   config: PermisoConfig,
   orgId: string,
   userId: string,
-  name: string
+  name: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation DeleteUserProperty($orgId: ID!, $userId: ID!, $name: String!) {
@@ -476,16 +463,14 @@ export async function deleteUserProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ deleteUserProperty: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId, name },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ deleteUserProperty: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId, name },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -501,7 +486,7 @@ export async function assignUserRole(
   config: PermisoConfig,
   orgId: string,
   userId: string,
-  roleId: string
+  roleId: string,
 ): Promise<Result<User, Error>> {
   const mutation = `
     mutation AssignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
@@ -527,16 +512,14 @@ export async function assignUserRole(
     }
   `;
 
-  const result = await graphqlRequest<{ assignUserRole: User }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId, roleId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ assignUserRole: User }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId, roleId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -552,7 +535,7 @@ export async function unassignUserRole(
   config: PermisoConfig,
   orgId: string,
   userId: string,
-  roleId: string
+  roleId: string,
 ): Promise<Result<User, Error>> {
   const mutation = `
     mutation UnassignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
@@ -578,16 +561,14 @@ export async function unassignUserRole(
     }
   `;
 
-  const result = await graphqlRequest<{ unassignUserRole: User }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, userId, roleId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ unassignUserRole: User }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, userId, roleId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;

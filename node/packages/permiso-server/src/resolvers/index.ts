@@ -1,4 +1,4 @@
-import { scalarResolvers } from './scalars.js';
+import { scalarResolvers } from "./scalars.js";
 
 import {
   getOrganizationResolver,
@@ -9,8 +9,8 @@ import {
   getOrganizationPropertyResolver,
   setOrganizationPropertyResolver,
   deleteOrganizationPropertyResolver,
-  organizationFieldResolvers
-} from './organization/index.js';
+  organizationFieldResolvers,
+} from "./organization/index.js";
 
 import {
   getUserResolver,
@@ -24,8 +24,8 @@ import {
   deleteUserPropertyResolver,
   assignUserRoleResolver,
   unassignUserRoleResolver,
-  userFieldResolvers
-} from './user/index.js';
+  userFieldResolvers,
+} from "./user/index.js";
 
 import {
   getRoleResolver,
@@ -36,8 +36,8 @@ import {
   getRolePropertyResolver,
   setRolePropertyResolver,
   deleteRolePropertyResolver,
-  roleFieldResolvers
-} from './role/index.js';
+  roleFieldResolvers,
+} from "./role/index.js";
 
 import {
   getResourceResolver,
@@ -46,8 +46,8 @@ import {
   createResourceResolver,
   updateResourceResolver,
   deleteResourceResolver,
-  resourceFieldResolvers
-} from './resource/index.js';
+  resourceFieldResolvers,
+} from "./resource/index.js";
 
 import {
   grantUserPermissionResolver,
@@ -59,13 +59,13 @@ import {
   getEffectivePermissionsResolver,
   getEffectivePermissionsByPrefixResolver,
   hasPermissionResolver,
-  permissionFieldResolvers
-} from './permission/index.js';
+  permissionFieldResolvers,
+} from "./permission/index.js";
 
 function mergeResolvers(...resolvers: any[]) {
   const merged: any = {
     Query: {},
-    Mutation: {}
+    Mutation: {},
   };
 
   for (const resolver of resolvers) {
@@ -77,7 +77,7 @@ function mergeResolvers(...resolvers: any[]) {
     }
     // Copy field resolvers (like User, Organization, etc.)
     for (const key of Object.keys(resolver)) {
-      if (key !== 'Query' && key !== 'Mutation') {
+      if (key !== "Query" && key !== "Mutation") {
         merged[key] = resolver[key];
       }
     }
@@ -145,5 +145,5 @@ export const resolvers = mergeResolvers(
   getEffectivePermissionsResolver,
   getEffectivePermissionsByPrefixResolver,
   hasPermissionResolver,
-  permissionFieldResolvers
+  permissionFieldResolvers,
 );

@@ -1,4 +1,4 @@
-import type { Database } from '@codespin/permiso-db';
+import type { Database } from "@codespin/permiso-db";
 
 export type GraphQLContext = {
   db: Database;

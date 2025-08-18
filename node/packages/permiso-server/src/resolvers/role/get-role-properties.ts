@@ -1,1 +1,1 @@
-export { getRoleProperties } from '../../domain/role/get-role-properties.js';
+export { getRoleProperties } from "../../domain/role/get-role-properties.js";

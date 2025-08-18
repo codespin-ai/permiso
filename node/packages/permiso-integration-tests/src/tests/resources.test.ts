@@ -1,11 +1,11 @@
-import { expect } from 'chai';
-import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../index.js';
+import { expect } from "chai";
+import { gql } from "@apollo/client/core/index.js";
+import { testDb, client } from "../index.js";
 
-describe('Resources', () => {
+describe("Resources", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
-    
+
     // Create test organization
     const mutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -17,14 +17,14 @@ describe('Resources', () => {
 
     await client.mutate(mutation, {
       input: {
-        id: 'test-org',
-        name: 'Test Organization'
-      }
+        id: "test-org",
+        name: "Test Organization",
+      },
     });
   });
 
-  describe('createResource', () => {
-    it('should create a new resource', async () => {
+  describe("createResource", () => {
+    it("should create a new resource", async () => {
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -38,21 +38,21 @@ describe('Resources', () => {
 
       const result = await client.mutate(mutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'User API',
-          description: 'User management endpoints'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "User API",
+          description: "User management endpoints",
+        },
       });
 
       const resource = result.data?.createResource;
-      expect(resource?.id).to.equal('/api/users/*');
-      expect(resource?.orgId).to.equal('test-org');
-      expect(resource?.name).to.equal('User API');
-      expect(resource?.description).to.equal('User management endpoints');
+      expect(resource?.id).to.equal("/api/users/*");
+      expect(resource?.orgId).to.equal("test-org");
+      expect(resource?.name).to.equal("User API");
+      expect(resource?.description).to.equal("User management endpoints");
     });
 
-    it('should fail with non-existent organization', async () => {
+    it("should fail with non-existent organization", async () => {
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -64,37 +64,40 @@ describe('Resources', () => {
       try {
         const result = await client.mutate(mutation, {
           input: {
-            id: '/api/users/*',
-            orgId: 'non-existent-org',
-            name: 'User API'
-          }
+            id: "/api/users/*",
+            orgId: "non-existent-org",
+            name: "User API",
+          },
         });
-        
+
         // Check if there are errors in the response
         if (result.errors && result.errors.length > 0) {
           const errorMessage = result.errors[0].message.toLowerCase();
-          expect(errorMessage).to.satisfy((msg: string) => 
-            msg.includes('foreign key violation') || 
-            msg.includes('is not present in table') ||
-            msg.includes('constraint')
+          expect(errorMessage).to.satisfy(
+            (msg: string) =>
+              msg.includes("foreign key violation") ||
+              msg.includes("is not present in table") ||
+              msg.includes("constraint"),
           );
         } else {
-          expect.fail('Should have returned an error');
+          expect.fail("Should have returned an error");
         }
       } catch (error: any) {
         // If an exception was thrown, check it
-        const errorMessage = error.graphQLErrors?.[0]?.message || error.message || '';
-        expect(errorMessage.toLowerCase()).to.satisfy((msg: string) => 
-          msg.includes('foreign key violation') || 
-          msg.includes('is not present in table') ||
-          msg.includes('constraint')
+        const errorMessage =
+          error.graphQLErrors?.[0]?.message || error.message || "";
+        expect(errorMessage.toLowerCase()).to.satisfy(
+          (msg: string) =>
+            msg.includes("foreign key violation") ||
+            msg.includes("is not present in table") ||
+            msg.includes("constraint"),
         );
       }
     });
   });
 
-  describe('resources query', () => {
-    it('should list resources in an organization', async () => {
+  describe("resources query", () => {
+    it("should list resources in an organization", async () => {
       const createResourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -106,18 +109,18 @@ describe('Resources', () => {
       // Create multiple resources
       await client.mutate(createResourceMutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'User API'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "User API",
+        },
       });
 
       await client.mutate(createResourceMutation, {
         input: {
-          id: '/api/roles/*',
-          orgId: 'test-org',
-          name: 'Role API'
-        }
+          id: "/api/roles/*",
+          orgId: "test-org",
+          name: "Role API",
+        },
       });
 
       // Query resources
@@ -134,16 +137,16 @@ describe('Resources', () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: 'test-org' });
+      const result = await client.query(query, { orgId: "test-org" });
 
       expect(result.data?.resources?.nodes).to.have.lengthOf(2);
       const resourceIds = result.data?.resources?.nodes.map((r: any) => r.id);
-      expect(resourceIds).to.include.members(['/api/users/*', '/api/roles/*']);
+      expect(resourceIds).to.include.members(["/api/users/*", "/api/roles/*"]);
     });
   });
 
-  describe('resource query', () => {
-    it('should retrieve a resource by orgId and resourceId', async () => {
+  describe("resource query", () => {
+    it("should retrieve a resource by orgId and resourceId", async () => {
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -155,11 +158,11 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'User API',
-          description: 'User management'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "User API",
+          description: "User management",
+        },
       });
 
       // Query resource
@@ -176,16 +179,19 @@ describe('Resources', () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: 'test-org', resourceId: '/api/users/*' });
+      const result = await client.query(query, {
+        orgId: "test-org",
+        resourceId: "/api/users/*",
+      });
 
-      expect(result.data?.resource?.id).to.equal('/api/users/*');
-      expect(result.data?.resource?.name).to.equal('User API');
-      expect(result.data?.resource?.description).to.equal('User management');
+      expect(result.data?.resource?.id).to.equal("/api/users/*");
+      expect(result.data?.resource?.name).to.equal("User API");
+      expect(result.data?.resource?.description).to.equal("User management");
     });
   });
 
-  describe('updateResource', () => {
-    it('should update resource details', async () => {
+  describe("updateResource", () => {
+    it("should update resource details", async () => {
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -197,16 +203,24 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'User API'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "User API",
+        },
       });
 
       // Update resource
       const updateMutation = gql`
-        mutation UpdateResource($orgId: ID!, $resourceId: ID!, $input: UpdateResourceInput!) {
-          updateResource(orgId: $orgId, resourceId: $resourceId, input: $input) {
+        mutation UpdateResource(
+          $orgId: ID!
+          $resourceId: ID!
+          $input: UpdateResourceInput!
+        ) {
+          updateResource(
+            orgId: $orgId
+            resourceId: $resourceId
+            input: $input
+          ) {
             id
             name
             description
@@ -215,22 +229,24 @@ describe('Resources', () => {
       `;
 
       const result = await client.mutate(updateMutation, {
-        orgId: 'test-org',
-        resourceId: '/api/users/*',
+        orgId: "test-org",
+        resourceId: "/api/users/*",
         input: {
-          name: 'User API v2',
-          description: 'Enhanced user management'
-        }
+          name: "User API v2",
+          description: "Enhanced user management",
+        },
       });
 
-      expect(result.data?.updateResource?.id).to.equal('/api/users/*');
-      expect(result.data?.updateResource?.name).to.equal('User API v2');
-      expect(result.data?.updateResource?.description).to.equal('Enhanced user management');
+      expect(result.data?.updateResource?.id).to.equal("/api/users/*");
+      expect(result.data?.updateResource?.name).to.equal("User API v2");
+      expect(result.data?.updateResource?.description).to.equal(
+        "Enhanced user management",
+      );
     });
   });
 
-  describe('deleteResource', () => {
-    it('should delete a resource', async () => {
+  describe("deleteResource", () => {
+    it("should delete a resource", async () => {
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -242,10 +258,10 @@ describe('Resources', () => {
 
       await client.mutate(createMutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'User API'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "User API",
+        },
       });
 
       // Delete resource
@@ -255,7 +271,10 @@ describe('Resources', () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, { orgId: 'test-org', resourceId: '/api/users/*' });
+      const result = await client.mutate(deleteMutation, {
+        orgId: "test-org",
+        resourceId: "/api/users/*",
+      });
 
       expect(result.data?.deleteResource).to.be.true;
 
@@ -268,7 +287,10 @@ describe('Resources', () => {
         }
       `;
 
-      const queryResult = await client.query(query, { orgId: 'test-org', resourceId: '/api/users/*' });
+      const queryResult = await client.query(query, {
+        orgId: "test-org",
+        resourceId: "/api/users/*",
+      });
 
       expect(queryResult.data?.resource).to.be.null;
     });

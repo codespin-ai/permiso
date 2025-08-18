@@ -3,8 +3,6 @@
   "extensions": ["ts"],
   "spec": ["src/index.ts"],
   "loader": "ts-node/esm",
-  "node-option": [
-    "loader=ts-node/esm"
-  ],
+  "node-option": ["loader=ts-node/esm"],
   "timeout": 30000
 }

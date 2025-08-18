@@ -11,7 +11,7 @@ export async function up(knex) {
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255).notNullable().defaultTo("");
     table.text("description");
-    
+
     // Indexes
     table.index("created_at");
     table.index("name");
@@ -24,13 +24,17 @@ export async function up(knex) {
     table.jsonb("value").notNullable();
     table.boolean("hidden").notNullable().defaultTo(false);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["parent_id", "name"]);
-    
+
     // Foreign key
-    table.foreign("parent_id").references("id").inTable("organization").onDelete("CASCADE");
-    
+    table
+      .foreign("parent_id")
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("hidden");
     table.index(["name", "value"]);
@@ -46,13 +50,17 @@ export async function up(knex) {
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255).notNullable().defaultTo("");
     table.text("description");
-    
+
     // Composite primary key
     table.primary(["id", "org_id"]);
-    
+
     // Foreign key
-    table.foreign("org_id").references("id").inTable("organization").onDelete("CASCADE");
-    
+    table
+      .foreign("org_id")
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("created_at");
     table.index("org_id");
@@ -67,13 +75,17 @@ export async function up(knex) {
     table.jsonb("value").notNullable();
     table.boolean("hidden").notNullable().defaultTo(false);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["parent_id", "org_id", "name"]);
-    
+
     // Foreign key
-    table.foreign(["parent_id", "org_id"]).references(["id", "org_id"]).inTable("role").onDelete("CASCADE");
-    
+    table
+      .foreign(["parent_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("role")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("hidden");
     table.index(["name", "value"]);
@@ -89,13 +101,17 @@ export async function up(knex) {
     table.text("data");
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["id", "org_id"]);
-    
+
     // Foreign key
-    table.foreign("org_id").references("id").inTable("organization").onDelete("CASCADE");
-    
+    table
+      .foreign("org_id")
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("created_at");
     table.index("org_id");
@@ -110,13 +126,17 @@ export async function up(knex) {
     table.jsonb("value").notNullable();
     table.boolean("hidden").notNullable().defaultTo(false);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["parent_id", "org_id", "name"]);
-    
+
     // Foreign key
-    table.foreign(["parent_id", "org_id"]).references(["id", "org_id"]).inTable("user").onDelete("CASCADE");
-    
+    table
+      .foreign(["parent_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("user")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("hidden");
     table.index(["name", "value"]);
@@ -132,13 +152,17 @@ export async function up(knex) {
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255);
     table.text("description");
-    
+
     // Composite primary key
     table.primary(["id", "org_id"]);
-    
+
     // Foreign key
-    table.foreign("org_id").references("id").inTable("organization").onDelete("CASCADE");
-    
+    table
+      .foreign("org_id")
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index("created_at");
     table.index("org_id");
@@ -151,14 +175,22 @@ export async function up(knex) {
     table.string("role_id", 255).notNullable();
     table.string("org_id", 255).notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["user_id", "role_id", "org_id"]);
-    
+
     // Foreign keys
-    table.foreign(["user_id", "org_id"]).references(["id", "org_id"]).inTable("user").onDelete("CASCADE");
-    table.foreign(["role_id", "org_id"]).references(["id", "org_id"]).inTable("role").onDelete("CASCADE");
-    
+    table
+      .foreign(["user_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("user")
+      .onDelete("CASCADE");
+    table
+      .foreign(["role_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("role")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index(["user_id", "org_id"]);
     table.index(["role_id", "org_id"]);
@@ -171,14 +203,22 @@ export async function up(knex) {
     table.string("resource_id", 255).notNullable();
     table.string("action", 255).notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["user_id", "org_id", "resource_id", "action"]);
-    
+
     // Foreign keys
-    table.foreign(["user_id", "org_id"]).references(["id", "org_id"]).inTable("user").onDelete("CASCADE");
-    table.foreign(["resource_id", "org_id"]).references(["id", "org_id"]).inTable("resource").onDelete("CASCADE");
-    
+    table
+      .foreign(["user_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("user")
+      .onDelete("CASCADE");
+    table
+      .foreign(["resource_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("resource")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index(["user_id", "org_id"]);
     table.index(["resource_id", "org_id"]);
@@ -192,14 +232,22 @@ export async function up(knex) {
     table.string("resource_id", 255).notNullable();
     table.string("action", 255).notNullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    
+
     // Composite primary key
     table.primary(["role_id", "org_id", "resource_id", "action"]);
-    
+
     // Foreign keys
-    table.foreign(["role_id", "org_id"]).references(["id", "org_id"]).inTable("role").onDelete("CASCADE");
-    table.foreign(["resource_id", "org_id"]).references(["id", "org_id"]).inTable("resource").onDelete("CASCADE");
-    
+    table
+      .foreign(["role_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("role")
+      .onDelete("CASCADE");
+    table
+      .foreign(["resource_id", "org_id"])
+      .references(["id", "org_id"])
+      .inTable("resource")
+      .onDelete("CASCADE");
+
     // Indexes
     table.index(["role_id", "org_id"]);
     table.index(["resource_id", "org_id"]);
@@ -207,7 +255,9 @@ export async function up(knex) {
   });
 
   // Add the special text_pattern_ops index for resource.id
-  await knex.raw('CREATE INDEX "resource_id text_pattern_ops_index" ON "resource" ("id" text_pattern_ops)');
+  await knex.raw(
+    'CREATE INDEX "resource_id text_pattern_ops_index" ON "resource" ("id" text_pattern_ops)',
+  );
 }
 
 /**

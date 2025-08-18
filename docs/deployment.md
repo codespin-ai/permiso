@@ -98,7 +98,7 @@ docker push ghcr.io/codespin-ai/permiso:latest
 Create a `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -145,7 +145,7 @@ docker-compose up -d
 For production, use environment files and proper secrets:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   permiso:
@@ -194,35 +194,35 @@ spec:
         app: permiso
     spec:
       containers:
-      - name: permiso
-        image: ghcr.io/codespin-ai/permiso:latest
-        ports:
-        - containerPort: 5001
-        env:
-        - name: PERMISO_DB_HOST
-          value: postgres-service
-        - name: PERMISO_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: permiso-secrets
-              key: db-password
-        - name: PERMISO_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: permiso-secrets
-              key: api-key
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 5001
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 5001
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: permiso
+          image: ghcr.io/codespin-ai/permiso:latest
+          ports:
+            - containerPort: 5001
+          env:
+            - name: PERMISO_DB_HOST
+              value: postgres-service
+            - name: PERMISO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: permiso-secrets
+                  key: db-password
+            - name: PERMISO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: permiso-secrets
+                  key: api-key
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -232,8 +232,8 @@ spec:
   selector:
     app: permiso
   ports:
-  - port: 5001
-    targetPort: 5001
+    - port: 5001
+      targetPort: 5001
   type: LoadBalancer
 ```
 
@@ -281,6 +281,7 @@ env:
 ### Setup Steps
 
 1. Clone and build:
+
 ```bash
 git clone https://github.com/codespin-ai/permiso.git
 cd permiso
@@ -289,6 +290,7 @@ npm install
 ```
 
 2. Configure environment:
+
 ```bash
 # Create production env file
 cat > .env.production << EOF
@@ -304,6 +306,7 @@ EOF
 ```
 
 3. Run migrations:
+
 ```bash
 source .env.production
 cd node/packages/permiso-server
@@ -311,21 +314,22 @@ npm run migrate:latest
 ```
 
 4. Start with PM2:
+
 ```bash
 # Create PM2 ecosystem file
 cat > ecosystem.config.js << EOF
 module.exports = {
   apps: [{
-    name: 'permiso',
-    script: './start.sh',
+    name: "permiso",
+    script: "./start.sh",
     env_production: {
-      NODE_ENV: 'production'
+      NODE_ENV: "production"
     },
-    instances: 'max',
-    exec_mode: 'cluster',
+    instances: "max",
+    exec_mode: "cluster",
     autorestart: true,
     watch: false,
-    max_memory_restart: '1G'
+    max_memory_restart: "1G"
   }]
 }
 EOF
@@ -354,7 +358,7 @@ server {
         proxy_pass http://permiso_backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -398,10 +402,10 @@ Example Prometheus configuration:
 
 ```yaml
 scrape_configs:
-  - job_name: 'permiso'
+  - job_name: "permiso"
     static_configs:
-      - targets: ['localhost:5001']
-    metrics_path: '/metrics'
+      - targets: ["localhost:5001"]
+    metrics_path: "/metrics"
 ```
 
 ## Security Considerations

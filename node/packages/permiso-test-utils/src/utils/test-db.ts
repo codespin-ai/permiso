@@ -1,8 +1,8 @@
-import knex, { Knex } from 'knex';
-import { Logger, testLogger } from './test-logger.js';
+import knex, { Knex } from "knex";
+import { Logger, testLogger } from "./test-logger.js";
 
 // Import the base config helper from root knexfile
-const rootPath = new URL('../../../../../knexfile.js', import.meta.url);
+const rootPath = new URL("../../../../../knexfile.js", import.meta.url);
 const { createDbConfig } = await import(rootPath.href);
 
 export interface TestDatabaseOptions {
@@ -19,18 +19,21 @@ export class TestDatabase {
 
   constructor(options: TestDatabaseOptions = {}) {
     // Use the main PERMISO database config but with a test database name
-    this.dbName = options.dbName || 'permiso_test';
+    this.dbName = options.dbName || "permiso_test";
     this.config = {
-      ...createDbConfig('permiso'),
+      ...createDbConfig("permiso"),
       connection: {
-        ...createDbConfig('permiso').connection,
-        database: this.dbName
-      }
+        ...createDbConfig("permiso").connection,
+        database: this.dbName,
+      },
     };
     this.logger = options.logger || testLogger;
   }
 
-  static getInstance(dbName: string = 'permiso_test', logger?: Logger): TestDatabase {
+  static getInstance(
+    dbName: string = "permiso_test",
+    logger?: Logger,
+  ): TestDatabase {
     if (!TestDatabase.instances.has(dbName)) {
       TestDatabase.instances.set(dbName, new TestDatabase({ dbName, logger }));
     }
@@ -46,12 +49,12 @@ export class TestDatabase {
         port: this.config.connection.port,
         user: this.config.connection.user,
         password: this.config.connection.password,
-        database: 'postgres'
-      }
+        database: "postgres",
+      },
     };
 
     const adminKnex = knex(adminConfig);
-    
+
     try {
       // First, force disconnect all connections to the test database
       await adminKnex.raw(`
@@ -60,16 +63,16 @@ export class TestDatabase {
         WHERE pg_stat_activity.datname = '${this.dbName}'
         AND pid <> pg_backend_pid()
       `);
-      
+
       // Wait a moment for connections to terminate
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Drop database if exists
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
-      
+
       // Create fresh database
       await adminKnex.raw(`CREATE DATABASE "${this.dbName}"`);
-      
+
       this.logger.info(`Created test database ${this.dbName}`);
     } finally {
       await adminKnex.destroy();
@@ -79,14 +82,17 @@ export class TestDatabase {
   async runMigrations(): Promise<void> {
     // Use knex instance to run migrations
     this.knexInstance = knex(this.config);
-    
+
     try {
       // Run migrations from the permiso database directory
-      const migrationsPath = new URL('../../../../../database/permiso/migrations', import.meta.url);
+      const migrationsPath = new URL(
+        "../../../../../database/permiso/migrations",
+        import.meta.url,
+      );
       await this.knexInstance.migrate.latest({
-        directory: migrationsPath.pathname
+        directory: migrationsPath.pathname,
       });
-      this.logger.info('Migrations completed');
+      this.logger.info("Migrations completed");
     } finally {
       await this.knexInstance.destroy();
       this.knexInstance = null;
@@ -96,7 +102,7 @@ export class TestDatabase {
   async setup(): Promise<void> {
     // Create database
     await this.createDatabase();
-    
+
     // Run migrations
     await this.runMigrations();
   }
@@ -110,12 +116,12 @@ export class TestDatabase {
         port: this.config.connection.port,
         user: this.config.connection.user,
         password: this.config.connection.password,
-        database: 'postgres'
-      }
+        database: "postgres",
+      },
     };
 
     const adminKnex = knex(adminConfig);
-    
+
     try {
       // First, force disconnect all connections to the test database
       await adminKnex.raw(`
@@ -124,14 +130,14 @@ export class TestDatabase {
         WHERE pg_stat_activity.datname = '${this.dbName}'
         AND pid <> pg_backend_pid()
       `);
-      
+
       // Wait a moment for connections to terminate
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       await adminKnex.raw(`DROP DATABASE IF EXISTS "${this.dbName}"`);
       this.logger.info(`Dropped test database ${this.dbName}`);
     } catch (error) {
-      this.logger.error('Error dropping test database:', error);
+      this.logger.error("Error dropping test database:", error);
     } finally {
       await adminKnex.destroy();
     }
@@ -139,19 +145,21 @@ export class TestDatabase {
 
   async truncateAllTables(): Promise<void> {
     this.knexInstance = knex(this.config);
-    
+
     try {
       // Get all tables except migration tables
-      const result = await this.knexInstance.raw<{rows: Array<{tablename: string}>}>(`
+      const result = await this.knexInstance.raw<{
+        rows: Array<{ tablename: string }>;
+      }>(`
         SELECT tablename 
         FROM pg_tables 
         WHERE schemaname = 'public' 
         AND tablename NOT IN ('knex_migrations', 'knex_migrations_lock')
       `);
-      
+
       // Truncate all tables in reverse order to handle foreign keys
-      const tables = result.rows.map(row => row.tablename).reverse();
-      
+      const tables = result.rows.map((row) => row.tablename).reverse();
+
       for (const table of tables) {
         await this.knexInstance.raw(`TRUNCATE TABLE "${table}" CASCADE`);
       }

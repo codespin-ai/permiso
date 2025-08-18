@@ -1,5 +1,9 @@
-import { TestDatabase, TestServer, testLogger } from '@codespin/permiso-test-utils';
-import { GraphQLClient } from './utils/graphql-client.js';
+import {
+  TestDatabase,
+  TestServer,
+  testLogger,
+} from "@codespin/permiso-test-utils";
+import { GraphQLClient } from "./utils/graphql-client.js";
 
 export let testDb: TestDatabase;
 export let server: TestServer;
@@ -7,17 +11,23 @@ export let client: GraphQLClient;
 
 export async function setupTests() {
   // Setup database
-  testDb = TestDatabase.getInstance('permiso_test', testLogger);
+  testDb = TestDatabase.getInstance("permiso_test", testLogger);
   await testDb.setup();
-  
+
   // Start server
-  server = new TestServer({ port: 5002, dbName: 'permiso_test', logger: testLogger });
+  server = new TestServer({
+    port: 5002,
+    dbName: "permiso_test",
+    logger: testLogger,
+  });
   await server.start();
-  
+
   // Initialize GraphQL client
-  client = new GraphQLClient('http://localhost:5002/graphql', { logger: testLogger });
-  
-  testLogger.info('Test environment ready');
+  client = new GraphQLClient("http://localhost:5002/graphql", {
+    logger: testLogger,
+  });
+
+  testLogger.info("Test environment ready");
 }
 
 export async function teardownTests() {
@@ -26,35 +36,35 @@ export async function teardownTests() {
     if (client) {
       await client.stop();
     }
-    
+
     // Stop server
     if (server) {
       await server.stop();
     }
-    
+
     // Wait for connections to close
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Teardown database
     if (testDb) {
       await testDb.teardown();
     }
-    
-    testLogger.info('Cleanup complete');
+
+    testLogger.info("Cleanup complete");
   } catch (error) {
-    testLogger.error('Error during cleanup:', error);
+    testLogger.error("Error during cleanup:", error);
     process.exit(1);
   }
 }
 
 // Global hooks for when running all tests
 export function setupGlobalHooks() {
-  before(async function() {
+  before(async function () {
     this.timeout(60000);
     await setupTests();
   });
 
-  after(async function() {
+  after(async function () {
     this.timeout(30000);
     await teardownTests();
   });

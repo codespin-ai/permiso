@@ -1,1 +1,1 @@
-export { getRoleUsers } from '../../domain/role/get-role-users.js';
+export { getRoleUsers } from "../../domain/role/get-role-users.js";

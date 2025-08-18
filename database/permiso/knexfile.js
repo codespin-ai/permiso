@@ -1,7 +1,7 @@
-import { createDbConfig } from '../../knexfile.js';
+import { createDbConfig } from "../../knexfile.js";
 
 // Permiso database configuration
-export default createDbConfig('permiso', {
+export default createDbConfig("permiso", {
   // Any permiso-specific overrides can go here
   // For example:
   // pool: {

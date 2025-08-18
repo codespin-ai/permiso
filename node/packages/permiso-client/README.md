@@ -5,7 +5,7 @@ A TypeScript client library for the Permiso RBAC (Role-Based Access Control) API
 ## Features
 
 - 🔒 **Type-safe** - Full TypeScript support with comprehensive type definitions
-- 🚀 **Zero GraphQL knowledge required** - Simple function calls instead of query strings  
+- 🚀 **Zero GraphQL knowledge required** - Simple function calls instead of query strings
 - ⚡ **Lightweight** - Minimal dependencies, tree-shakeable
 - 🛡️ **Result types** - Explicit error handling with discriminated unions
 - 🔄 **Consistent API** - Uniform patterns across all operations
@@ -22,42 +22,42 @@ npm install @codespin/permiso-client
 ## Quick Start
 
 ```typescript
-import { 
+import {
   createOrganization,
   createUser,
   assignUserRole,
   hasPermission,
-  PermisoConfig 
-} from '@codespin/permiso-client';
+  PermisoConfig,
+} from "@codespin/permiso-client";
 
 // Configure the client
 const config: PermisoConfig = {
-  endpoint: 'http://localhost:5001',
-  apiKey: 'your-api-key', // optional
-  timeout: 30000 // optional, in milliseconds
+  endpoint: "http://localhost:5001",
+  apiKey: "your-api-key", // optional
+  timeout: 30000, // optional, in milliseconds
 };
 
 // Create an organization
 const orgResult = await createOrganization(config, {
-  id: 'acme-corp',
-  name: 'ACME Corporation',
-  description: 'A sample organization'
+  id: "acme-corp",
+  name: "ACME Corporation",
+  description: "A sample organization",
 });
 
 if (orgResult.success) {
-  console.log('Created organization:', orgResult.data);
+  console.log("Created organization:", orgResult.data);
 }
 
 // Check if a user has permission
 const hasPermResult = await hasPermission(config, {
-  orgId: 'acme-corp',
-  userId: 'john-doe',
-  resourceId: '/api/users/*',
-  action: 'read'
+  orgId: "acme-corp",
+  userId: "john-doe",
+  resourceId: "/api/users/*",
+  action: "read",
 });
 
 if (hasPermResult.success) {
-  console.log('Has permission:', hasPermResult.data);
+  console.log("Has permission:", hasPermResult.data);
 }
 ```
 
@@ -66,15 +66,16 @@ if (hasPermResult.success) {
 ### Basic Configuration
 
 ```typescript
-import { PermisoConfig } from '@codespin/permiso-client';
+import { PermisoConfig } from "@codespin/permiso-client";
 
 const config: PermisoConfig = {
-  endpoint: 'http://localhost:5001',  // GraphQL endpoint URL
-  apiKey: 'your-api-key',            // Optional: API key for authentication
-  timeout: 30000,                    // Optional: Request timeout in ms (default: 30000)
-  headers: {                         // Optional: Additional headers
-    'X-Custom-Header': 'value'
-  }
+  endpoint: "http://localhost:5001", // GraphQL endpoint URL
+  apiKey: "your-api-key", // Optional: API key for authentication
+  timeout: 30000, // Optional: Request timeout in ms (default: 30000)
+  headers: {
+    // Optional: Additional headers
+    "X-Custom-Header": "value",
+  },
 };
 ```
 
@@ -82,9 +83,9 @@ const config: PermisoConfig = {
 
 ```typescript
 const config: PermisoConfig = {
-  endpoint: process.env.PERMISO_ENDPOINT || 'http://localhost:5001',
+  endpoint: process.env.PERMISO_ENDPOINT || "http://localhost:5001",
   apiKey: process.env.PERMISO_API_KEY,
-  timeout: parseInt(process.env.PERMISO_TIMEOUT || '30000')
+  timeout: parseInt(process.env.PERMISO_TIMEOUT || "30000"),
 };
 ```
 
@@ -94,18 +95,18 @@ All functions return a `Result` type that explicitly handles success and failure
 
 ```typescript
 const result = await createUser(config, {
-  id: 'john-doe',
-  orgId: 'acme-corp',
-  identityProvider: 'google',
-  identityProviderUserId: 'john@example.com'
+  id: "john-doe",
+  orgId: "acme-corp",
+  identityProvider: "google",
+  identityProviderUserId: "john@example.com",
 });
 
 if (result.success) {
   // Type-safe access to data
-  console.log('User created:', result.data.id);
+  console.log("User created:", result.data.id);
 } else {
   // Type-safe access to error
-  console.error('Failed to create user:', result.error.message);
+  console.error("Failed to create user:", result.error.message);
 }
 ```
 
@@ -176,18 +177,18 @@ if (result.success) {
 List operations support pagination through the `PaginationInput` type:
 
 ```typescript
-const result = await listUsers(config, 'acme-corp', {
+const result = await listUsers(config, "acme-corp", {
   pagination: {
     limit: 10,
     offset: 20,
-    sortDirection: 'DESC' // 'ASC' or 'DESC', defaults to 'ASC'
-  }
+    sortDirection: "DESC", // "ASC" or "DESC", defaults to "ASC"
+  },
 });
 
 if (result.success) {
-  console.log('Users:', result.data.nodes);
-  console.log('Total count:', result.data.totalCount);
-  console.log('Has next page:', result.data.pageInfo.hasNextPage);
+  console.log("Users:", result.data.nodes);
+  console.log("Total count:", result.data.totalCount);
+  console.log("Has next page:", result.data.pageInfo.hasNextPage);
 }
 ```
 
@@ -196,13 +197,13 @@ if (result.success) {
 List operations support filtering by properties:
 
 ```typescript
-const result = await listUsers(config, 'acme-corp', {
+const result = await listUsers(config, "acme-corp", {
   filter: {
     properties: [
-      { name: 'department', value: 'engineering' },
-      { name: 'active', value: true }
-    ]
-  }
+      { name: "department", value: "engineering" },
+      { name: "active", value: true },
+    ],
+  },
 });
 ```
 
@@ -210,11 +211,11 @@ const result = await listUsers(config, 'acme-corp', {
 // Set a hidden property (e.g., for sensitive data)
 await setUserProperty(
   config,
-  'acme-corp',
-  'john-doe',
-  'apiToken',
-  'secret-token-123',
-  true  // hidden = true
+  "acme-corp",
+  "john-doe",
+  "apiToken",
+  "secret-token-123",
+  true, // hidden = true
 );
 ```
 
@@ -226,23 +227,23 @@ Filter entities by their properties:
 // Set a property
 const setPropResult = await setUserProperty(
   config,
-  'acme-corp',
-  'john-doe',
-  'preferences',
-  { theme: 'dark', language: 'en' },
-  false // not hidden
+  "acme-corp",
+  "john-doe",
+  "preferences",
+  { theme: "dark", language: "en" },
+  false, // not hidden
 );
 
 // Get a property
 const getPropResult = await getUserProperty(
   config,
-  'acme-corp',
-  'john-doe',
-  'preferences'
+  "acme-corp",
+  "john-doe",
+  "preferences",
 );
 
 if (getPropResult.success && getPropResult.data) {
-  console.log('User preferences:', getPropResult.data.value);
+  console.log("User preferences:", getPropResult.data.value);
 }
 ```
 
@@ -255,18 +256,33 @@ For better performance when creating multiple entities:
 ```typescript
 // Create multiple users efficiently
 const users = [
-  { id: 'user-1', orgId: 'org-1', identityProvider: 'auth0', identityProviderUserId: 'auth0|123' },
-  { id: 'user-2', orgId: 'org-1', identityProvider: 'auth0', identityProviderUserId: 'auth0|456' },
-  { id: 'user-3', orgId: 'org-1', identityProvider: 'auth0', identityProviderUserId: 'auth0|789' }
+  {
+    id: "user-1",
+    orgId: "org-1",
+    identityProvider: "auth0",
+    identityProviderUserId: "auth0|123",
+  },
+  {
+    id: "user-2",
+    orgId: "org-1",
+    identityProvider: "auth0",
+    identityProviderUserId: "auth0|456",
+  },
+  {
+    id: "user-3",
+    orgId: "org-1",
+    identityProvider: "auth0",
+    identityProviderUserId: "auth0|789",
+  },
 ];
 
 const results = await Promise.all(
-  users.map(user => createUser(config, user))
+  users.map((user) => createUser(config, user)),
 );
 
-const failed = results.filter(r => !r.success);
+const failed = results.filter((r) => !r.success);
 if (failed.length > 0) {
-  console.error('Some users failed to create:', failed);
+  console.error("Some users failed to create:", failed);
 }
 ```
 
@@ -275,35 +291,55 @@ if (failed.length > 0) {
 ```typescript
 // Check single permission
 const canRead = await hasPermission(config, {
-  orgId: 'acme-corp',
-  userId: 'john-doe',
-  resourceId: '/api/users/*',
-  action: 'read'
+  orgId: "acme-corp",
+  userId: "john-doe",
+  resourceId: "/api/users/*",
+  action: "read",
 });
 
 // Check multiple permissions
 const permissions = await Promise.all([
-  hasPermission(config, { orgId, userId, resourceId: '/api/users/*', action: 'read' }),
-  hasPermission(config, { orgId, userId, resourceId: '/api/users/*', action: 'write' }),
-  hasPermission(config, { orgId, userId, resourceId: '/api/billing/*', action: 'read' })
+  hasPermission(config, {
+    orgId,
+    userId,
+    resourceId: "/api/users/*",
+    action: "read",
+  }),
+  hasPermission(config, {
+    orgId,
+    userId,
+    resourceId: "/api/users/*",
+    action: "write",
+  }),
+  hasPermission(config, {
+    orgId,
+    userId,
+    resourceId: "/api/billing/*",
+    action: "read",
+  }),
 ]);
 
-const [canReadUsers, canWriteUsers, canReadBilling] = permissions.map(r => r.success && r.data);
+const [canReadUsers, canWriteUsers, canReadBilling] = permissions.map(
+  (r) => r.success && r.data,
+);
 
 // Get all effective permissions for a user
 const effectivePerms = await getEffectivePermissions(config, {
-  orgId: 'acme-corp',
-  userId: 'john-doe'
+  orgId: "acme-corp",
+  userId: "john-doe",
 });
 
 if (effectivePerms.success) {
-  const groupedByResource = effectivePerms.data.reduce((acc, perm) => {
-    if (!acc[perm.resourceId]) acc[perm.resourceId] = [];
-    acc[perm.resourceId].push(perm.action);
-    return acc;
-  }, {} as Record<string, string[]>);
-  
-  console.log('Permissions by resource:', groupedByResource);
+  const groupedByResource = effectivePerms.data.reduce(
+    (acc, perm) => {
+      if (!acc[perm.resourceId]) acc[perm.resourceId] = [];
+      acc[perm.resourceId].push(perm.action);
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
+
+  console.log("Permissions by resource:", groupedByResource);
 }
 ```
 
@@ -314,30 +350,30 @@ Permiso uses Unix-like path patterns for resources:
 ```typescript
 // Exact match
 const resource1 = await createResource(config, {
-  id: '/api/users',
-  orgId: 'acme-corp',
-  description: 'User management API'
+  id: "/api/users",
+  orgId: "acme-corp",
+  description: "User management API",
 });
 
 // Wildcard match (matches any sub-path)
 const resource2 = await createResource(config, {
-  id: '/api/users/*',
-  orgId: 'acme-corp',
-  description: 'All user endpoints'
+  id: "/api/users/*",
+  orgId: "acme-corp",
+  description: "All user endpoints",
 });
 
 // Specific endpoint
 const resource3 = await createResource(config, {
-  id: '/api/users/profile',
-  orgId: 'acme-corp',
-  description: 'User profile endpoint'
+  id: "/api/users/profile",
+  orgId: "acme-corp",
+  description: "User profile endpoint",
 });
 
 // Hierarchical resources
 const resource4 = await createResource(config, {
-  id: '/api/billing/invoices/*',
-  orgId: 'acme-corp',
-  description: 'Invoice management'
+  id: "/api/billing/invoices/*",
+  orgId: "acme-corp",
+  description: "Invoice management",
 });
 ```
 
@@ -349,25 +385,25 @@ async function getAllUsers(config: PermisoConfig, orgId: string) {
   const allUsers = [];
   let offset = 0;
   const limit = 50;
-  
+
   while (true) {
     const result = await listUsers(config, orgId, {
-      pagination: { limit, offset }
+      pagination: { limit, offset },
     });
-    
+
     if (!result.success) {
       throw new Error(`Failed to fetch users: ${result.error.message}`);
     }
-    
+
     allUsers.push(...result.data.nodes);
-    
+
     if (!result.data.pageInfo.hasNextPage) {
       break;
     }
-    
+
     offset += limit;
   }
-  
+
   return allUsers;
 }
 ```
@@ -385,7 +421,7 @@ import type {
   Resource,
   Permission,
   Property,
-  
+
   // Input types
   CreateOrganizationInput,
   CreateUserInput,
@@ -394,21 +430,21 @@ import type {
   UpdateOrganizationInput,
   UpdateUserInput,
   UpdateRoleInput,
-  
+
   // Permission types
   UserPermission,
   RolePermission,
   EffectivePermission,
-  
+
   // Utility types
   PaginationInput,
   Connection,
   PageInfo,
   Result,
-  
+
   // Configuration
-  PermisoConfig
-} from '@codespin/permiso-client';
+  PermisoConfig,
+} from "@codespin/permiso-client";
 ```
 
 ## Best Practices
@@ -421,12 +457,12 @@ Store configuration in a central location:
 // config/permiso.ts
 export const permisoConfig: PermisoConfig = {
   endpoint: process.env.PERMISO_ENDPOINT!,
-  apiKey: process.env.PERMISO_API_KEY
+  apiKey: process.env.PERMISO_API_KEY,
 };
 
 // Usage in other files
-import { permisoConfig } from './config/permiso';
-import { createUser } from '@codespin/permiso-client';
+import { permisoConfig } from "./config/permiso";
+import { createUser } from "@codespin/permiso-client";
 
 const result = await createUser(permisoConfig, userData);
 ```
@@ -438,22 +474,22 @@ Create a wrapper for consistent error handling:
 ```typescript
 async function executePermiso<T>(
   operation: Promise<Result<T>>,
-  errorMessage: string
+  errorMessage: string,
 ): Promise<T> {
   const result = await operation;
-  
+
   if (!result.success) {
     console.error(`${errorMessage}:`, result.error);
     throw new Error(`${errorMessage}: ${result.error.message}`);
   }
-  
+
   return result.data;
 }
 
 // Usage
 const user = await executePermiso(
   createUser(config, userData),
-  'Failed to create user'
+  "Failed to create user",
 );
 ```
 
@@ -463,27 +499,27 @@ Use type guards for property values:
 
 ```typescript
 interface UserPreferences {
-  theme: 'light' | 'dark';
+  theme: "light" | "dark";
   language: string;
   notifications: boolean;
 }
 
 function isUserPreferences(value: unknown): value is UserPreferences {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'theme' in value &&
-    'language' in value &&
-    'notifications' in value
+    "theme" in value &&
+    "language" in value &&
+    "notifications" in value
   );
 }
 
 // Usage
-const prefResult = await getUserProperty(config, orgId, userId, 'preferences');
+const prefResult = await getUserProperty(config, orgId, userId, "preferences");
 if (prefResult.success && prefResult.data) {
   const value = prefResult.data.value;
   if (isUserPreferences(value)) {
-    console.log('User theme:', value.theme);
+    console.log("User theme:", value.theme);
   }
 }
 ```
@@ -494,20 +530,20 @@ Follow consistent patterns for resource IDs:
 
 ```typescript
 // API endpoints
-'/api/users'
-'/api/users/*'
-'/api/users/{id}'
-'/api/users/{id}/profile'
+"/api/users";
+"/api/users/*";
+"/api/users/{id}";
+"/api/users/{id}/profile";
 
 // Feature-based
-'/features/billing'
-'/features/billing/*'
-'/features/reporting'
+"/features/billing";
+"/features/billing/*";
+"/features/reporting";
 
 // Service-based
-'/services/auth'
-'/services/notifications'
-'/services/analytics/*'
+"/services/auth";
+"/services/notifications";
+"/services/analytics/*";
 ```
 
 ## Troubleshooting
@@ -518,26 +554,28 @@ Follow consistent patterns for resource IDs:
 // Add retry logic for transient failures
 async function withRetry<T>(
   operation: () => Promise<Result<T>>,
-  maxRetries = 3
+  maxRetries = 3,
 ): Promise<Result<T>> {
   for (let i = 0; i < maxRetries; i++) {
     const result = await operation();
-    
+
     if (result.success || i === maxRetries - 1) {
       return result;
     }
-    
+
     // Check if error is retryable
-    if (result.error.message.includes('ECONNREFUSED') ||
-        result.error.message.includes('ETIMEDOUT')) {
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    if (
+      result.error.message.includes("ECONNREFUSED") ||
+      result.error.message.includes("ETIMEDOUT")
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
       continue;
     }
-    
+
     return result;
   }
-  
-  return { success: false, error: new Error('Max retries exceeded') };
+
+  return { success: false, error: new Error("Max retries exceeded") };
 }
 ```
 
@@ -548,20 +586,23 @@ Enable debug logging:
 ```typescript
 // Create a debugging wrapper
 function createDebugClient(config: PermisoConfig) {
-  return new Proxy({}, {
-    get(target, prop) {
-      const original = (await import('@codespin/permiso-client'))[prop];
-      if (typeof original === 'function') {
-        return async (...args) => {
-          console.log(`Calling ${String(prop)} with:`, args);
-          const result = await original(...args);
-          console.log(`Result:`, result);
-          return result;
-        };
-      }
-      return original;
-    }
-  });
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        const original = (await import("@codespin/permiso-client"))[prop];
+        if (typeof original === "function") {
+          return async (...args) => {
+            console.log(`Calling ${String(prop)} with:`, args);
+            const result = await original(...args);
+            console.log(`Result:`, result);
+            return result;
+          };
+        }
+        return original;
+      },
+    },
+  );
 }
 ```
 
@@ -607,6 +648,7 @@ npm run test:client:grep -- "Organizations"
 ### Test Coverage
 
 The test suite covers all API operations:
+
 - **Organizations** (12 tests): CRUD, properties, pagination
 - **Users** (11 tests): CRUD, role assignment, properties, search
 - **Roles** (13 tests): CRUD, hidden properties, filtering

@@ -12,7 +12,7 @@ This document outlines the coding standards and patterns used throughout the cod
 // ✅ Good - Pure function with explicit dependencies
 export async function createCustomer(
   db: Database,
-  input: CreateCustomerInput
+  input: CreateCustomerInput,
 ): Promise<Result<Customer, Error>> {
   // Implementation
 }
@@ -22,18 +22,18 @@ export async function createCustomer(
 export class WebSocketConnection {
   private socket: WebSocket;
   private reconnectAttempts = 0;
-  
+
   constructor(private config: WebSocketConfig) {
     this.socket = new WebSocket(config.url);
   }
-  
+
   async send(message: Message): Promise<void> {
     if (this.socket.readyState !== WebSocket.OPEN) {
       await this.reconnect();
     }
     this.socket.send(JSON.stringify(message));
   }
-  
+
   private async reconnect(): Promise<void> {
     // Reconnection logic with exponential backoff
   }
@@ -42,14 +42,15 @@ export class WebSocketConnection {
 // ❌ Bad - Class used unnecessarily for stateless operations
 export class CustomerService {
   constructor(private db: Database) {}
-  
+
   async createCustomer(input: CreateCustomerInput): Promise<Customer> {
-    // This doesn't need to be a class
+    // This doesn"t need to be a class
   }
 }
 ```
 
 **When classes are appropriate:**
+
 - Managing stateful connections (WebSocket, database pools)
 - Third-party library requirements
 - Complex state machines with internal state
@@ -69,7 +70,7 @@ export async function findOrder(
   try {
     const order = await db.oneOrNone<OrderDbRow>(...);
     if (!order) {
-      return failure(new Error('Order not found'));
+      return failure(new Error("Order not found"));
     }
     return success(mapOrderFromDb(order));
   } catch (error) {
@@ -87,6 +88,7 @@ export async function findOrder(db: Database, orderId: string): Promise<Order> {
 ### 3. Database Patterns
 
 #### DbRow Types
+
 All database interactions use `*DbRow` types that exactly mirror the database schema with snake_case:
 
 ```typescript
@@ -112,6 +114,7 @@ type Customer = {
 ```
 
 #### Mapper Functions
+
 Always use mapper functions to convert between different representations. The target representation depends on your needs (REST API, GraphQL, domain models, etc.):
 
 ```typescript
@@ -123,19 +126,21 @@ export function mapCustomerFromDb(row: CustomerDbRow): Customer {
     email: row.email,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    preferences: row.preferences as CustomerPreferences | undefined
+    preferences: row.preferences as CustomerPreferences | undefined,
   };
 }
 
 // Example: Mapping from domain to database representation
-export function mapCustomerToDb(customer: Partial<Customer>): Partial<CustomerDbRow> {
+export function mapCustomerToDb(
+  customer: Partial<Customer>,
+): Partial<CustomerDbRow> {
   return {
     id: customer.id,
     org_id: customer.orgId,
     email: customer.email,
     created_at: customer.createdAt,
     updated_at: customer.updatedAt,
-    preferences: customer.preferences || null
+    preferences: customer.preferences || null,
   };
 }
 
@@ -147,12 +152,13 @@ export function mapCustomerToGraphQL(customer: Customer): CustomerGraphQLType {
     emailAddress: customer.email,
     createdAt: customer.createdAt.toISOString(),
     updatedAt: customer.updatedAt?.toISOString() || null,
-    preferences: customer.preferences || defaultPreferences()
+    preferences: customer.preferences || defaultPreferences(),
   };
 }
 ```
 
 #### Type-safe Queries
+
 Always specify the type parameter for database queries and use named parameters:
 
 ```typescript
@@ -160,23 +166,22 @@ Always specify the type parameter for database queries and use named parameters:
 // Example: Finding a user by email
 const row = await db.one<UserDbRow>(
   `SELECT * FROM "user" WHERE email = $(email)`,
-  { email: userEmail }
+  { email: userEmail },
 );
 
 // ❌ Bad - Using positional parameters
-const row = await db.one<UserDbRow>(
-  `SELECT * FROM "user" WHERE email = $1`,
-  [userEmail]
-);
+const row = await db.one<UserDbRow>(`SELECT * FROM "user" WHERE email = $1`, [
+  userEmail,
+]);
 
 // ❌ Bad - No type parameter
-const row = await db.one(
-  `SELECT * FROM "user" WHERE email = $(email)`,
-  { email: userEmail }
-);
+const row = await db.one(`SELECT * FROM "user" WHERE email = $(email)`, {
+  email: userEmail,
+});
 ```
 
 #### Named Parameters
+
 ALWAYS use named parameters for database queries. This improves readability, prevents SQL injection, and makes queries self-documenting:
 
 ```typescript
@@ -191,8 +196,8 @@ const product = await db.one<ProductDbRow>(
     name: input.name,
     price: input.price,
     categoryId: input.categoryId,
-    description: input.description
-  }
+    description: input.description,
+  },
 );
 
 // ❌ Bad - Positional parameters
@@ -200,7 +205,7 @@ const product = await db.one<ProductDbRow>(
   `INSERT INTO product (id, name, price, category_id, description) 
    VALUES ($1, $2, $3, $4, $5) 
    RETURNING *`,
-  [input.id, input.name, input.price, input.categoryId, input.description]
+  [input.id, input.name, input.price, input.categoryId, input.description],
 );
 ```
 
@@ -228,35 +233,40 @@ export function mapUserFromDb(row: UserDbRow): User {
   };
 }
 
-// create-user.ts - Single business function  
-export async function createUser(db: Database, user: CreateUserInput): Promise<User> {
+// create-user.ts - Single business function
+export async function createUser(
+  db: Database,
+  user: CreateUserInput,
+): Promise<User> {
   // Implementation using mapUserToDb and mapUserFromDb
 }
 
 // index.ts - Clean exports
-export { createUser } from './create-user.js';
-export { getUser } from './get-user.js';
-export { mapUserFromDb } from './mappers/map-user-from-db.js';
-export type { UserDbRow } from './types.js';
+export { createUser } from "./create-user.js";
+export { getUser } from "./get-user.js";
+export { mapUserFromDb } from "./mappers/map-user-from-db.js";
+export type { UserDbRow } from "./types.js";
 ```
 
 ### 4. Module Structure
 
 #### Imports
+
 All imports MUST include the `.js` extension:
 
 ```typescript
 // ✅ Good
-import { createOrder } from './orders.js';
-import { validatePayment } from './payments.js';
-import { Result } from '@company/core';
+import { createOrder } from "./orders.js";
+import { validatePayment } from "./payments.js";
+import { Result } from "@company/core";
 
 // ❌ Bad
-import { createOrder } from './orders';
-import { validatePayment } from './payments';
+import { createOrder } from "./orders";
+import { validatePayment } from "./payments";
 ```
 
 #### Exports
+
 Use named exports, avoid default exports:
 
 ```typescript
@@ -272,34 +282,38 @@ export default class InvoiceService { ... }
 ### 5. Naming Conventions
 
 #### General Rules
+
 - **Functions**: camelCase (`createOrder`, `findUserById`, `validatePayment`)
 - **Types/Interfaces**: PascalCase (`Customer`, `CreateOrderInput`, `PaymentStatus`)
 - **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`, `DEFAULT_TIMEOUT`, `API_VERSION`)
 - **Files**: kebab-case (`order-service.ts`, `create-payment.ts`, `user-validator.ts`)
 
 #### Acronym Handling
+
 - **Two-letter acronyms**: Keep uppercase when not at the beginning (`delayMS`, `apiID`, `xmlIO`)
 - **Two-letter acronyms at beginning**: Lowercase (`dbConnection`, `ioStream`, `idGenerator`)
 - **Three or more letter acronyms**: Use PascalCase (`HttpClient`, `JsonParser`, `XmlSerializer`)
 
 Examples:
+
 ```typescript
 // ✅ Good
-const delayMS = 1000;        // MS = milliseconds (2 letters)
-const apiURL = "https://";   // URL = 3+ letters, so PascalCase
-const dbConn = connect();    // db at beginning, so lowercase
-const totalMS = 5000;        // MS in middle, so uppercase
-const xmlData = parse();     // xml at beginning, so lowercase
+const delayMS = 1000; // MS = milliseconds (2 letters)
+const apiURL = "https://"; // URL = 3+ letters, so PascalCase
+const dbConn = connect(); // db at beginning, so lowercase
+const totalMS = 5000; // MS in middle, so uppercase
+const xmlData = parse(); // xml at beginning, so lowercase
 const getXMLData = () => {}; // XML in middle of function, 3 letters, so uppercase
 
 // ❌ Bad
-const delayMs = 1000;        // Should be delayMS
-const apiUrl = "https://";   // Should be apiURL
-const DBConn = connect();    // Should be dbConn
-const totalms = 5000;        // Should be totalMS
+const delayMs = 1000; // Should be delayMS
+const apiUrl = "https://"; // Should be apiURL
+const DBConn = connect(); // Should be dbConn
+const totalms = 5000; // Should be totalMS
 ```
 
 #### Database Naming
+
 - **Tables**: singular, snake_case (`customer`, `product_category`, `order_item`)
 - **Columns**: snake_case (`customer_id`, `created_at`, `is_active`)
 - **Indexes**: `idx_table_column` (`idx_order_status`, `idx_customer_email`)
@@ -307,6 +321,7 @@ const totalms = 5000;        // Should be totalMS
 ### 6. TypeScript Guidelines
 
 #### Strict Mode
+
 Always use TypeScript strict mode. The following compiler options must be enabled:
 
 ```json
@@ -321,6 +336,7 @@ Always use TypeScript strict mode. The following compiler options must be enable
 ```
 
 #### Type vs Interface
+
 Prefer `type` over `interface` unless you need interface-specific features:
 
 ```typescript
@@ -331,7 +347,7 @@ type Product = {
   price: number;
 };
 
-type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered';
+type OrderStatus = "pending" | "processing" | "shipped" | "delivered";
 
 // Use interface only for extensible contracts
 interface PaymentProcessor {
@@ -348,13 +364,14 @@ interface AuthProvider {
 ```
 
 #### Avoid `any`
+
 Never use `any`. Use `unknown` if the type is truly unknown:
 
 ```typescript
 // ✅ Good - Handling webhook payloads
 function processWebhookPayload(payload: unknown): ProcessedData {
   if (!isValidWebhookPayload(payload)) {
-    throw new Error('Invalid webhook payload');
+    throw new Error("Invalid webhook payload");
   }
   // Now payload is typed through the type guard
   return transformPayload(payload);
@@ -380,12 +397,12 @@ export type ShoppingCart = {
 // ✅ Good - Functional updates
 export function addItemToCart(
   cart: ShoppingCart,
-  item: CartItem
+  item: CartItem,
 ): ShoppingCart {
   return {
     ...cart,
     items: [...cart.items, item],
-    totals: recalculateTotals([...cart.items, item])
+    totals: recalculateTotals([...cart.items, item]),
   };
 }
 ```
@@ -415,8 +432,8 @@ export type PaymentMethod =
 // Order processing states
 export type OrderState =
   | { readonly status: "draft"; readonly createdAt: Date }
-  | { 
-      readonly status: "submitted"; 
+  | {
+      readonly status: "submitted";
       readonly createdAt: Date;
       readonly submittedAt: Date;
     }
@@ -445,18 +462,18 @@ Always use async/await instead of promises with `.then()`:
 export async function processOrderWithInventory(
   db: Database,
   orderInput: CreateOrderInput,
-  items: OrderItemInput[]
+  items: OrderItemInput[],
 ): Promise<Result<Order>> {
   const inventoryResult = await checkInventory(db, items);
   if (!inventoryResult.success) {
-    return failure(new Error('Insufficient inventory'));
+    return failure(new Error("Insufficient inventory"));
   }
-  
+
   const orderResult = await createOrder(db, orderInput);
   if (!orderResult.success) {
     return orderResult;
   }
-  
+
   for (const item of items) {
     const itemResult = await addOrderItem(db, orderResult.data.id, item);
     if (!itemResult.success) {
@@ -464,7 +481,7 @@ export async function processOrderWithInventory(
       return failure(itemResult.error);
     }
   }
-  
+
   return orderResult;
 }
 
@@ -472,13 +489,13 @@ export async function processOrderWithInventory(
 export function processOrderWithInventory(
   db: Database,
   orderInput: CreateOrderInput,
-  items: OrderItemInput[]
+  items: OrderItemInput[],
 ): Promise<Result<Order>> {
-  return checkInventory(db, items).then(inventoryResult => {
+  return checkInventory(db, items).then((inventoryResult) => {
     if (!inventoryResult.success) {
-      return failure(new Error('Insufficient inventory'));
+      return failure(new Error("Insufficient inventory"));
     }
-    return createOrder(db, orderInput).then(orderResult => {
+    return createOrder(db, orderInput).then((orderResult) => {
       // Nested promise chains...
     });
   });
@@ -488,37 +505,38 @@ export function processOrderWithInventory(
 ### 8. Documentation
 
 #### JSDoc Comments
+
 Add JSDoc comments for all exported functions and types:
 
 ```typescript
 /**
  * Processes a payment for the given order.
- * 
+ *
  * @param paymentGateway - Payment gateway connection
  * @param order - Order to process payment for
- * @param paymentMethod - Customer's payment method
+ * @param paymentMethod - Customer"s payment method
  * @returns Result containing the payment transaction or an error
- * 
+ *
  * @example
  * const result = await processPayment(gateway, {
- *   orderId: 'ord-123',
+ *   orderId: "ord-123",
  *   amount: 99.99,
- *   currency: 'USD'
+ *   currency: "USD"
  * }, {
- *   type: 'credit_card',
- *   cardNumber: '4111111111111111',
- *   expiryDate: '12/25',
- *   cvv: '123'
+ *   type: "credit_card",
+ *   cardNumber: "4111111111111111",
+ *   expiryDate: "12/25",
+ *   cvv: "123"
  * });
- * 
+ *
  * if (result.success) {
- *   console.log('Payment processed:', result.data.transactionId);
+ *   console.log("Payment processed:", result.data.transactionId);
  * }
  */
 export async function processPayment(
   paymentGateway: PaymentGateway,
   order: Order,
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod,
 ): Promise<Result<PaymentTransaction, PaymentError>> {
   // Implementation
 }
@@ -527,24 +545,25 @@ export async function processPayment(
 ### 9. Testing
 
 #### Test Structure
+
 - Place tests in `__tests__` directories
 - Name test files with `.test.ts` suffix
 - Use descriptive test names
 
 ```typescript
 // Example: Testing user registration
-describe('registerUser', () => {
-  it('should create a new user with valid email', async () => {
+describe("registerUser", () => {
+  it("should create a new user with valid email", async () => {
     // Arrange
     const input = {
-      email: 'test@example.com',
-      password: 'securePassword123',
-      name: 'Test User'
+      email: "test@example.com",
+      password: "securePassword123",
+      name: "Test User",
     };
-    
+
     // Act
     const result = await registerUser(db, input);
-    
+
     // Assert
     expect(result.success).toBe(true);
     if (result.success) {
@@ -552,22 +571,22 @@ describe('registerUser', () => {
       expect(result.data.name).toBe(input.name);
     }
   });
-  
-  it('should return error when email already exists', async () => {
+
+  it("should return error when email already exists", async () => {
     // Arrange - create existing user
-    await createUser(db, { email: 'existing@example.com' });
-    
+    await createUser(db, { email: "existing@example.com" });
+
     // Act
     const result = await registerUser(db, {
-      email: 'existing@example.com',
-      password: 'password123',
-      name: 'Another User'
+      email: "existing@example.com",
+      password: "password123",
+      name: "Another User",
     });
-    
+
     // Assert
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.message).toContain('already exists');
+      expect(result.error.message).toContain("already exists");
     }
   });
 });
@@ -607,7 +626,7 @@ export function isValidEmail(email: unknown): email is string {
 
 // Example: Validating order input
 export function validateCreateOrderInput(
-  input: unknown
+  input: unknown,
 ): Result<CreateOrderInput, ValidationError[]> {
   const errors: ValidationError[] = [];
 
@@ -654,12 +673,12 @@ export function validateCreateOrderInput(
 export type PaymentServiceConfig = {
   readonly apiKey: string;
   readonly webhookSecret: string;
-  readonly environment: 'sandbox' | 'production';
+  readonly environment: "sandbox" | "production";
   readonly timeout: number;
 };
 
 export async function initializePaymentService(
-  config: PaymentServiceConfig
+  config: PaymentServiceConfig,
 ): Promise<PaymentService> {
   // Implementation
 }
@@ -672,23 +691,23 @@ export async function processCustomerOrder(
     paymentGateway: (payment: PaymentRequest) => Promise<PaymentResult>;
     shippingProvider: (shipment: ShipmentRequest) => Promise<ShipmentResult>;
     notificationService: (message: NotificationMessage) => Promise<void>;
-  }
+  },
 ): Promise<OrderProcessingResult> {
   // Check inventory
   for (const item of order.items) {
     const inventory = await dependencies.inventoryService(item.sku);
     if (inventory.available < item.quantity) {
-      return { success: false, error: 'Insufficient inventory' };
+      return { success: false, error: "Insufficient inventory" };
     }
   }
-  
+
   // Process payment
   const paymentResult = await dependencies.paymentGateway({
     amount: order.total,
     currency: order.currency,
-    orderId: order.id
+    orderId: order.id,
   });
-  
+
   // Continue with other steps...
 }
 ```
@@ -700,7 +719,7 @@ export async function processCustomerOrder(
 export async function* streamOrderHistory(
   customerId: string,
   dateRange: DateRange,
-  db: Database
+  db: Database,
 ): AsyncIterable<Order> {
   const query = db.stream<OrderDbRow>(
     `SELECT * FROM "order" 
@@ -710,18 +729,18 @@ export async function* streamOrderHistory(
     {
       customerId,
       startDate: dateRange.start,
-      endDate: dateRange.end
-    }
+      endDate: dateRange.end,
+    },
   );
-  
+
   for await (const row of query) {
     yield mapOrderFromDb(row);
   }
 }
 
 // Usage example
-import { createLogger } from '@company/logger';
-const logger = createLogger('OrderExport');
+import { createLogger } from "@company/logger";
+const logger = createLogger("OrderExport");
 
 for await (const order of streamOrderHistory(customerId, dateRange, db)) {
   logger.debug("Processing order:", { orderId: order.id });
@@ -737,7 +756,7 @@ for await (const order of streamOrderHistory(customerId, dateRange, db)) {
 // Example: E-commerce platform tools
 export type ToolHandler<TInput, TOutput> = (
   input: TInput,
-  context: ToolContext
+  context: ToolContext,
 ) => Promise<Result<TOutput, ToolError>>;
 
 export type EcommercePlatformTools = {
@@ -748,36 +767,36 @@ export type EcommercePlatformTools = {
 
 // Type-safe handler implementation
 export function createPlatformToolHandlers(
-  dependencies: PlatformDependencies
+  dependencies: PlatformDependencies,
 ): EcommercePlatformTools {
   return {
     inventory_check: async (input, context) => {
       const status = await dependencies.inventory.checkAvailability({
         sku: input.sku,
         warehouse: input.warehouse,
-        quantity: input.requestedQuantity
+        quantity: input.requestedQuantity,
       });
       return { success: true, data: status };
     },
-    
+
     price_calculate: async (input, context) => {
       const breakdown = await dependencies.pricing.calculate({
         items: input.items,
         discountCodes: input.discountCodes,
-        taxRegion: input.taxRegion
+        taxRegion: input.taxRegion,
       });
       return { success: true, data: breakdown };
     },
-    
+
     shipping_estimate: async (input, context) => {
       const options = await dependencies.shipping.getOptions({
         origin: input.origin,
         destination: input.destination,
         weight: input.weight,
-        dimensions: input.dimensions
+        dimensions: input.dimensions,
       });
       return { success: true, data: options };
-    }
+    },
   };
 }
 ```
@@ -785,6 +804,7 @@ export function createPlatformToolHandlers(
 ### 14. Performance Considerations
 
 #### Database Queries
+
 - ALWAYS use named parameters (e.g., `$(paramName)`) instead of positional parameters (e.g., `$1`)
 - Use parameterized queries to prevent SQL injection
 - Add appropriate indexes for frequently queried columns
@@ -792,27 +812,28 @@ export function createPlatformToolHandlers(
 - Avoid N+1 queries by using joins or batch operations
 
 Example of batch operation:
+
 ```typescript
 // ✅ Good - Batch fetch product details
 export async function getProductsWithCategories(
   productIds: string[],
-  db: Database
+  db: Database,
 ): Promise<ProductWithCategory[]> {
   const products = await db.manyOrNone<ProductWithCategoryDbRow>(
     `SELECT p.*, c.name as category_name, c.slug as category_slug
      FROM product p
      JOIN category c ON p.category_id = c.id
      WHERE p.id = ANY($(productIds))`,
-    { productIds }
+    { productIds },
   );
-  
+
   return products.map(mapProductWithCategoryFromDb);
 }
 
 // ❌ Bad - N+1 query pattern
 export async function getProductsWithCategories(
   productIds: string[],
-  db: Database
+  db: Database,
 ): Promise<ProductWithCategory[]> {
   const products = [];
   for (const id of productIds) {
@@ -825,6 +846,7 @@ export async function getProductsWithCategories(
 ```
 
 #### Memory Management
+
 - Stream large result sets instead of loading all data into memory
 - Use pagination for list operations
 - Clean up resources (close database connections, etc.)
@@ -853,14 +875,14 @@ export type ReservationOptions = {
 export async function checkInventory(
   sku: string,
   warehouse: string,
-  options: ReservationOptions = { duration: 3600, allowBackorder: false }
+  options: ReservationOptions = { duration: 3600, allowBackorder: false },
 ): Promise<Result<InventoryCheck, InventoryError>> {
   // Implementation
 }
 
 export async function reserveInventory(
   items: ReservationItem[],
-  orderId: string
+  orderId: string,
 ): Promise<Result<ReservationConfirmation, ReservationError>> {
   // Implementation
 }
@@ -868,7 +890,7 @@ export async function reserveInventory(
 // Helper functions (can be internal)
 function calculateAvailableQuantity(
   physical: number,
-  reserved: number
+  reserved: number,
 ): number {
   // Implementation
 }

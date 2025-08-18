@@ -1,11 +1,11 @@
-import { PermisoConfig } from '../../types.js';
-import { testLogger } from '@codespin/permiso-test-utils';
+import { PermisoConfig } from "../../types.js";
+import { testLogger } from "@codespin/permiso-test-utils";
 
 export function getTestConfig(): PermisoConfig {
   return {
-    endpoint: 'http://localhost:5003',
+    endpoint: "http://localhost:5003",
     timeout: 30000,
-    logger: testLogger
+    logger: testLogger,
   };
 }
 

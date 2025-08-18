@@ -1,18 +1,16 @@
-import { createLogger } from '@codespin/permiso-logger';
-import { Result } from '@codespin/permiso-core';
-import type { Database } from '@codespin/permiso-db';
-import type {
-  EffectivePermission
-} from '../../types.js';
+import { createLogger } from "@codespin/permiso-logger";
+import { Result } from "@codespin/permiso-core";
+import type { Database } from "@codespin/permiso-db";
+import type { EffectivePermission } from "../../types.js";
 
-const logger = createLogger('permiso-server:permissions');
+const logger = createLogger("permiso-server:permissions");
 
 export async function getEffectivePermissions(
   db: Database,
   orgId: string,
   userId: string,
   resourceId?: string,
-  action?: string
+  action?: string,
 ): Promise<Result<EffectivePermission[]>> {
   try {
     if (!resourceId) {
@@ -36,32 +34,32 @@ export async function getEffectivePermissions(
            WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId)`;
 
       const params = action ? { userId, orgId, action } : { userId, orgId };
-      
+
       const [userPerms, rolePerms] = await Promise.all([
         db.manyOrNone(userPermsQuery, params),
-        db.manyOrNone(rolePermsQuery, params)
+        db.manyOrNone(rolePermsQuery, params),
       ]);
 
       const effectivePerms: EffectivePermission[] = [
         ...userPerms.map((p: any) => ({
           resourceId: p.resource_id,
           action: p.action,
-          source: 'user' as const,
+          source: "user" as const,
           sourceId: p.source_id,
-          createdAt: p.created_at
+          createdAt: p.created_at,
         })),
         ...rolePerms.map((p: any) => ({
           resourceId: p.resource_id,
           action: p.action,
-          source: 'role' as const,
+          source: "role" as const,
           sourceId: p.source_id,
-          createdAt: p.created_at
-        }))
+          createdAt: p.created_at,
+        })),
       ];
 
       return { success: true, data: effectivePerms };
     }
-    
+
     // Get user's direct permissions - find permissions where the requested resourceId starts with the permission's resource_id
     // This allows /api/users/* to match /api/users/123
     const userPermsQuery = action
@@ -97,29 +95,35 @@ export async function getEffectivePermissions(
 
     const [userPerms, rolePerms] = await Promise.all([
       db.manyOrNone(userPermsQuery, userPermsParams),
-      db.manyOrNone(rolePermsQuery, rolePermsParams)
+      db.manyOrNone(rolePermsQuery, rolePermsParams),
     ]);
 
     const effectivePerms: EffectivePermission[] = [
       ...userPerms.map((p: any) => ({
         resourceId: p.resource_id,
         action: p.action,
-        source: 'user' as const,
+        source: "user" as const,
         sourceId: p.source_id,
-        createdAt: p.created_at
+        createdAt: p.created_at,
       })),
       ...rolePerms.map((p: any) => ({
         resourceId: p.resource_id,
         action: p.action,
-        source: 'role' as const,
+        source: "role" as const,
         sourceId: p.source_id,
-        createdAt: p.created_at
-      }))
+        createdAt: p.created_at,
+      })),
     ];
 
     return { success: true, data: effectivePerms };
   } catch (error) {
-    logger.error('Failed to get effective permissions', { error, orgId, userId, resourceId, action });
+    logger.error("Failed to get effective permissions", {
+      error,
+      orgId,
+      userId,
+      resourceId,
+      action,
+    });
     return { success: false, error: error as Error };
   }
 }

@@ -14,13 +14,13 @@ import type {
   UserPermissionWithOrgId,
   UserPermissionDbRow,
   RolePermissionWithOrgId,
-  RolePermissionDbRow
-} from './types.js';
+  RolePermissionDbRow,
+} from "./types.js";
 
 // Organization mappers
 export function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
   return {
-    __typename: 'Organization',
+    __typename: "Organization",
     id: row.id,
     name: row.name,
     description: row.description,
@@ -28,19 +28,54 @@ export function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
     updatedAt: row.updated_at,
     // These will be populated by GraphQL resolvers
     properties: [],
-    resources: { __typename: 'ResourceConnection', nodes: [], totalCount: 0, pageInfo: { __typename: 'PageInfo', hasNextPage: false, hasPreviousPage: false, startCursor: null, endCursor: null } },
-    roles: { __typename: 'RoleConnection', nodes: [], totalCount: 0, pageInfo: { __typename: 'PageInfo', hasNextPage: false, hasPreviousPage: false, startCursor: null, endCursor: null } },
-    users: { __typename: 'UserConnection', nodes: [], totalCount: 0, pageInfo: { __typename: 'PageInfo', hasNextPage: false, hasPreviousPage: false, startCursor: null, endCursor: null } }
+    resources: {
+      __typename: "ResourceConnection",
+      nodes: [],
+      totalCount: 0,
+      pageInfo: {
+        __typename: "PageInfo",
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    },
+    roles: {
+      __typename: "RoleConnection",
+      nodes: [],
+      totalCount: 0,
+      pageInfo: {
+        __typename: "PageInfo",
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    },
+    users: {
+      __typename: "UserConnection",
+      nodes: [],
+      totalCount: 0,
+      pageInfo: {
+        __typename: "PageInfo",
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+    },
   };
 }
 
-export function mapOrganizationToDb(org: Partial<Organization>): Partial<OrganizationDbRow> {
+export function mapOrganizationToDb(
+  org: Partial<Organization>,
+): Partial<OrganizationDbRow> {
   return {
     id: org.id,
     name: org.name,
     description: org.description ?? null,
     created_at: org.createdAt,
-    updated_at: org.updatedAt
+    updated_at: org.updatedAt,
   };
 }
 
@@ -50,7 +85,7 @@ export function mapPropertyFromDb(row: PropertyDbRow): Property {
     name: row.name,
     value: row.value,
     hidden: row.hidden,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
@@ -62,7 +97,7 @@ export const mapUserPropertyFromDb = mapPropertyFromDb;
 // Role mappers
 export function mapRoleFromDb(row: RoleDbRow): Role {
   return {
-    __typename: 'Role',
+    __typename: "Role",
     id: row.id,
     orgId: row.org_id,
     name: row.name,
@@ -73,7 +108,7 @@ export function mapRoleFromDb(row: RoleDbRow): Role {
     organization: {} as Organization,
     permissions: [],
     properties: [],
-    users: []
+    users: [],
   };
 }
 
@@ -84,15 +119,14 @@ export function mapRoleToDb(role: Partial<Role>): Partial<RoleDbRow> {
     name: role.name,
     description: role.description ?? null,
     created_at: role.createdAt,
-    updated_at: role.updatedAt
+    updated_at: role.updatedAt,
   };
 }
-
 
 // User mappers
 export function mapUserFromDb(row: UserDbRow): User {
   return {
-    __typename: 'User',
+    __typename: "User",
     id: row.id,
     orgId: row.org_id,
     identityProvider: row.identity_provider,
@@ -104,7 +138,7 @@ export function mapUserFromDb(row: UserDbRow): User {
     roles: [],
     permissions: [],
     properties: [],
-    effectivePermissions: []
+    effectivePermissions: [],
   };
 }
 
@@ -115,15 +149,14 @@ export function mapUserToDb(user: Partial<User>): Partial<UserDbRow> {
     identity_provider: user.identityProvider,
     identity_provider_user_id: user.identityProviderUserId,
     created_at: user.createdAt,
-    updated_at: user.updatedAt
+    updated_at: user.updatedAt,
   };
 }
-
 
 // Resource mappers
 export function mapResourceFromDb(row: ResourceDbRow): Resource {
   return {
-    __typename: 'Resource',
+    __typename: "Resource",
     id: row.id,
     orgId: row.org_id,
     name: row.name,
@@ -132,18 +165,20 @@ export function mapResourceFromDb(row: ResourceDbRow): Resource {
     updatedAt: row.updated_at,
     // These will be populated by GraphQL resolvers
     organization: {} as Organization,
-    permissions: []
+    permissions: [],
   };
 }
 
-export function mapResourceToDb(resource: Partial<Resource>): Partial<ResourceDbRow> {
+export function mapResourceToDb(
+  resource: Partial<Resource>,
+): Partial<ResourceDbRow> {
   return {
     id: resource.id,
     org_id: resource.orgId,
     name: resource.name ?? null,
     description: resource.description ?? null,
     created_at: resource.createdAt,
-    updated_at: resource.updatedAt
+    updated_at: resource.updatedAt,
   };
 }
 
@@ -153,7 +188,7 @@ export function mapUserRoleFromDb(row: UserRoleDbRow): UserRole {
     userId: row.user_id,
     roleId: row.role_id,
     orgId: row.org_id,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
@@ -162,48 +197,56 @@ export function mapUserRoleToDb(userRole: UserRole): UserRoleDbRow {
     user_id: userRole.userId,
     role_id: userRole.roleId,
     org_id: userRole.orgId,
-    created_at: userRole.createdAt
+    created_at: userRole.createdAt,
   };
 }
 
 // User Permission mappers
-export function mapUserPermissionFromDb(row: UserPermissionDbRow): UserPermissionWithOrgId {
+export function mapUserPermissionFromDb(
+  row: UserPermissionDbRow,
+): UserPermissionWithOrgId {
   return {
     userId: row.user_id,
     orgId: row.org_id,
     resourceId: row.resource_id,
     action: row.action,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
-export function mapUserPermissionToDb(perm: UserPermissionWithOrgId): UserPermissionDbRow {
+export function mapUserPermissionToDb(
+  perm: UserPermissionWithOrgId,
+): UserPermissionDbRow {
   return {
     user_id: perm.userId,
     org_id: perm.orgId,
     resource_id: perm.resourceId,
     action: perm.action,
-    created_at: perm.createdAt
+    created_at: perm.createdAt,
   };
 }
 
 // Role Permission mappers
-export function mapRolePermissionFromDb(row: RolePermissionDbRow): RolePermissionWithOrgId {
+export function mapRolePermissionFromDb(
+  row: RolePermissionDbRow,
+): RolePermissionWithOrgId {
   return {
     roleId: row.role_id,
     orgId: row.org_id,
     resourceId: row.resource_id,
     action: row.action,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   };
 }
 
-export function mapRolePermissionToDb(perm: RolePermissionWithOrgId): RolePermissionDbRow {
+export function mapRolePermissionToDb(
+  perm: RolePermissionWithOrgId,
+): RolePermissionDbRow {
   return {
     role_id: perm.roleId,
     org_id: perm.orgId,
     resource_id: perm.resourceId,
     action: perm.action,
-    created_at: perm.createdAt
+    created_at: perm.createdAt,
   };
 }

@@ -1,14 +1,20 @@
 /**
  * Permiso Client - A TypeScript client for the Permiso RBAC API
- * 
+ *
  * This package provides a complete client SDK for interacting with the Permiso
  * Role-Based Access Control system. It abstracts away the GraphQL layer and
  * provides simple function-based APIs for all operations.
  */
 
 // Export types
-export type { PermisoConfig, Logger, Result, GraphQLError, GraphQLResponse } from './types.js';
-export { success, failure } from './types.js';
+export type {
+  PermisoConfig,
+  Logger,
+  Result,
+  GraphQLError,
+  GraphQLResponse,
+} from "./types.js";
+export { success, failure } from "./types.js";
 
 // Export generated types
 export type {
@@ -18,13 +24,13 @@ export type {
   Role,
   Resource,
   Property,
-  
+
   // Permission types
   Permission,
   UserPermission,
   RolePermission,
   EffectivePermission,
-  
+
   // Input types
   CreateOrganizationInput,
   UpdateOrganizationInput,
@@ -37,25 +43,25 @@ export type {
   PropertyInput,
   GrantUserPermissionInput,
   GrantRolePermissionInput,
-  
+
   // Filter types
   OrganizationFilter,
   UserFilter,
   RoleFilter,
   ResourceFilter,
   PropertyFilter,
-  
+
   // Pagination types
   PaginationInput,
   SortDirection,
-  
+
   // Connection types
   OrganizationConnection,
   UserConnection,
   RoleConnection,
   ResourceConnection,
-  PageInfo
-} from './generated/types.js';
+  PageInfo,
+} from "./generated/types.js";
 
 // Export organization APIs
 export {
@@ -67,8 +73,8 @@ export {
   deleteOrganization,
   getOrganizationProperty,
   setOrganizationProperty,
-  deleteOrganizationProperty
-} from './api/organizations.js';
+  deleteOrganizationProperty,
+} from "./api/organizations.js";
 
 // Export user APIs
 export {
@@ -83,8 +89,8 @@ export {
   setUserProperty,
   deleteUserProperty,
   assignUserRole,
-  unassignUserRole
-} from './api/users.js';
+  unassignUserRole,
+} from "./api/users.js";
 
 // Export role APIs
 export {
@@ -96,8 +102,8 @@ export {
   deleteRole,
   getRoleProperty,
   setRoleProperty,
-  deleteRoleProperty
-} from './api/roles.js';
+  deleteRoleProperty,
+} from "./api/roles.js";
 
 // Export resource APIs
 export {
@@ -106,8 +112,8 @@ export {
   getResourcesByIdPrefix,
   createResource,
   updateResource,
-  deleteResource
-} from './api/resources.js';
+  deleteResource,
+} from "./api/resources.js";
 
 // Export permission APIs
 export {
@@ -119,5 +125,5 @@ export {
   grantUserPermission,
   revokeUserPermission,
   grantRolePermission,
-  revokeRolePermission
-} from './api/permissions.js';
+  revokeRolePermission,
+} from "./api/permissions.js";

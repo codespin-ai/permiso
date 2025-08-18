@@ -21,6 +21,7 @@ For TypeScript/JavaScript applications, we recommend using the official client l
 ### Endpoint
 
 The GraphQL API is available at:
+
 ```
 http://localhost:5001/graphql
 ```
@@ -51,31 +52,35 @@ npm install @codespin/permiso-client
 ### Quick Example
 
 ```typescript
-import { createUser, hasPermission, PermisoConfig } from '@codespin/permiso-client';
+import {
+  createUser,
+  hasPermission,
+  PermisoConfig,
+} from "@codespin/permiso-client";
 
 const config: PermisoConfig = {
-  endpoint: 'http://localhost:5001',
-  apiKey: 'your-api-key' // optional
+  endpoint: "http://localhost:5001",
+  apiKey: "your-api-key", // optional
 };
 
 // Create a user
 const result = await createUser(config, {
-  id: 'john-doe',
-  orgId: 'acme-corp',
-  identityProvider: 'google',
-  identityProviderUserId: 'john@example.com'
+  id: "john-doe",
+  orgId: "acme-corp",
+  identityProvider: "google",
+  identityProviderUserId: "john@example.com",
 });
 
 if (result.success) {
-  console.log('User created:', result.data.id);
+  console.log("User created:", result.data.id);
 }
 
 // Check permission
 const hasAccess = await hasPermission(config, {
-  orgId: 'acme-corp',
-  userId: 'john-doe',
-  resourceId: '/api/users/*',
-  action: 'read'
+  orgId: "acme-corp",
+  userId: "john-doe",
+  resourceId: "/api/users/*",
+  action: "read",
 });
 ```
 
@@ -84,32 +89,38 @@ For complete client documentation, see [TypeScript Client README](../node/packag
 ## Core Concepts
 
 ### Organizations
+
 - Top-level tenant isolation
 - All entities belong to an organization
 - Organizations have unique IDs and properties
 
 ### Users
+
 - Represent authenticated principals
 - Belong to one organization
 - Identified by identity provider + provider user ID
 - Can have multiple roles and direct permissions
 
 ### Roles
+
 - Named collections of permissions
 - Reusable permission sets (e.g., "admin", "editor", "viewer")
 - Can be assigned to multiple users
 
 ### Resources
+
 - Protected entities identified by IDs in path-like format
 - IDs follow Unix-like path notation (e.g., `/api/users/*`)
 - Support wildcard matching with `*`
 
 ### Permissions
+
 - Define allowed actions on resources
 - Can be granted directly to users or to roles
 - Actions are arbitrary strings (e.g., "read", "write", "delete")
 
 ### Properties
+
 - Key-value metadata stored as JSONB that can be attached to organizations, users, and roles
 - **Flexible JSON storage** - Store strings, numbers, booleans, objects, arrays, or null
 - **Hidden properties** - Mark sensitive data as hidden
@@ -128,6 +139,7 @@ scalar JSON
 ### Core Types
 
 #### Organization
+
 ```graphql
 type Organization {
   id: ID!
@@ -136,15 +148,19 @@ type Organization {
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
-  
+
   # Relationships
   users(filter: UserFilter, pagination: PaginationInput): UserConnection!
   roles(filter: RoleFilter, pagination: PaginationInput): RoleConnection!
-  resources(filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
+  resources(
+    filter: ResourceFilter
+    pagination: PaginationInput
+  ): ResourceConnection!
 }
 ```
 
 #### User
+
 ```graphql
 type User {
   id: ID!
@@ -154,7 +170,7 @@ type User {
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
-  
+
   # Relationships
   organization: Organization!
   roles: [Role!]!
@@ -164,6 +180,7 @@ type User {
 ```
 
 #### Role
+
 ```graphql
 type Role {
   id: ID!
@@ -173,7 +190,7 @@ type Role {
   properties: [Property!]!
   createdAt: DateTime!
   updatedAt: DateTime!
-  
+
   # Relationships
   organization: Organization!
   users: [User!]!
@@ -182,15 +199,16 @@ type Role {
 ```
 
 #### Resource
+
 ```graphql
 type Resource {
-  id: ID!  # This is the path (e.g., /api/users/*)
+  id: ID! # This is the path (e.g., /api/users/*)
   orgId: ID!
   name: String
   description: String
   createdAt: DateTime!
   updatedAt: DateTime!
-  
+
   # Relationships
   organization: Organization!
   permissions: [Permission!]!
@@ -198,6 +216,7 @@ type Resource {
 ```
 
 #### Property
+
 ```graphql
 type Property {
   name: String!
@@ -208,6 +227,7 @@ type Property {
 ```
 
 #### Permission Types
+
 ```graphql
 interface Permission {
   resourceId: ID!
@@ -240,8 +260,8 @@ type RolePermission implements Permission {
 type EffectivePermission {
   resourceId: ID!
   action: String!
-  source: String! # 'user' or 'role'
-  sourceId: ID    # userId or roleId
+  source: String! # "user" or "role"
+  sourceId: ID # userId or roleId
   createdAt: DateTime!
 }
 ```
@@ -252,41 +272,79 @@ type EffectivePermission {
 type Query {
   # Organizations
   organization(id: ID!): Organization
-  organizations(filter: OrganizationFilter, pagination: PaginationInput): OrganizationConnection!
+  organizations(
+    filter: OrganizationFilter
+    pagination: PaginationInput
+  ): OrganizationConnection!
   organizationsByIds(ids: [ID!]!): [Organization!]!
   organizationProperty(orgId: ID!, propertyName: String!): Property
-  
+
   # Users (scoped to org)
   user(orgId: ID!, userId: ID!): User
-  users(orgId: ID!, filter: UserFilter, pagination: PaginationInput): UserConnection!
+  users(
+    orgId: ID!
+    filter: UserFilter
+    pagination: PaginationInput
+  ): UserConnection!
   usersByIds(orgId: ID!, ids: [ID!]!): [User!]!
-  usersByIdentity(identityProvider: String!, identityProviderUserId: String!): [User!]!
+  usersByIdentity(
+    identityProvider: String!
+    identityProviderUserId: String!
+  ): [User!]!
   userProperty(orgId: ID!, userId: ID!, propertyName: String!): Property
-  
+
   # Roles (scoped to org)
   role(orgId: ID!, roleId: ID!): Role
-  roles(orgId: ID!, filter: RoleFilter, pagination: PaginationInput): RoleConnection!
+  roles(
+    orgId: ID!
+    filter: RoleFilter
+    pagination: PaginationInput
+  ): RoleConnection!
   rolesByIds(orgId: ID!, ids: [ID!]!): [Role!]!
   roleProperty(orgId: ID!, roleId: ID!, propertyName: String!): Property
-  
+
   # Resources (scoped to org)
   resource(orgId: ID!, resourceId: ID!): Resource
-  resources(orgId: ID!, filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
+  resources(
+    orgId: ID!
+    filter: ResourceFilter
+    pagination: PaginationInput
+  ): ResourceConnection!
   resourcesByIdPrefix(orgId: ID!, idPrefix: String!): [Resource!]!
-  
+
   # Permissions
-  userPermissions(orgId: ID!, userId: ID!, resourceId: String, action: String): [UserPermission!]!
-  rolePermissions(orgId: ID!, roleId: ID!, resourceId: String, action: String): [RolePermission!]!
-  effectivePermissions(orgId: ID!, userId: ID!, resourceId: String!, action: String): [EffectivePermission!]!
-  effectivePermissionsByPrefix(
-    orgId: ID!, 
-    userId: ID!, 
-    resourceIdPrefix: String!, 
+  userPermissions(
+    orgId: ID!
+    userId: ID!
+    resourceId: String
+    action: String
+  ): [UserPermission!]!
+  rolePermissions(
+    orgId: ID!
+    roleId: ID!
+    resourceId: String
+    action: String
+  ): [RolePermission!]!
+  effectivePermissions(
+    orgId: ID!
+    userId: ID!
+    resourceId: String!
     action: String
   ): [EffectivePermission!]!
-  
+  effectivePermissionsByPrefix(
+    orgId: ID!
+    userId: ID!
+    resourceIdPrefix: String!
+    action: String
+  ): [EffectivePermission!]!
+
   # Check permission (returns boolean)
-  hasPermission(orgId: ID!, userId: ID!, resourceId: String!, action: String!): Boolean!
+  hasPermission(
+    orgId: ID!
+    userId: ID!
+    resourceId: String!
+    action: String!
+  ): Boolean!
 }
 ```
 
@@ -298,44 +356,75 @@ type Mutation {
   createOrganization(input: CreateOrganizationInput!): Organization!
   updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
   deleteOrganization(id: ID!, safetyKey: String): Boolean!
-  
+
   # Organization Properties
-  setOrganizationProperty(orgId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
+  setOrganizationProperty(
+    orgId: ID!
+    name: String!
+    value: JSON
+    hidden: Boolean
+  ): Property!
   deleteOrganizationProperty(orgId: ID!, name: String!): Boolean!
-  
+
   # Users
   createUser(input: CreateUserInput!): User!
   updateUser(orgId: ID!, userId: ID!, input: UpdateUserInput!): User!
   deleteUser(orgId: ID!, userId: ID!): Boolean!
-  
+
   # User Properties
-  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
+  setUserProperty(
+    orgId: ID!
+    userId: ID!
+    name: String!
+    value: JSON
+    hidden: Boolean
+  ): Property!
   deleteUserProperty(orgId: ID!, userId: ID!, name: String!): Boolean!
-  
+
   # User Roles
   assignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
   unassignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
-  
+
   # Roles
   createRole(input: CreateRoleInput!): Role!
   updateRole(orgId: ID!, roleId: ID!, input: UpdateRoleInput!): Role!
   deleteRole(orgId: ID!, roleId: ID!): Boolean!
-  
+
   # Role Properties
-  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
+  setRoleProperty(
+    orgId: ID!
+    roleId: ID!
+    name: String!
+    value: JSON
+    hidden: Boolean
+  ): Property!
   deleteRoleProperty(orgId: ID!, roleId: ID!, name: String!): Boolean!
-  
+
   # Resources
   createResource(input: CreateResourceInput!): Resource!
-  updateResource(orgId: ID!, resourceId: ID!, input: UpdateResourceInput!): Resource!
+  updateResource(
+    orgId: ID!
+    resourceId: ID!
+    input: UpdateResourceInput!
+  ): Resource!
   deleteResource(orgId: ID!, resourceId: ID!): Boolean!
-  
+
   # Permissions
   grantUserPermission(input: GrantUserPermissionInput!): UserPermission!
-  revokeUserPermission(orgId: ID!, userId: ID!, resourceId: ID!, action: String!): Boolean!
-  
+  revokeUserPermission(
+    orgId: ID!
+    userId: ID!
+    resourceId: ID!
+    action: String!
+  ): Boolean!
+
   grantRolePermission(input: GrantRolePermissionInput!): RolePermission!
-  revokeRolePermission(orgId: ID!, roleId: ID!, resourceId: ID!, action: String!): Boolean!
+  revokeRolePermission(
+    orgId: ID!
+    roleId: ID!
+    resourceId: ID!
+    action: String!
+  ): Boolean!
 }
 ```
 
@@ -582,11 +671,7 @@ query GetPermissionsByPrefix {
 query FilterUsersByDepartment {
   users(
     orgId: "acme-corp"
-    filter: {
-      properties: [
-        { name: "department", value: "engineering" }
-      ]
-    }
+    filter: { properties: [{ name: "department", value: "engineering" }] }
   ) {
     nodes {
       id
@@ -617,15 +702,17 @@ query GetAPIResources {
 
 ```graphql
 mutation CreateOrg {
-  createOrganization(input: {
-    id: "acme-corp"
-    name: "ACME Corporation"
-    description: "A sample organization"
-    properties: [
-      { name: "industry", value: "technology" }
-      { name: "size", value: "enterprise" }
-    ]
-  }) {
+  createOrganization(
+    input: {
+      id: "acme-corp"
+      name: "ACME Corporation"
+      description: "A sample organization"
+      properties: [
+        { name: "industry", value: "technology" }
+        { name: "size", value: "enterprise" }
+      ]
+    }
+  ) {
     id
     name
     properties {
@@ -640,18 +727,20 @@ mutation CreateOrg {
 
 ```graphql
 mutation CreateUserWithRoles {
-  createUser(input: {
-    id: "john-doe"
-    orgId: "acme-corp"
-    identityProvider: "google"
-    identityProviderUserId: "john@acme.com"
-    roleIds: ["admin", "editor"]
-    properties: [
-      { name: "department", value: "engineering" }
-      { name: "employee_id", value: "E12345", hidden: true }
-      { name: "email", value: "john@acme.com" }
-    ]
-  }) {
+  createUser(
+    input: {
+      id: "john-doe"
+      orgId: "acme-corp"
+      identityProvider: "google"
+      identityProviderUserId: "john@acme.com"
+      roleIds: ["admin", "editor"]
+      properties: [
+        { name: "department", value: "engineering" }
+        { name: "employee_id", value: "E12345", hidden: true }
+        { name: "email", value: "john@acme.com" }
+      ]
+    }
+  ) {
     id
     roles {
       id
@@ -670,15 +759,15 @@ mutation CreateUserWithRoles {
 
 ```graphql
 mutation CreateEditorRole {
-  createRole(input: {
-    id: "editor"
-    orgId: "acme-corp"
-    name: "Content Editor"
-    description: "Can edit all content"
-    properties: [
-      { name: "level", value: "intermediate" }
-    ]
-  }) {
+  createRole(
+    input: {
+      id: "editor"
+      orgId: "acme-corp"
+      name: "Content Editor"
+      description: "Can edit all content"
+      properties: [{ name: "level", value: "intermediate" }]
+    }
+  ) {
     id
     name
     description
@@ -690,12 +779,14 @@ mutation CreateEditorRole {
 
 ```graphql
 mutation CreateAPIResource {
-  createResource(input: {
-    id: "/api/users/*"
-    orgId: "acme-corp"
-    name: "User API"
-    description: "All user-related API endpoints"
-  }) {
+  createResource(
+    input: {
+      id: "/api/users/*"
+      orgId: "acme-corp"
+      name: "User API"
+      description: "All user-related API endpoints"
+    }
+  ) {
     id
     name
     description
@@ -707,12 +798,14 @@ mutation CreateAPIResource {
 
 ```graphql
 mutation GrantUserPermission {
-  grantUserPermission(input: {
-    orgId: "acme-corp"
-    userId: "john-doe"
-    resourceId: "/api/reports/*"
-    action: "read"
-  }) {
+  grantUserPermission(
+    input: {
+      orgId: "acme-corp"
+      userId: "john-doe"
+      resourceId: "/api/reports/*"
+      action: "read"
+    }
+  ) {
     userId
     resourceId
     action
@@ -725,12 +818,14 @@ mutation GrantUserPermission {
 
 ```graphql
 mutation GrantRolePermission {
-  grantRolePermission(input: {
-    orgId: "acme-corp"
-    roleId: "editor"
-    resourceId: "/api/content/*"
-    action: "write"
-  }) {
+  grantRolePermission(
+    input: {
+      orgId: "acme-corp"
+      roleId: "editor"
+      resourceId: "/api/content/*"
+      action: "write"
+    }
+  ) {
     roleId
     resourceId
     action
@@ -745,11 +840,7 @@ mutation GrantRolePermission {
 
 ```graphql
 mutation AssignRole {
-  assignUserRole(
-    orgId: "acme-corp"
-    userId: "john-doe"
-    roleId: "admin"
-  ) {
+  assignUserRole(orgId: "acme-corp", userId: "john-doe", roleId: "admin") {
     id
     roles {
       id
@@ -810,6 +901,7 @@ When checking permissions, the system:
 3. Uses prefix matching for wildcard resources
 
 Example:
+
 - User has role "editor" with permission on `/api/content/*`
 - System checks if user can "write" to `/api/content/articles/123`
 - Permission is granted because `/api/content/articles/123` starts with `/api/content/`
@@ -817,6 +909,7 @@ Example:
 ### Effective Permissions
 
 The `effectivePermissions` query returns all applicable permissions for a user on a specific resource, including:
+
 - Direct user permissions
 - Permissions inherited from roles
 - Source information (whether from user or role)
@@ -830,7 +923,7 @@ The API returns standard GraphQL errors with descriptive messages:
   "errors": [
     {
       "message": "Foreign key violation - Key (org_id)=(non-existent) is not present in table \"organization\"",
-      "locations": [{"line": 2, "column": 3}],
+      "locations": [{ "line": 2, "column": 3 }],
       "path": ["createUser"],
       "extensions": {
         "code": "INTERNAL_SERVER_ERROR"
@@ -842,6 +935,7 @@ The API returns standard GraphQL errors with descriptive messages:
 ```
 
 Common error scenarios:
+
 - Foreign key violations (referencing non-existent entities)
 - Unique constraint violations (duplicate IDs)
 - Not found errors (querying non-existent resources)
@@ -852,6 +946,7 @@ Common error scenarios:
 ### 1. Use Meaningful IDs
 
 Instead of auto-generated IDs, use descriptive identifiers:
+
 - Organizations: `acme-corp`, `startup-inc`
 - Users: `john-doe`, `jane-smith`
 - Roles: `admin`, `editor`, `viewer`
@@ -860,6 +955,7 @@ Instead of auto-generated IDs, use descriptive identifiers:
 ### 2. Resource ID Design
 
 Design your resource IDs hierarchically in path-like format:
+
 ```
 /api/
   /users/
@@ -879,6 +975,7 @@ Design your resource IDs hierarchically in path-like format:
 ### 3. Action Naming
 
 Use consistent action names:
+
 - `read` - View/list resources
 - `write` - Create/update resources
 - `delete` - Remove resources
@@ -887,6 +984,7 @@ Use consistent action names:
 ### 4. Property Usage
 
 Use properties for:
+
 - Filtering and searching
 - Custom business logic
 - Non-security metadata
@@ -895,6 +993,7 @@ Use properties for:
 ### 5. Batch Operations
 
 When creating multiple related entities, use transactions:
+
 1. Create organization
 2. Create roles
 3. Create resources
@@ -904,6 +1003,7 @@ When creating multiple related entities, use transactions:
 ### 6. Permission Testing
 
 Always test permission chains:
+
 1. Grant permission to role
 2. Assign role to user
 3. Verify user has effective permission
@@ -912,6 +1012,7 @@ Always test permission chains:
 ### 7. Wildcard Usage
 
 Use wildcards appropriately:
+
 - Too broad: `/*` gives access to everything
 - Too narrow: `/api/users/123` only works for one user
 - Just right: `/api/users/*` covers all user operations
@@ -923,9 +1024,9 @@ Use wildcards appropriately:
 ```bash
 curl -X POST http://localhost:5001/graphql \
   -H "Content-Type: application/json" \
-  -d '{
+  -d "{
     "query": "mutation { createOrganization(input: { id: \"test-org\", name: \"Test Organization\" }) { id name } }"
-  }'
+  }"
 ```
 
 ### Check Permission
@@ -933,9 +1034,9 @@ curl -X POST http://localhost:5001/graphql \
 ```bash
 curl -X POST http://localhost:5001/graphql \
   -H "Content-Type: application/json" \
-  -d '{
+  -d "{
     "query": "query { hasPermission(orgId: \"test-org\", userId: \"user-1\", resourceId: \"/api/users/123\", action: \"read\") }"
-  }'
+  }"
 ```
 
 ### Get User with Permissions
@@ -943,9 +1044,9 @@ curl -X POST http://localhost:5001/graphql \
 ```bash
 curl -X POST http://localhost:5001/graphql \
   -H "Content-Type: application/json" \
-  -d '{
+  -d "{
     "query": "query { user(orgId: \"test-org\", userId: \"user-1\") { id roles { name } effectivePermissions(resourceId: \"/api/users/*\") { action source } } }"
-  }'
+  }"
 ```
 
 ## Advanced Topics
@@ -968,6 +1069,7 @@ curl -X POST http://localhost:5001/graphql \
 ### Integration Patterns
 
 1. **Authentication Integration**:
+
    ```graphql
    query FindUserByAuth {
      usersByIdentity(
@@ -990,14 +1092,14 @@ curl -X POST http://localhost:5001/graphql \
          orgId: req.user.orgId,
          userId: req.user.id,
          resourceId: req.path, // Using request path as resource ID
-         action: req.method.toLowerCase()
-       }
+         action: req.method.toLowerCase(),
+       },
      });
-     
+
      if (hasPermission.data.hasPermission) {
        next();
      } else {
-       res.status(403).json({ error: 'Forbidden' });
+       res.status(403).json({ error: "Forbidden" });
      }
    }
    ```
@@ -1037,7 +1139,7 @@ query AuditPermissions {
 ### Debug Queries
 
 ```graphql
-# Debug user's complete permission state
+# Debug user"s complete permission state
 query DebugUserPermissions {
   user(orgId: "acme-corp", userId: "john-doe") {
     # Direct permissions
@@ -1079,5 +1181,6 @@ If migrating from another RBAC system:
 ## Support
 
 For questions and support:
+
 - GitHub Issues: [https://github.com/codespin-ai/permiso/issues](https://github.com/codespin-ai/permiso/issues)
 - Documentation: [https://github.com/codespin-ai/permiso/docs](https://github.com/codespin-ai/permiso/docs)

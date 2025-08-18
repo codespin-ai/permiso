@@ -1,62 +1,64 @@
-import { expect } from 'chai';
-import { createOrganization } from '../api/organizations.js';
-import { 
+import { expect } from "chai";
+import { createOrganization } from "../api/organizations.js";
+import {
   createResource,
   getResource,
   listResources,
   getResourcesByIdPrefix,
   updateResource,
-  deleteResource
-} from '../api/resources.js';
-import { getTestConfig, generateTestId } from './utils/test-helpers.js';
-import './setup.js';
+  deleteResource,
+} from "../api/resources.js";
+import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
+import "./setup.js";
 
-describe('Resources API', () => {
+describe("Resources API", () => {
   const config = getTestConfig();
   let testOrgId: string;
 
   beforeEach(async () => {
     // Create a test organization for each test
-    testOrgId = generateTestId('org');
+    testOrgId = generateTestId("org");
     const orgResult = await createOrganization(config, {
       id: testOrgId,
-      name: 'Test Organization'
+      name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
   });
 
-  describe('createResource', () => {
-    it('should create a resource successfully', async () => {
-      const resourceId = '/api/users/*';
+  describe("createResource", () => {
+    it("should create a resource successfully", async () => {
+      const resourceId = "/api/users/*";
       const result = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'User API',
-        description: 'All user-related API endpoints'
+        name: "User API",
+        description: "All user-related API endpoints",
       });
 
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data.id).to.equal(resourceId);
         expect(result.data.orgId).to.equal(testOrgId);
-        expect(result.data.name).to.equal('User API');
-        expect(result.data.description).to.equal('All user-related API endpoints');
+        expect(result.data.name).to.equal("User API");
+        expect(result.data.description).to.equal(
+          "All user-related API endpoints",
+        );
       }
     });
 
-    it('should create resources with path-like IDs', async () => {
+    it("should create resources with path-like IDs", async () => {
       const testCases = [
-        { id: '/api/posts/*/comments', name: 'Post Comments' },
-        { id: '/documents/public/*', name: 'Public Documents' },
-        { id: '/features/billing', name: 'Billing Feature' },
-        { id: '/*', name: 'All Resources' }
+        { id: "/api/posts/*/comments", name: "Post Comments" },
+        { id: "/documents/public/*", name: "Public Documents" },
+        { id: "/features/billing", name: "Billing Feature" },
+        { id: "/*", name: "All Resources" },
       ];
 
       for (const testCase of testCases) {
         const result = await createResource(config, {
           id: testCase.id,
           orgId: testOrgId,
-          name: testCase.name
+          name: testCase.name,
         });
         expect(result.success).to.be.true;
         if (result.success) {
@@ -65,14 +67,14 @@ describe('Resources API', () => {
       }
     });
 
-    it('should handle duplicate resource creation', async () => {
-      const resourceId = '/api/products/*';
-      
+    it("should handle duplicate resource creation", async () => {
+      const resourceId = "/api/products/*";
+
       // Create first resource
       const result1 = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Products API'
+        name: "Products API",
       });
       expect(result1.success).to.be.true;
 
@@ -80,25 +82,25 @@ describe('Resources API', () => {
       const result2 = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Duplicate Products'
+        name: "Duplicate Products",
       });
       expect(result2.success).to.be.false;
       if (!result2.success) {
-        expect(result2.error.message).to.include('duplicate key');
+        expect(result2.error.message).to.include("duplicate key");
       }
     });
   });
 
-  describe('getResource', () => {
-    it('should retrieve an existing resource', async () => {
-      const resourceId = '/api/orders/*';
-      
+  describe("getResource", () => {
+    it("should retrieve an existing resource", async () => {
+      const resourceId = "/api/orders/*";
+
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Orders API',
-        description: 'Order management endpoints'
+        name: "Orders API",
+        description: "Order management endpoints",
       });
       expect(createResult.success).to.be.true;
 
@@ -107,13 +109,15 @@ describe('Resources API', () => {
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data?.id).to.equal(resourceId);
-        expect(getResult.data?.name).to.equal('Orders API');
-        expect(getResult.data?.description).to.equal('Order management endpoints');
+        expect(getResult.data?.name).to.equal("Orders API");
+        expect(getResult.data?.description).to.equal(
+          "Order management endpoints",
+        );
       }
     });
 
-    it('should return null for non-existent resource', async () => {
-      const result = await getResource(config, testOrgId, '/non/existent/*');
+    it("should return null for non-existent resource", async () => {
+      const result = await getResource(config, testOrgId, "/non/existent/*");
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.be.null;
@@ -121,8 +125,8 @@ describe('Resources API', () => {
     });
   });
 
-  describe('listResources', () => {
-    it('should list resources with pagination', async () => {
+  describe("listResources", () => {
+    it("should list resources with pagination", async () => {
       // Create multiple resources
       const resourceIds = [];
       for (let i = 0; i < 5; i++) {
@@ -131,16 +135,16 @@ describe('Resources API', () => {
         const result = await createResource(config, {
           id: resourceId,
           orgId: testOrgId,
-          name: `Resource ${i}`
+          name: `Resource ${i}`,
         });
         expect(result.success).to.be.true;
       }
 
       // List with pagination
       const listResult = await listResources(config, testOrgId, {
-        pagination: { limit: 3, offset: 0 }
+        pagination: { limit: 3, offset: 0 },
       });
-      
+
       expect(listResult.success).to.be.true;
       if (listResult.success) {
         expect(listResult.data.nodes).to.have.lengthOf(3);
@@ -149,114 +153,122 @@ describe('Resources API', () => {
       }
     });
 
-    it('should list resources with descending sort', async () => {
+    it("should list resources with descending sort", async () => {
       // Create resources with IDs that will sort differently
-      const resourceIds = ['/z-resource', '/a-resource', '/m-resource'];
+      const resourceIds = ["/z-resource", "/a-resource", "/m-resource"];
       for (const resourceId of resourceIds) {
         const result = await createResource(config, {
           id: resourceId,
           orgId: testOrgId,
-          name: `Test ${resourceId}`
+          name: `Test ${resourceId}`,
         });
         expect(result.success).to.be.true;
       }
 
       // List with DESC sort
       const listResult = await listResources(config, testOrgId, {
-        pagination: { sortDirection: 'DESC' }
+        pagination: { sortDirection: "DESC" },
       });
-      
+
       expect(listResult.success).to.be.true;
       if (listResult.success) {
-        const ids = listResult.data.nodes.map(resource => resource.id);
-        const zIndex = ids.indexOf('/z-resource');
-        const aIndex = ids.indexOf('/a-resource');
+        const ids = listResult.data.nodes.map((resource) => resource.id);
+        const zIndex = ids.indexOf("/z-resource");
+        const aIndex = ids.indexOf("/a-resource");
         if (zIndex !== -1 && aIndex !== -1) {
           expect(zIndex).to.be.lessThan(aIndex);
         }
       }
     });
 
-    it('should filter resources by ID prefix', async () => {
+    it("should filter resources by ID prefix", async () => {
       // Create resources with different prefixes
       await createResource(config, {
-        id: '/api/users/create',
+        id: "/api/users/create",
         orgId: testOrgId,
-        name: 'Create User'
+        name: "Create User",
       });
 
       await createResource(config, {
-        id: '/api/users/update',
+        id: "/api/users/update",
         orgId: testOrgId,
-        name: 'Update User'
+        name: "Update User",
       });
 
       await createResource(config, {
-        id: '/api/posts/create',
+        id: "/api/posts/create",
         orgId: testOrgId,
-        name: 'Create Post'
+        name: "Create Post",
       });
 
       // Filter by prefix
       const result = await listResources(config, testOrgId, {
-        filter: { idPrefix: '/api/users/' }
+        filter: { idPrefix: "/api/users/" },
       });
 
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data.nodes).to.have.lengthOf(2);
-        result.data.nodes.forEach(resource => {
-          expect(resource.id).to.include('/api/users/');
+        result.data.nodes.forEach((resource) => {
+          expect(resource.id).to.include("/api/users/");
         });
       }
     });
   });
 
-  describe('getResourcesByIdPrefix', () => {
-    it('should retrieve resources by ID prefix', async () => {
+  describe("getResourcesByIdPrefix", () => {
+    it("should retrieve resources by ID prefix", async () => {
       // Create resources with hierarchical structure
       const resources = [
-        { id: '/api/v1/users', name: 'Users V1' },
-        { id: '/api/v1/posts', name: 'Posts V1' },
-        { id: '/api/v2/users', name: 'Users V2' },
-        { id: '/documents/public', name: 'Public Docs' }
+        { id: "/api/v1/users", name: "Users V1" },
+        { id: "/api/v1/posts", name: "Posts V1" },
+        { id: "/api/v2/users", name: "Users V2" },
+        { id: "/documents/public", name: "Public Docs" },
       ];
 
       for (const resource of resources) {
         const result = await createResource(config, {
           ...resource,
-          orgId: testOrgId
+          orgId: testOrgId,
         });
         expect(result.success).to.be.true;
       }
 
       // Get resources by prefix
-      const result = await getResourcesByIdPrefix(config, testOrgId, '/api/v1/');
+      const result = await getResourcesByIdPrefix(
+        config,
+        testOrgId,
+        "/api/v1/",
+      );
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.have.lengthOf(2);
-        result.data.forEach(resource => {
-          expect(resource.id).to.include('/api/v1/');
+        result.data.forEach((resource) => {
+          expect(resource.id).to.include("/api/v1/");
         });
       }
     });
 
-    it('should handle wildcard resources in prefix search', async () => {
+    it("should handle wildcard resources in prefix search", async () => {
       // Create resources with wildcards
       await createResource(config, {
-        id: '/api/users/*',
+        id: "/api/users/*",
         orgId: testOrgId,
-        name: 'All User Endpoints'
+        name: "All User Endpoints",
       });
 
       await createResource(config, {
-        id: '/api/users/profile',
+        id: "/api/users/profile",
         orgId: testOrgId,
-        name: 'User Profile'
+        name: "User Profile",
       });
 
       // Search with prefix
-      const result = await getResourcesByIdPrefix(config, testOrgId, '/api/users/');
+      const result = await getResourcesByIdPrefix(
+        config,
+        testOrgId,
+        "/api/users/",
+      );
       expect(result.success).to.be.true;
       if (result.success) {
         // Should find both the wildcard and specific resource
@@ -265,64 +277,68 @@ describe('Resources API', () => {
     });
   });
 
-  describe('updateResource', () => {
-    it('should update a resource', async () => {
-      const resourceId = '/api/customers/*';
-      
+  describe("updateResource", () => {
+    it("should update a resource", async () => {
+      const resourceId = "/api/customers/*";
+
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Original Name',
-        description: 'Original description'
+        name: "Original Name",
+        description: "Original description",
       });
       expect(createResult.success).to.be.true;
 
       // Update resource
       const updateResult = await updateResource(config, testOrgId, resourceId, {
-        name: 'Customer Management API',
-        description: 'Complete customer management endpoints'
+        name: "Customer Management API",
+        description: "Complete customer management endpoints",
       });
       expect(updateResult.success).to.be.true;
       if (updateResult.success) {
-        expect(updateResult.data.name).to.equal('Customer Management API');
-        expect(updateResult.data.description).to.equal('Complete customer management endpoints');
+        expect(updateResult.data.name).to.equal("Customer Management API");
+        expect(updateResult.data.description).to.equal(
+          "Complete customer management endpoints",
+        );
       }
     });
 
-    it('should update only specified fields', async () => {
-      const resourceId = '/features/analytics';
-      
+    it("should update only specified fields", async () => {
+      const resourceId = "/features/analytics";
+
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Analytics Feature',
-        description: 'Analytics and reporting'
+        name: "Analytics Feature",
+        description: "Analytics and reporting",
       });
       expect(createResult.success).to.be.true;
 
       // Update only description
       const updateResult = await updateResource(config, testOrgId, resourceId, {
-        description: 'Advanced analytics and reporting'
+        description: "Advanced analytics and reporting",
       });
       expect(updateResult.success).to.be.true;
       if (updateResult.success) {
-        expect(updateResult.data.name).to.equal('Analytics Feature'); // Unchanged
-        expect(updateResult.data.description).to.equal('Advanced analytics and reporting');
+        expect(updateResult.data.name).to.equal("Analytics Feature"); // Unchanged
+        expect(updateResult.data.description).to.equal(
+          "Advanced analytics and reporting",
+        );
       }
     });
   });
 
-  describe('deleteResource', () => {
-    it('should delete a resource', async () => {
-      const resourceId = '/api/temp/*';
-      
+  describe("deleteResource", () => {
+    it("should delete a resource", async () => {
+      const resourceId = "/api/temp/*";
+
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
         orgId: testOrgId,
-        name: 'Temporary Resource'
+        name: "Temporary Resource",
       });
       expect(createResult.success).to.be.true;
 

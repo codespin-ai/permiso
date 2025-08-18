@@ -1,12 +1,12 @@
-import { graphqlRequest } from '../http-client.js';
-import { Result, PermisoConfig } from '../types.js';
+import { graphqlRequest } from "../http-client.js";
+import { Result, PermisoConfig } from "../types.js";
 import type {
   Resource,
   CreateResourceInput,
   UpdateResourceInput,
   ResourceFilter,
-  PaginationInput
-} from '../generated/types.js';
+  PaginationInput,
+} from "../generated/types.js";
 
 /**
  * Get a resource by organization and resource ID
@@ -14,7 +14,7 @@ import type {
 export async function getResource(
   config: PermisoConfig,
   orgId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<Result<Resource | null, Error>> {
   const query = `
     query GetResource($orgId: ID!, $resourceId: ID!) {
@@ -29,16 +29,14 @@ export async function getResource(
     }
   `;
 
-  const result = await graphqlRequest<{ resource: Resource | null }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, resourceId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ resource: Resource | null }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, resourceId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -56,17 +54,22 @@ export async function listResources(
   options?: {
     filter?: ResourceFilter;
     pagination?: PaginationInput;
-  }
-): Promise<Result<{
-  nodes: Resource[];
-  totalCount: number;
-  pageInfo: {
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    startCursor?: string;
-    endCursor?: string;
-  };
-}, Error>> {
+  },
+): Promise<
+  Result<
+    {
+      nodes: Resource[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    },
+    Error
+  >
+> {
   const query = `
     query ListResources($orgId: ID!, $filter: ResourceFilter, $pagination: PaginationInput) {
       resources(orgId: $orgId, filter: $filter, pagination: $pagination) {
@@ -89,20 +92,18 @@ export async function listResources(
     }
   `;
 
-  const result = await graphqlRequest<{ resources: any }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: {
-        orgId,
-        filter: options?.filter,
-        pagination: options?.pagination
-      },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ resources: any }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: {
+      orgId,
+      filter: options?.filter,
+      pagination: options?.pagination,
+    },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -117,7 +118,7 @@ export async function listResources(
 export async function getResourcesByIdPrefix(
   config: PermisoConfig,
   orgId: string,
-  idPrefix: string
+  idPrefix: string,
 ): Promise<Result<Resource[], Error>> {
   const query = `
     query GetResourcesByIdPrefix($orgId: ID!, $idPrefix: String!) {
@@ -132,16 +133,14 @@ export async function getResourcesByIdPrefix(
     }
   `;
 
-  const result = await graphqlRequest<{ resourcesByIdPrefix: Resource[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, idPrefix },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ resourcesByIdPrefix: Resource[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, idPrefix },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -155,7 +154,7 @@ export async function getResourcesByIdPrefix(
  */
 export async function createResource(
   config: PermisoConfig,
-  input: CreateResourceInput
+  input: CreateResourceInput,
 ): Promise<Result<Resource, Error>> {
   const mutation = `
     mutation CreateResource($input: CreateResourceInput!) {
@@ -170,16 +169,14 @@ export async function createResource(
     }
   `;
 
-  const result = await graphqlRequest<{ createResource: Resource }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ createResource: Resource }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -195,7 +192,7 @@ export async function updateResource(
   config: PermisoConfig,
   orgId: string,
   resourceId: string,
-  input: UpdateResourceInput
+  input: UpdateResourceInput,
 ): Promise<Result<Resource, Error>> {
   const mutation = `
     mutation UpdateResource($orgId: ID!, $resourceId: ID!, $input: UpdateResourceInput!) {
@@ -210,16 +207,14 @@ export async function updateResource(
     }
   `;
 
-  const result = await graphqlRequest<{ updateResource: Resource }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, resourceId, input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ updateResource: Resource }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, resourceId, input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -234,7 +229,7 @@ export async function updateResource(
 export async function deleteResource(
   config: PermisoConfig,
   orgId: string,
-  resourceId: string
+  resourceId: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation DeleteResource($orgId: ID!, $resourceId: ID!) {
@@ -242,16 +237,14 @@ export async function deleteResource(
     }
   `;
 
-  const result = await graphqlRequest<{ deleteResource: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, resourceId },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ deleteResource: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, resourceId },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;

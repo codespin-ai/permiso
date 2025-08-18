@@ -46,6 +46,7 @@ npm run migrate:all:status
 See [Configuration Documentation](configuration.md) for database connection settings.
 
 Each database uses its own set of environment variables following the pattern:
+
 - `{DATABASE_NAME}_DB_HOST`
 - `{DATABASE_NAME}_DB_PORT`
 - `{DATABASE_NAME}_DB_NAME`
@@ -55,21 +56,24 @@ Each database uses its own set of environment variables following the pattern:
 ### Adding a New Database
 
 1. Create a new directory under `database/`:
+
    ```bash
    mkdir -p database/mydb/migrations database/mydb/seeds
    ```
 
 2. Create a knexfile.js for the database:
+
    ```javascript
    // database/mydb/knexfile.js
-   import { createDbConfig } from '../../knexfile.js';
+   import { createDbConfig } from "../../knexfile.js";
 
-   export default createDbConfig('mydb', {
+   export default createDbConfig("mydb", {
      // Any database-specific overrides
    });
    ```
 
 3. Add scripts to package.json:
+
    ```json
    "migrate:mydb:make": "knex migrate:make --knexfile database/mydb/knexfile.js",
    "migrate:mydb:latest": "knex migrate:latest --knexfile database/mydb/knexfile.js",
@@ -87,6 +91,7 @@ Each database uses its own set of environment variables following the pattern:
 ### Script Naming Convention
 
 All database-specific scripts follow this pattern:
+
 - `migrate:[dbname]:make` - Create a new migration
 - `migrate:[dbname]:latest` - Run pending migrations
 - `migrate:[dbname]:rollback` - Rollback last migration
@@ -95,6 +100,7 @@ All database-specific scripts follow this pattern:
 - `seed:[dbname]:run` - Run seed files
 
 The `:all` scripts operate on all databases:
+
 - `migrate:all` - Run latest migrations on all databases
 - `migrate:all:rollback` - Rollback all databases
 - `migrate:all:status` - Check status of all databases

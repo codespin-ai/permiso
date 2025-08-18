@@ -1,6 +1,5 @@
 // Re-export all GraphQL generated types
-export * from './generated/graphql.js';
-
+export * from "./generated/graphql.js";
 
 // Permission types with orgId (for internal use, since GraphQL doesn't have orgId)
 export type UserPermissionWithOrgId = {
@@ -13,7 +12,7 @@ export type UserPermissionWithOrgId = {
 
 export type RolePermissionWithOrgId = {
   roleId: string;
-  orgId: string;  
+  orgId: string;
   resourceId: string;
   action: string;
   createdAt: Date;
@@ -92,7 +91,6 @@ export type RolePermissionDbRow = {
   created_at: Date;
 };
 
-
 // Domain-specific types that bridge database and GraphQL
 
 // Join table type
@@ -133,4 +131,3 @@ export type UserWithProperties = {
   properties: Record<string, unknown>;
   roleIds: string[];
 };
-

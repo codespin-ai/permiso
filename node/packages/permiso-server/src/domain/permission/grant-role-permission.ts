@@ -1,22 +1,20 @@
-import { createLogger } from '@codespin/permiso-logger';
-import { Result } from '@codespin/permiso-core';
-import type { Database } from '@codespin/permiso-db';
+import { createLogger } from "@codespin/permiso-logger";
+import { Result } from "@codespin/permiso-core";
+import type { Database } from "@codespin/permiso-db";
 import type {
   RolePermissionWithOrgId,
-  RolePermissionDbRow
-} from '../../types.js';
-import {
-  mapRolePermissionFromDb
-} from '../../mappers.js';
+  RolePermissionDbRow,
+} from "../../types.js";
+import { mapRolePermissionFromDb } from "../../mappers.js";
 
-const logger = createLogger('permiso-server:permissions');
+const logger = createLogger("permiso-server:permissions");
 
 export async function grantRolePermission(
   db: Database,
   orgId: string,
   roleId: string,
   resourceId: string,
-  action: string
+  action: string,
 ): Promise<Result<RolePermissionWithOrgId>> {
   try {
     const row = await db.one<RolePermissionDbRow>(
@@ -24,12 +22,18 @@ export async function grantRolePermission(
        VALUES ($(roleId), $(orgId), $(resourceId), $(action)) 
        ON CONFLICT (role_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
-      { roleId, orgId, resourceId, action }
+      { roleId, orgId, resourceId, action },
     );
 
     return { success: true, data: mapRolePermissionFromDb(row) };
   } catch (error) {
-    logger.error('Failed to grant role permission', { error, orgId, roleId, resourceId, action });
+    logger.error("Failed to grant role permission", {
+      error,
+      orgId,
+      roleId,
+      resourceId,
+      action,
+    });
     return { success: false, error: error as Error };
   }
 }

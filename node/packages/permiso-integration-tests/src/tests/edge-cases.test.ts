@@ -1,13 +1,13 @@
-import { expect } from 'chai';
-import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../index.js';
+import { expect } from "chai";
+import { gql } from "@apollo/client/core/index.js";
+import { testDb, client } from "../index.js";
 
-describe('Edge Cases and Error Scenarios', () => {
+describe("Edge Cases and Error Scenarios", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
   });
 
-  describe('Resource Pattern Matching', () => {
+  describe("Resource Pattern Matching", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -19,7 +19,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create test user
@@ -33,15 +33,15 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(userMutation, {
         input: {
-          id: 'test-user',
-          orgId: 'test-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|12345'
-        }
+          id: "test-user",
+          orgId: "test-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|12345",
+        },
       });
     });
 
-    it('should handle complex resource patterns with multiple wildcards', async () => {
+    it("should handle complex resource patterns with multiple wildcards", async () => {
       // Create resources with complex patterns
       const resourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -53,26 +53,26 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/api/*/users/*',
-          orgId: 'test-org',
-          name: 'Multi-wildcard Resource'
-        }
+          id: "/api/*/users/*",
+          orgId: "test-org",
+          name: "Multi-wildcard Resource",
+        },
       });
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/*/data/*',
-          orgId: 'test-org',
-          name: 'Data Resource Pattern'
-        }
+          id: "/*/data/*",
+          orgId: "test-org",
+          name: "Data Resource Pattern",
+        },
       });
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/*',
-          orgId: 'test-org',
-          name: 'Root Wildcard'
-        }
+          id: "/*",
+          orgId: "test-org",
+          name: "Root Wildcard",
+        },
       });
 
       // Grant permissions on these resources
@@ -86,35 +86,43 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(grantMutation, {
         input: {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/api/*/users/*',
-          action: 'read'
-        }
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/api/*/users/*",
+          action: "read",
+        },
       });
 
       await client.mutate(grantMutation, {
         input: {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/*/data/*',
-          action: 'write'
-        }
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/*/data/*",
+          action: "write",
+        },
       });
 
       await client.mutate(grantMutation, {
         input: {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/*',
-          action: 'list'
-        }
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/*",
+          action: "list",
+        },
       });
 
       // Test pattern matching
       const query = gql`
-        query GetEffectivePermissions($orgId: ID!, $userId: ID!, $resourceId: String!) {
-          effectivePermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
+        query GetEffectivePermissions(
+          $orgId: ID!
+          $userId: ID!
+          $resourceId: String!
+        ) {
+          effectivePermissions(
+            orgId: $orgId
+            userId: $userId
+            resourceId: $resourceId
+          ) {
             resourceId
             action
           }
@@ -123,30 +131,30 @@ describe('Edge Cases and Error Scenarios', () => {
 
       // Should match /api/*/users/*
       let result = await client.query(query, {
-        orgId: 'test-org',
-        userId: 'test-user',
-        resourceId: '/api/v1/users/123'
+        orgId: "test-org",
+        userId: "test-user",
+        resourceId: "/api/v1/users/123",
       });
 
       let permissions = result.data?.effectivePermissions;
       expect(permissions).to.have.length.at.least(2); // Should match both /api/*/users/* and /*
       const actions = permissions.map((p: any) => p.action);
-      expect(actions).to.include.members(['read', 'list']);
+      expect(actions).to.include.members(["read", "list"]);
 
       // Should match /*/data/*
       result = await client.query(query, {
-        orgId: 'test-org',
-        userId: 'test-user',
-        resourceId: '/europe/data/sensitive'
+        orgId: "test-org",
+        userId: "test-user",
+        resourceId: "/europe/data/sensitive",
       });
 
       permissions = result.data?.effectivePermissions;
       expect(permissions).to.have.length.at.least(2); // Should match both /*/data/* and /*
       const actions2 = permissions.map((p: any) => p.action);
-      expect(actions2).to.include.members(['write', 'list']);
+      expect(actions2).to.include.members(["write", "list"]);
     });
 
-    it('should handle edge cases in resource IDs', async () => {
+    it("should handle edge cases in resource IDs", async () => {
       const resourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -157,26 +165,26 @@ describe('Edge Cases and Error Scenarios', () => {
 
       // Create resources with special characters
       const specialResources = [
-        '/api/users/:id',
-        '/api/users/{id}',
-        '/api/users/[id]',
-        '/api/users/$id',
-        '/api/users/@username',
-        '/api/users/#tag',
-        '/api/users/user%20name',
-        '/api/users/user+name',
-        '/api/users/user.name',
-        '/api/users/user-name',
-        '/api/users/user_name'
+        "/api/users/:id",
+        "/api/users/{id}",
+        "/api/users/[id]",
+        "/api/users/$id",
+        "/api/users/@username",
+        "/api/users/#tag",
+        "/api/users/user%20name",
+        "/api/users/user+name",
+        "/api/users/user.name",
+        "/api/users/user-name",
+        "/api/users/user_name",
       ];
 
       for (const resourceId of specialResources) {
         const result = await client.mutate(resourceMutation, {
           input: {
             id: resourceId,
-            orgId: 'test-org',
-            name: `Resource: ${resourceId}`
-          }
+            orgId: "test-org",
+            name: `Resource: ${resourceId}`,
+          },
         });
 
         expect(result.data?.createResource?.id).to.equal(resourceId);
@@ -193,13 +201,13 @@ describe('Edge Cases and Error Scenarios', () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: 'test-org' });
+      const result = await client.query(query, { orgId: "test-org" });
       const ids = result.data?.resources?.nodes.map((r: any) => r.id);
       expect(ids).to.include.members(specialResources);
     });
   });
 
-  describe('Permission Queries', () => {
+  describe("Permission Queries", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -211,7 +219,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create test user
@@ -225,11 +233,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(userMutation, {
         input: {
-          id: 'test-user',
-          orgId: 'test-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|12345'
-        }
+          id: "test-user",
+          orgId: "test-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|12345",
+        },
       });
 
       // Create role
@@ -243,10 +251,10 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(roleMutation, {
         input: {
-          id: 'test-role',
-          orgId: 'test-org',
-          name: 'Test Role'
-        }
+          id: "test-role",
+          orgId: "test-org",
+          name: "Test Role",
+        },
       });
 
       // Create resources
@@ -260,23 +268,23 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/api/users/*',
-          orgId: 'test-org',
-          name: 'Users API'
-        }
+          id: "/api/users/*",
+          orgId: "test-org",
+          name: "Users API",
+        },
       });
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/api/posts/*',
-          orgId: 'test-org',
-          name: 'Posts API'
-        }
+          id: "/api/posts/*",
+          orgId: "test-org",
+          name: "Posts API",
+        },
       });
     });
 
-    describe('hasPermission query', () => {
-      it('should return true when user has direct permission', async () => {
+    describe("hasPermission query", () => {
+      it("should return true when user has direct permission", async () => {
         // Grant permission
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -288,48 +296,68 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "read",
+          },
         });
 
         // Check permission
         const query = gql`
-          query HasPermission($orgId: ID!, $userId: ID!, $resourceId: String!, $action: String!) {
-            hasPermission(orgId: $orgId, userId: $userId, resourceId: $resourceId, action: $action)
+          query HasPermission(
+            $orgId: ID!
+            $userId: ID!
+            $resourceId: String!
+            $action: String!
+          ) {
+            hasPermission(
+              orgId: $orgId
+              userId: $userId
+              resourceId: $resourceId
+              action: $action
+            )
           }
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/api/users/123',
-          action: 'read'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/api/users/123",
+          action: "read",
         });
 
         expect(result.data?.hasPermission).to.be.true;
       });
 
-      it('should return false when user lacks permission', async () => {
+      it("should return false when user lacks permission", async () => {
         const query = gql`
-          query HasPermission($orgId: ID!, $userId: ID!, $resourceId: String!, $action: String!) {
-            hasPermission(orgId: $orgId, userId: $userId, resourceId: $resourceId, action: $action)
+          query HasPermission(
+            $orgId: ID!
+            $userId: ID!
+            $resourceId: String!
+            $action: String!
+          ) {
+            hasPermission(
+              orgId: $orgId
+              userId: $userId
+              resourceId: $resourceId
+              action: $action
+            )
           }
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/api/users/123',
-          action: 'delete'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/api/users/123",
+          action: "delete",
         });
 
         expect(result.data?.hasPermission).to.be.false;
       });
 
-      it('should return true when user has permission through role', async () => {
+      it("should return true when user has permission through role", async () => {
         // Grant permission to role
         const grantRoleMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -341,11 +369,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantRoleMutation, {
           input: {
-            orgId: 'test-org',
-            roleId: 'test-role',
-            resourceId: '/api/posts/*',
-            action: 'write'
-          }
+            orgId: "test-org",
+            roleId: "test-role",
+            resourceId: "/api/posts/*",
+            action: "write",
+          },
         });
 
         // Assign role to user
@@ -358,31 +386,41 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         await client.mutate(assignMutation, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          roleId: 'test-role'
+          orgId: "test-org",
+          userId: "test-user",
+          roleId: "test-role",
         });
 
         // Check permission
         const query = gql`
-          query HasPermission($orgId: ID!, $userId: ID!, $resourceId: String!, $action: String!) {
-            hasPermission(orgId: $orgId, userId: $userId, resourceId: $resourceId, action: $action)
+          query HasPermission(
+            $orgId: ID!
+            $userId: ID!
+            $resourceId: String!
+            $action: String!
+          ) {
+            hasPermission(
+              orgId: $orgId
+              userId: $userId
+              resourceId: $resourceId
+              action: $action
+            )
           }
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/api/posts/456',
-          action: 'write'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/api/posts/456",
+          action: "write",
         });
 
         expect(result.data?.hasPermission).to.be.true;
       });
     });
 
-    describe('userPermissions query', () => {
-      it('should list all user permissions', async () => {
+    describe("userPermissions query", () => {
+      it("should list all user permissions", async () => {
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -394,29 +432,29 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'write'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "write",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/posts/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/posts/*",
+            action: "read",
+          },
         });
 
         // Query all permissions
@@ -431,14 +469,14 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user'
+          orgId: "test-org",
+          userId: "test-user",
         });
 
         expect(result.data?.userPermissions).to.have.lengthOf(3);
       });
 
-      it('should filter user permissions by resource', async () => {
+      it("should filter user permissions by resource", async () => {
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -450,26 +488,34 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/posts/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/posts/*",
+            action: "read",
+          },
         });
 
         // Query filtered permissions
         const query = gql`
-          query GetUserPermissions($orgId: ID!, $userId: ID!, $resourceId: String) {
-            userPermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
+          query GetUserPermissions(
+            $orgId: ID!
+            $userId: ID!
+            $resourceId: String
+          ) {
+            userPermissions(
+              orgId: $orgId
+              userId: $userId
+              resourceId: $resourceId
+            ) {
               resourceId
               action
             }
@@ -477,16 +523,18 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceId: '/api/users/*'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceId: "/api/users/*",
         });
 
         expect(result.data?.userPermissions).to.have.lengthOf(1);
-        expect(result.data?.userPermissions[0].resourceId).to.equal('/api/users/*');
+        expect(result.data?.userPermissions[0].resourceId).to.equal(
+          "/api/users/*",
+        );
       });
 
-      it('should filter user permissions by action', async () => {
+      it("should filter user permissions by action", async () => {
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -498,20 +546,20 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/users/*',
-            action: 'write'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/users/*",
+            action: "write",
+          },
         });
 
         // Query filtered permissions
@@ -525,18 +573,18 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          action: 'read'
+          orgId: "test-org",
+          userId: "test-user",
+          action: "read",
         });
 
         expect(result.data?.userPermissions).to.have.lengthOf(1);
-        expect(result.data?.userPermissions[0].action).to.equal('read');
+        expect(result.data?.userPermissions[0].action).to.equal("read");
       });
     });
 
-    describe('rolePermissions query', () => {
-      it('should list all role permissions', async () => {
+    describe("rolePermissions query", () => {
+      it("should list all role permissions", async () => {
         // Grant multiple permissions to role
         const grantMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -548,20 +596,20 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            roleId: 'test-role',
-            resourceId: '/api/users/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            roleId: "test-role",
+            resourceId: "/api/users/*",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            roleId: 'test-role',
-            resourceId: '/api/posts/*',
-            action: 'write'
-          }
+            orgId: "test-org",
+            roleId: "test-role",
+            resourceId: "/api/posts/*",
+            action: "write",
+          },
         });
 
         // Query all permissions
@@ -576,15 +624,15 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          roleId: 'test-role'
+          orgId: "test-org",
+          roleId: "test-role",
         });
 
         expect(result.data?.rolePermissions).to.have.lengthOf(2);
       });
     });
 
-    describe('effectivePermissionsByPrefix query', () => {
+    describe("effectivePermissionsByPrefix query", () => {
       beforeEach(async () => {
         // Create multiple resources
         const resourceMutation = gql`
@@ -597,26 +645,26 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/v1/users',
-            orgId: 'test-org',
-            name: 'V1 Users'
-          }
+            id: "/api/v1/users",
+            orgId: "test-org",
+            name: "V1 Users",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/v2/users',
-            orgId: 'test-org',
-            name: 'V2 Users'
-          }
+            id: "/api/v2/users",
+            orgId: "test-org",
+            name: "V2 Users",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/v1/posts',
-            orgId: 'test-org',
-            name: 'V1 Posts'
-          }
+            id: "/api/v1/posts",
+            orgId: "test-org",
+            name: "V1 Posts",
+          },
         });
 
         // Grant permissions
@@ -630,44 +678,44 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/v1/users',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/v1/users",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/v2/users',
-            action: 'read'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/v2/users",
+            action: "read",
+          },
         });
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/v1/posts',
-            action: 'write'
-          }
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/v1/posts",
+            action: "write",
+          },
         });
       });
 
-      it('should return permissions matching the prefix', async () => {
+      it("should return permissions matching the prefix", async () => {
         const query = gql`
           query GetEffectivePermissionsByPrefix(
-            $orgId: ID!, 
-            $userId: ID!, 
-            $resourceIdPrefix: String!, 
+            $orgId: ID!
+            $userId: ID!
+            $resourceIdPrefix: String!
             $action: String
           ) {
             effectivePermissionsByPrefix(
-              orgId: $orgId, 
-              userId: $userId, 
-              resourceIdPrefix: $resourceIdPrefix, 
+              orgId: $orgId
+              userId: $userId
+              resourceIdPrefix: $resourceIdPrefix
               action: $action
             ) {
               resourceId
@@ -679,28 +727,33 @@ describe('Edge Cases and Error Scenarios', () => {
 
         // Get all permissions under /api/v1/
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceIdPrefix: '/api/v1/'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceIdPrefix: "/api/v1/",
         });
 
         expect(result.data?.effectivePermissionsByPrefix).to.have.lengthOf(2);
-        const resourceIds = result.data?.effectivePermissionsByPrefix.map((p: any) => p.resourceId);
-        expect(resourceIds).to.include.members(['/api/v1/users', '/api/v1/posts']);
+        const resourceIds = result.data?.effectivePermissionsByPrefix.map(
+          (p: any) => p.resourceId,
+        );
+        expect(resourceIds).to.include.members([
+          "/api/v1/users",
+          "/api/v1/posts",
+        ]);
       });
 
-      it('should filter by action when provided', async () => {
+      it("should filter by action when provided", async () => {
         const query = gql`
           query GetEffectivePermissionsByPrefix(
-            $orgId: ID!, 
-            $userId: ID!, 
-            $resourceIdPrefix: String!, 
+            $orgId: ID!
+            $userId: ID!
+            $resourceIdPrefix: String!
             $action: String
           ) {
             effectivePermissionsByPrefix(
-              orgId: $orgId, 
-              userId: $userId, 
-              resourceIdPrefix: $resourceIdPrefix, 
+              orgId: $orgId
+              userId: $userId
+              resourceIdPrefix: $resourceIdPrefix
               action: $action
             ) {
               resourceId
@@ -710,20 +763,25 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          resourceIdPrefix: '/api/',
-          action: 'read'
+          orgId: "test-org",
+          userId: "test-user",
+          resourceIdPrefix: "/api/",
+          action: "read",
         });
 
         expect(result.data?.effectivePermissionsByPrefix).to.have.lengthOf(2);
-        const resourceIds = result.data?.effectivePermissionsByPrefix.map((p: any) => p.resourceId);
-        expect(resourceIds).to.include.members(['/api/v1/users', '/api/v2/users']);
+        const resourceIds = result.data?.effectivePermissionsByPrefix.map(
+          (p: any) => p.resourceId,
+        );
+        expect(resourceIds).to.include.members([
+          "/api/v1/users",
+          "/api/v2/users",
+        ]);
       });
     });
   });
 
-  describe('User Role Operations', () => {
+  describe("User Role Operations", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -735,7 +793,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create test user
@@ -749,11 +807,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(userMutation, {
         input: {
-          id: 'test-user',
-          orgId: 'test-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|12345'
-        }
+          id: "test-user",
+          orgId: "test-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|12345",
+        },
       });
 
       // Create roles
@@ -767,23 +825,23 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(roleMutation, {
         input: {
-          id: 'admin',
-          orgId: 'test-org',
-          name: 'Administrator'
-        }
+          id: "admin",
+          orgId: "test-org",
+          name: "Administrator",
+        },
       });
 
       await client.mutate(roleMutation, {
         input: {
-          id: 'editor',
-          orgId: 'test-org',
-          name: 'Editor'
-        }
+          id: "editor",
+          orgId: "test-org",
+          name: "Editor",
+        },
       });
     });
 
-    describe('unassignUserRole mutation', () => {
-      it('should remove a role from a user', async () => {
+    describe("unassignUserRole mutation", () => {
+      it("should remove a role from a user", async () => {
         // First assign roles
         const assignMutation = gql`
           mutation AssignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
@@ -797,15 +855,15 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         await client.mutate(assignMutation, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          roleId: 'admin'
+          orgId: "test-org",
+          userId: "test-user",
+          roleId: "admin",
         });
 
         await client.mutate(assignMutation, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          roleId: 'editor'
+          orgId: "test-org",
+          userId: "test-user",
+          roleId: "editor",
         });
 
         // Verify user has both roles
@@ -820,8 +878,8 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         let result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user'
+          orgId: "test-org",
+          userId: "test-user",
         });
 
         expect(result.data?.user?.roles).to.have.lengthOf(2);
@@ -839,25 +897,29 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const unassignResult = await client.mutate(unassignMutation, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          roleId: 'admin'
+          orgId: "test-org",
+          userId: "test-user",
+          roleId: "admin",
         });
 
-        expect(unassignResult.data?.unassignUserRole?.roles).to.have.lengthOf(1);
-        expect(unassignResult.data?.unassignUserRole?.roles[0].id).to.equal('editor');
+        expect(unassignResult.data?.unassignUserRole?.roles).to.have.lengthOf(
+          1,
+        );
+        expect(unassignResult.data?.unassignUserRole?.roles[0].id).to.equal(
+          "editor",
+        );
 
         // Verify role was removed
         result = await client.query(query, {
-          orgId: 'test-org',
-          userId: 'test-user'
+          orgId: "test-org",
+          userId: "test-user",
         });
 
         expect(result.data?.user?.roles).to.have.lengthOf(1);
-        expect(result.data?.user?.roles[0].id).to.equal('editor');
+        expect(result.data?.user?.roles[0].id).to.equal("editor");
       });
 
-      it('should handle unassigning a role that user does not have', async () => {
+      it("should handle unassigning a role that user does not have", async () => {
         const unassignMutation = gql`
           mutation UnassignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
             unassignUserRole(orgId: $orgId, userId: $userId, roleId: $roleId) {
@@ -871,9 +933,9 @@ describe('Edge Cases and Error Scenarios', () => {
 
         // Should not throw error, just return user unchanged
         const result = await client.mutate(unassignMutation, {
-          orgId: 'test-org',
-          userId: 'test-user',
-          roleId: 'admin'
+          orgId: "test-org",
+          userId: "test-user",
+          roleId: "admin",
         });
 
         expect(result.data?.unassignUserRole?.roles).to.deep.equal([]);
@@ -881,7 +943,7 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Role Permission Operations', () => {
+  describe("Role Permission Operations", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -893,7 +955,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create role
@@ -907,10 +969,10 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(roleMutation, {
         input: {
-          id: 'test-role',
-          orgId: 'test-org',
-          name: 'Test Role'
-        }
+          id: "test-role",
+          orgId: "test-org",
+          name: "Test Role",
+        },
       });
 
       // Create resource
@@ -924,15 +986,15 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/api/data/*',
-          orgId: 'test-org',
-          name: 'Data API'
-        }
+          id: "/api/data/*",
+          orgId: "test-org",
+          name: "Data API",
+        },
       });
     });
 
-    describe('revokeRolePermission mutation', () => {
-      it('should revoke a permission from a role', async () => {
+    describe("revokeRolePermission mutation", () => {
+      it("should revoke a permission from a role", async () => {
         // Grant permission first
         const grantMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -946,11 +1008,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            roleId: 'test-role',
-            resourceId: '/api/data/*',
-            action: 'read'
-          }
+            orgId: "test-org",
+            roleId: "test-role",
+            resourceId: "/api/data/*",
+            action: "read",
+          },
         });
 
         // Verify permission exists
@@ -964,49 +1026,69 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         let result = await client.query(query, {
-          orgId: 'test-org',
-          roleId: 'test-role'
+          orgId: "test-org",
+          roleId: "test-role",
         });
 
         expect(result.data?.rolePermissions).to.have.lengthOf(1);
 
         // Revoke permission
         const revokeMutation = gql`
-          mutation RevokeRolePermission($orgId: ID!, $roleId: ID!, $resourceId: ID!, $action: String!) {
-            revokeRolePermission(orgId: $orgId, roleId: $roleId, resourceId: $resourceId, action: $action)
+          mutation RevokeRolePermission(
+            $orgId: ID!
+            $roleId: ID!
+            $resourceId: ID!
+            $action: String!
+          ) {
+            revokeRolePermission(
+              orgId: $orgId
+              roleId: $roleId
+              resourceId: $resourceId
+              action: $action
+            )
           }
         `;
 
         const revokeResult = await client.mutate(revokeMutation, {
-          orgId: 'test-org',
-          roleId: 'test-role',
-          resourceId: '/api/data/*',
-          action: 'read'
+          orgId: "test-org",
+          roleId: "test-role",
+          resourceId: "/api/data/*",
+          action: "read",
         });
 
         expect(revokeResult.data?.revokeRolePermission).to.be.true;
 
         // Verify permission is gone
         result = await client.query(query, {
-          orgId: 'test-org',
-          roleId: 'test-role'
+          orgId: "test-org",
+          roleId: "test-role",
         });
 
         expect(result.data?.rolePermissions).to.deep.equal([]);
       });
 
-      it('should return false when revoking non-existent permission', async () => {
+      it("should return false when revoking non-existent permission", async () => {
         const revokeMutation = gql`
-          mutation RevokeRolePermission($orgId: ID!, $roleId: ID!, $resourceId: ID!, $action: String!) {
-            revokeRolePermission(orgId: $orgId, roleId: $roleId, resourceId: $resourceId, action: $action)
+          mutation RevokeRolePermission(
+            $orgId: ID!
+            $roleId: ID!
+            $resourceId: ID!
+            $action: String!
+          ) {
+            revokeRolePermission(
+              orgId: $orgId
+              roleId: $roleId
+              resourceId: $resourceId
+              action: $action
+            )
           }
         `;
 
         const result = await client.mutate(revokeMutation, {
-          orgId: 'test-org',
-          roleId: 'test-role',
-          resourceId: '/api/data/*',
-          action: 'write'
+          orgId: "test-org",
+          roleId: "test-role",
+          resourceId: "/api/data/*",
+          action: "write",
         });
 
         expect(result.data?.revokeRolePermission).to.be.false;
@@ -1014,7 +1096,7 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Resource Prefix Operations', () => {
+  describe("Resource Prefix Operations", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -1026,7 +1108,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create multiple resources
@@ -1039,30 +1121,30 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       const resources = [
-        '/api/v1/users',
-        '/api/v1/users/*',
-        '/api/v1/posts',
-        '/api/v1/posts/*',
-        '/api/v2/users',
-        '/api/v2/users/*',
-        '/admin/settings',
-        '/admin/users',
-        '/public/docs'
+        "/api/v1/users",
+        "/api/v1/users/*",
+        "/api/v1/posts",
+        "/api/v1/posts/*",
+        "/api/v2/users",
+        "/api/v2/users/*",
+        "/admin/settings",
+        "/admin/users",
+        "/public/docs",
       ];
 
       for (const resourceId of resources) {
         await client.mutate(resourceMutation, {
           input: {
             id: resourceId,
-            orgId: 'test-org',
-            name: `Resource: ${resourceId}`
-          }
+            orgId: "test-org",
+            name: `Resource: ${resourceId}`,
+          },
         });
       }
     });
 
-    describe('resourcesByIdPrefix query', () => {
-      it('should return resources matching exact prefix', async () => {
+    describe("resourcesByIdPrefix query", () => {
+      it("should return resources matching exact prefix", async () => {
         const query = gql`
           query GetResourcesByIdPrefix($orgId: ID!, $idPrefix: String!) {
             resourcesByIdPrefix(orgId: $orgId, idPrefix: $idPrefix) {
@@ -1073,21 +1155,21 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          idPrefix: '/api/v1/'
+          orgId: "test-org",
+          idPrefix: "/api/v1/",
         });
 
         expect(result.data?.resourcesByIdPrefix).to.have.lengthOf(4);
         const ids = result.data?.resourcesByIdPrefix.map((r: any) => r.id);
         expect(ids).to.include.members([
-          '/api/v1/users',
-          '/api/v1/users/*',
-          '/api/v1/posts',
-          '/api/v1/posts/*'
+          "/api/v1/users",
+          "/api/v1/users/*",
+          "/api/v1/posts",
+          "/api/v1/posts/*",
         ]);
       });
 
-      it('should handle prefix without trailing slash', async () => {
+      it("should handle prefix without trailing slash", async () => {
         const query = gql`
           query GetResourcesByIdPrefix($orgId: ID!, $idPrefix: String!) {
             resourcesByIdPrefix(orgId: $orgId, idPrefix: $idPrefix) {
@@ -1097,16 +1179,16 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          idPrefix: '/admin'
+          orgId: "test-org",
+          idPrefix: "/admin",
         });
 
         expect(result.data?.resourcesByIdPrefix).to.have.lengthOf(2);
         const ids = result.data?.resourcesByIdPrefix.map((r: any) => r.id);
-        expect(ids).to.include.members(['/admin/settings', '/admin/users']);
+        expect(ids).to.include.members(["/admin/settings", "/admin/users"]);
       });
 
-      it('should return empty array for non-matching prefix', async () => {
+      it("should return empty array for non-matching prefix", async () => {
         const query = gql`
           query GetResourcesByIdPrefix($orgId: ID!, $idPrefix: String!) {
             resourcesByIdPrefix(orgId: $orgId, idPrefix: $idPrefix) {
@@ -1116,8 +1198,8 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          idPrefix: '/nonexistent/'
+          orgId: "test-org",
+          idPrefix: "/nonexistent/",
         });
 
         expect(result.data?.resourcesByIdPrefix).to.deep.equal([]);
@@ -1125,9 +1207,9 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Cascading Deletes', () => {
-    describe('deleteOrganization with safetyKey', () => {
-      it('should delete organization with correct safety key', async () => {
+  describe("Cascading Deletes", () => {
+    describe("deleteOrganization with safetyKey", () => {
+      it("should delete organization with correct safety key", async () => {
         // Create organization
         const createMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -1139,9 +1221,9 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(createMutation, {
           input: {
-            id: 'org-to-delete',
-            name: 'Organization to Delete'
-          }
+            id: "org-to-delete",
+            name: "Organization to Delete",
+          },
         });
 
         // Delete with safety key (which is the org ID)
@@ -1152,8 +1234,8 @@ describe('Edge Cases and Error Scenarios', () => {
         `;
 
         const result = await client.mutate(deleteMutation, {
-          id: 'org-to-delete',
-          safetyKey: 'org-to-delete'
+          id: "org-to-delete",
+          safetyKey: "org-to-delete",
         });
 
         expect(result.data?.deleteOrganization).to.be.true;
@@ -1167,11 +1249,11 @@ describe('Edge Cases and Error Scenarios', () => {
           }
         `;
 
-        const queryResult = await client.query(query, { id: 'org-to-delete' });
+        const queryResult = await client.query(query, { id: "org-to-delete" });
         expect(queryResult.data?.organization).to.be.null;
       });
 
-      it('should not delete organization with incorrect safety key', async () => {
+      it("should not delete organization with incorrect safety key", async () => {
         // Create organization
         const createMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -1183,9 +1265,9 @@ describe('Edge Cases and Error Scenarios', () => {
 
         await client.mutate(createMutation, {
           input: {
-            id: 'org-safe',
-            name: 'Safe Organization'
-          }
+            id: "org-safe",
+            name: "Safe Organization",
+          },
         });
 
         // Try to delete with wrong safety key
@@ -1199,25 +1281,27 @@ describe('Edge Cases and Error Scenarios', () => {
         let result;
         try {
           result = await client.mutate(deleteMutation, {
-            id: 'org-safe',
-            safetyKey: 'wrong-key'
+            id: "org-safe",
+            safetyKey: "wrong-key",
           });
           // Check if there are errors in the result
           if (result.errors && result.errors.length > 0) {
             errorOccurred = true;
             const errorMessage = result.errors[0].message;
-            expect(errorMessage.toLowerCase()).to.include('safety key');
+            expect(errorMessage.toLowerCase()).to.include("safety key");
           }
         } catch (error: any) {
           errorOccurred = true;
           // Handle different error structures from Apollo Client
-          const errorMessage = error.graphQLErrors?.[0]?.message || 
-                             error.message || 
-                             '';
-          expect(errorMessage.toLowerCase()).to.include('safety key');
+          const errorMessage =
+            error.graphQLErrors?.[0]?.message || error.message || "";
+          expect(errorMessage.toLowerCase()).to.include("safety key");
         }
-        
-        expect(errorOccurred, 'Expected mutation to return an error for invalid safety key').to.be.true;
+
+        expect(
+          errorOccurred,
+          "Expected mutation to return an error for invalid safety key",
+        ).to.be.true;
 
         // Verify organization still exists
         const query = gql`
@@ -1228,12 +1312,12 @@ describe('Edge Cases and Error Scenarios', () => {
           }
         `;
 
-        const queryResult = await client.query(query, { id: 'org-safe' });
-        expect(queryResult.data?.organization?.id).to.equal('org-safe');
+        const queryResult = await client.query(query, { id: "org-safe" });
+        expect(queryResult.data?.organization?.id).to.equal("org-safe");
       });
     });
 
-    it('should cascade delete all related entities when deleting organization', async () => {
+    it("should cascade delete all related entities when deleting organization", async () => {
       // Create a complete organization setup
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -1245,10 +1329,10 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(orgMutation, {
         input: {
-          id: 'cascade-org',
-          name: 'Cascade Test Org',
-          properties: [{ name: 'tier', value: 'premium' }]
-        }
+          id: "cascade-org",
+          name: "Cascade Test Org",
+          properties: [{ name: "tier", value: "premium" }],
+        },
       });
 
       // Create user
@@ -1262,11 +1346,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(userMutation, {
         input: {
-          id: 'cascade-user',
-          orgId: 'cascade-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|cascade'
-        }
+          id: "cascade-user",
+          orgId: "cascade-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|cascade",
+        },
       });
 
       // Create role
@@ -1280,10 +1364,10 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(roleMutation, {
         input: {
-          id: 'cascade-role',
-          orgId: 'cascade-org',
-          name: 'Cascade Role'
-        }
+          id: "cascade-role",
+          orgId: "cascade-org",
+          name: "Cascade Role",
+        },
       });
 
       // Create resource
@@ -1297,10 +1381,10 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/cascade/*',
-          orgId: 'cascade-org',
-          name: 'Cascade Resource'
-        }
+          id: "/cascade/*",
+          orgId: "cascade-org",
+          name: "Cascade Resource",
+        },
       });
 
       // Assign role to user
@@ -1313,9 +1397,9 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(assignMutation, {
-        orgId: 'cascade-org',
-        userId: 'cascade-user',
-        roleId: 'cascade-role'
+        orgId: "cascade-org",
+        userId: "cascade-user",
+        roleId: "cascade-role",
       });
 
       // Grant permissions
@@ -1329,11 +1413,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(grantUserMutation, {
         input: {
-          orgId: 'cascade-org',
-          userId: 'cascade-user',
-          resourceId: '/cascade/*',
-          action: 'read'
-        }
+          orgId: "cascade-org",
+          userId: "cascade-user",
+          resourceId: "/cascade/*",
+          action: "read",
+        },
       });
 
       const grantRoleMutation = gql`
@@ -1346,11 +1430,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(grantRoleMutation, {
         input: {
-          orgId: 'cascade-org',
-          roleId: 'cascade-role',
-          resourceId: '/cascade/*',
-          action: 'write'
-        }
+          orgId: "cascade-org",
+          roleId: "cascade-role",
+          resourceId: "/cascade/*",
+          action: "write",
+        },
       });
 
       // Delete organization
@@ -1360,7 +1444,7 @@ describe('Edge Cases and Error Scenarios', () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, { id: 'cascade-org' });
+      const result = await client.mutate(deleteMutation, { id: "cascade-org" });
       expect(result.data?.deleteOrganization).to.be.true;
 
       // Verify everything is gone
@@ -1376,16 +1460,19 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       try {
-        await client.query(usersQuery, { orgId: 'cascade-org' });
+        await client.query(usersQuery, { orgId: "cascade-org" });
       } catch {
         // Expected - org doesn't exist
       }
 
       // Check by identity to ensure user is completely gone
       const identityQuery = gql`
-        query GetUsersByIdentity($identityProvider: String!, $identityProviderUserId: String!) {
+        query GetUsersByIdentity(
+          $identityProvider: String!
+          $identityProviderUserId: String!
+        ) {
           usersByIdentity(
-            identityProvider: $identityProvider,
+            identityProvider: $identityProvider
             identityProviderUserId: $identityProviderUserId
           ) {
             id
@@ -1394,15 +1481,15 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       const identityResult = await client.query(identityQuery, {
-        identityProvider: 'auth0',
-        identityProviderUserId: 'auth0|cascade'
+        identityProvider: "auth0",
+        identityProviderUserId: "auth0|cascade",
       });
 
       expect(identityResult.data?.usersByIdentity).to.deep.equal([]);
     });
   });
 
-  describe('Empty String and Boundary Cases', () => {
+  describe("Empty String and Boundary Cases", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -1414,11 +1501,11 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
     });
 
-    it('should handle empty string values in various fields', async () => {
+    it("should handle empty string values in various fields", async () => {
       // Try to create organization with empty description
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -1432,13 +1519,13 @@ describe('Edge Cases and Error Scenarios', () => {
 
       const orgResult = await client.mutate(orgMutation, {
         input: {
-          id: 'empty-desc-org',
-          name: 'Org with Empty Desc',
-          description: ''
-        }
+          id: "empty-desc-org",
+          name: "Org with Empty Desc",
+          description: "",
+        },
       });
 
-      expect(orgResult.data?.createOrganization?.description).to.equal('');
+      expect(orgResult.data?.createOrganization?.description).to.equal("");
 
       // Create user with empty property value
       const userMutation = gql`
@@ -1455,22 +1542,22 @@ describe('Edge Cases and Error Scenarios', () => {
 
       const userResult = await client.mutate(userMutation, {
         input: {
-          id: 'empty-property-user',
-          orgId: 'test-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|empty',
-          properties: [
-            { name: 'notes', value: '' }
-          ]
-        }
+          id: "empty-property-user",
+          orgId: "test-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|empty",
+          properties: [{ name: "notes", value: "" }],
+        },
       });
 
-      const notesProperty = userResult.data?.createUser?.properties.find((p: any) => p.name === 'notes');
-      expect(notesProperty?.value).to.equal('');
+      const notesProperty = userResult.data?.createUser?.properties.find(
+        (p: any) => p.name === "notes",
+      );
+      expect(notesProperty?.value).to.equal("");
     });
 
-    it('should handle very long strings', async () => {
-      const longString = 'a'.repeat(10000); // 10k character string
+    it("should handle very long strings", async () => {
+      const longString = "a".repeat(10000); // 10k character string
 
       // Create organization with long description
       const orgMutation = gql`
@@ -1484,23 +1571,25 @@ describe('Edge Cases and Error Scenarios', () => {
 
       const result = await client.mutate(orgMutation, {
         input: {
-          id: 'long-desc-org',
-          name: 'Long Description Org',
-          description: longString
-        }
+          id: "long-desc-org",
+          name: "Long Description Org",
+          description: longString,
+        },
       });
 
-      expect(result.data?.createOrganization?.description).to.have.lengthOf(10000);
+      expect(result.data?.createOrganization?.description).to.have.lengthOf(
+        10000,
+      );
     });
 
-    it('should handle special characters in IDs', async () => {
+    it("should handle special characters in IDs", async () => {
       // IDs with dots, dashes, underscores
       const specialIds = [
-        'org.with.dots',
-        'org-with-dashes',
-        'org_with_underscores',
-        'org123numeric',
-        'ORG-UPPERCASE'
+        "org.with.dots",
+        "org-with-dashes",
+        "org_with_underscores",
+        "org123numeric",
+        "ORG-UPPERCASE",
       ];
 
       const orgMutation = gql`
@@ -1515,8 +1604,8 @@ describe('Edge Cases and Error Scenarios', () => {
         const result = await client.mutate(orgMutation, {
           input: {
             id: id,
-            name: `Org ${id}`
-          }
+            name: `Org ${id}`,
+          },
         });
 
         expect(result.data?.createOrganization?.id).to.equal(id);
@@ -1524,7 +1613,7 @@ describe('Edge Cases and Error Scenarios', () => {
     });
   });
 
-  describe('Concurrent Operations', () => {
+  describe("Concurrent Operations", () => {
     beforeEach(async () => {
       // Create test organization
       const orgMutation = gql`
@@ -1536,7 +1625,7 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       await client.mutate(orgMutation, {
-        input: { id: 'test-org', name: 'Test Organization' }
+        input: { id: "test-org", name: "Test Organization" },
       });
 
       // Create test user
@@ -1550,11 +1639,11 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(userMutation, {
         input: {
-          id: 'test-user',
-          orgId: 'test-org',
-          identityProvider: 'auth0',
-          identityProviderUserId: 'auth0|12345'
-        }
+          id: "test-user",
+          orgId: "test-org",
+          identityProvider: "auth0",
+          identityProviderUserId: "auth0|12345",
+        },
       });
 
       // Create resource
@@ -1568,14 +1657,14 @@ describe('Edge Cases and Error Scenarios', () => {
 
       await client.mutate(resourceMutation, {
         input: {
-          id: '/api/concurrent',
-          orgId: 'test-org',
-          name: 'Concurrent Resource'
-        }
+          id: "/api/concurrent",
+          orgId: "test-org",
+          name: "Concurrent Resource",
+        },
       });
     });
 
-    it('should handle concurrent permission grants', async () => {
+    it("should handle concurrent permission grants", async () => {
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {
@@ -1586,46 +1675,58 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       // Grant multiple permissions concurrently
-      const actions = ['read', 'write', 'delete', 'admin'];
-      const promises = actions.map(action =>
+      const actions = ["read", "write", "delete", "admin"];
+      const promises = actions.map((action) =>
         client.mutate(grantMutation, {
           input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/concurrent',
-            action: action
-          }
-        })
+            orgId: "test-org",
+            userId: "test-user",
+            resourceId: "/api/concurrent",
+            action: action,
+          },
+        }),
       );
 
       const results = await Promise.all(promises);
-      
+
       // All should succeed
       results.forEach((result, index) => {
-        expect(result.data?.grantUserPermission?.action).to.equal(actions[index]);
+        expect(result.data?.grantUserPermission?.action).to.equal(
+          actions[index],
+        );
       });
 
       // Verify all permissions were granted
       const query = gql`
-        query GetUserPermissions($orgId: ID!, $userId: ID!, $resourceId: String) {
-          userPermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId) {
+        query GetUserPermissions(
+          $orgId: ID!
+          $userId: ID!
+          $resourceId: String
+        ) {
+          userPermissions(
+            orgId: $orgId
+            userId: $userId
+            resourceId: $resourceId
+          ) {
             action
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: 'test-org',
-        userId: 'test-user',
-        resourceId: '/api/concurrent'
+        orgId: "test-org",
+        userId: "test-user",
+        resourceId: "/api/concurrent",
       });
 
       expect(queryResult.data?.userPermissions).to.have.lengthOf(4);
-      const grantedActions = queryResult.data?.userPermissions.map((p: any) => p.action);
+      const grantedActions = queryResult.data?.userPermissions.map(
+        (p: any) => p.action,
+      );
       expect(grantedActions).to.include.members(actions);
     });
 
-    it('should handle duplicate permission grants gracefully', async () => {
+    it("should handle duplicate permission grants gracefully", async () => {
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {
@@ -1637,38 +1738,50 @@ describe('Edge Cases and Error Scenarios', () => {
       `;
 
       // Grant same permission multiple times concurrently
-      const promises = Array(5).fill(null).map(() =>
-        client.mutate(grantMutation, {
-          input: {
-            orgId: 'test-org',
-            userId: 'test-user',
-            resourceId: '/api/concurrent',
-            action: 'read'
-          }
-        })
-      );
+      const promises = Array(5)
+        .fill(null)
+        .map(() =>
+          client.mutate(grantMutation, {
+            input: {
+              orgId: "test-org",
+              userId: "test-user",
+              resourceId: "/api/concurrent",
+              action: "read",
+            },
+          }),
+        );
 
       const results = await Promise.all(promises);
-      
+
       // All should succeed (idempotent operation)
-      results.forEach(result => {
-        expect(result.data?.grantUserPermission?.action).to.equal('read');
+      results.forEach((result) => {
+        expect(result.data?.grantUserPermission?.action).to.equal("read");
       });
 
       // Verify only one permission exists
       const query = gql`
-        query GetUserPermissions($orgId: ID!, $userId: ID!, $resourceId: String, $action: String) {
-          userPermissions(orgId: $orgId, userId: $userId, resourceId: $resourceId, action: $action) {
+        query GetUserPermissions(
+          $orgId: ID!
+          $userId: ID!
+          $resourceId: String
+          $action: String
+        ) {
+          userPermissions(
+            orgId: $orgId
+            userId: $userId
+            resourceId: $resourceId
+            action: $action
+          ) {
             action
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: 'test-org',
-        userId: 'test-user',
-        resourceId: '/api/concurrent',
-        action: 'read'
+        orgId: "test-org",
+        userId: "test-user",
+        resourceId: "/api/concurrent",
+        action: "read",
       });
 
       expect(queryResult.data?.userPermissions).to.have.lengthOf(1);

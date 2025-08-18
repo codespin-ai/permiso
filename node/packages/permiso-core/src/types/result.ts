@@ -1,6 +1,6 @@
 /**
  * Result<T,E> union type for explicit error handling.
- * 
+ *
  * Instead of throwing exceptions, functions return either a Success<T> or Failure<E>.
  * This makes error handling explicit and type-safe.
  */
@@ -56,7 +56,7 @@ export function unwrap<T, E>(result: Result<T, E>): T {
  */
 export function map<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => U
+  fn: (value: T) => U,
 ): Result<U, E> {
   if (result.success) {
     return success(fn(result.data));
@@ -69,7 +69,7 @@ export function map<T, U, E>(
  */
 export function mapError<T, E, F>(
   result: Result<T, E>,
-  fn: (error: E) => F
+  fn: (error: E) => F,
 ): Result<T, F> {
   if (!result.success) {
     return failure(fn(result.error));
@@ -82,7 +82,7 @@ export function mapError<T, E, F>(
  */
 export async function chain<T, U, E>(
   result: Result<T, E>,
-  fn: (value: T) => Promise<Result<U, E>>
+  fn: (value: T) => Promise<Result<U, E>>,
 ): Promise<Result<U, E>> {
   if (result.success) {
     return fn(result.data);

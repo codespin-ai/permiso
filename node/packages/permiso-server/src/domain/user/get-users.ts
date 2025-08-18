@@ -1,22 +1,16 @@
-import { createLogger } from '@codespin/permiso-logger';
-import { Result } from '@codespin/permiso-core';
-import type { Database } from '@codespin/permiso-db';
-import type {
-  UserDbRow,
-  UserWithProperties,
-  Property
-} from '../../types.js';
+import { createLogger } from "@codespin/permiso-logger";
+import { Result } from "@codespin/permiso-core";
+import type { Database } from "@codespin/permiso-db";
+import type { UserDbRow, UserWithProperties, Property } from "../../types.js";
 import type {
   PropertyFilter,
-  PaginationInput
-} from '../../generated/graphql.js';
-import {
-  mapUserFromDb
-} from '../../mappers.js';
-import { getUserProperties } from './get-user-properties.js';
-import { getUserRoles } from './get-user-roles.js';
+  PaginationInput,
+} from "../../generated/graphql.js";
+import { mapUserFromDb } from "../../mappers.js";
+import { getUserProperties } from "./get-user-properties.js";
+import { getUserRoles } from "./get-user-roles.js";
 
-const logger = createLogger('permiso-server:users');
+const logger = createLogger("permiso-server:users");
 
 export async function getUsers(
   db: Database,
@@ -27,7 +21,7 @@ export async function getUsers(
     identityProvider?: string;
     identityProviderUserId?: string;
   },
-  pagination?: PaginationInput
+  pagination?: PaginationInput,
 ): Promise<Result<UserWithProperties[]>> {
   try {
     let query: string;
@@ -45,31 +39,31 @@ export async function getUsers(
             WHERE org_id = $(orgId)
               AND (name, value) IN (
       `;
-      
+
       const propConditions: string[] = [];
       filters.properties.forEach((prop, index) => {
         propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
         params[`propValue${index}`] = JSON.stringify(prop.value);
       });
-      
-      query += propConditions.join(', ');
+
+      query += propConditions.join(", ");
       query += `)
             GROUP BY parent_id
             HAVING COUNT(DISTINCT name) = $(propCount)
           )`;
       params.propCount = filters.properties.length;
-      
+
       if (filters?.ids && filters.ids.length > 0) {
         query += ` AND u.id = ANY($(userIds))`;
         params.userIds = filters.ids;
       }
-      
+
       if (filters?.identityProvider) {
         query += ` AND u.identity_provider = $(identityProvider)`;
         params.identityProvider = filters.identityProvider;
       }
-      
+
       if (filters?.identityProviderUserId) {
         query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
         params.identityProviderUserId = filters.identityProviderUserId;
@@ -80,17 +74,17 @@ export async function getUsers(
         FROM "user" u
         WHERE u.org_id = $(orgId)
       `;
-      
+
       if (filters?.ids && filters.ids.length > 0) {
         query += ` AND u.id = ANY($(userIds))`;
         params.userIds = filters.ids;
       }
-      
+
       if (filters?.identityProvider) {
         query += ` AND u.identity_provider = $(identityProvider)`;
         params.identityProvider = filters.identityProvider;
       }
-      
+
       if (filters?.identityProviderUserId) {
         query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
         params.identityProviderUserId = filters.identityProviderUserId;
@@ -98,7 +92,7 @@ export async function getUsers(
     }
 
     // Apply sorting - validate and default to ASC if not specified
-    const sortDirection = pagination?.sortDirection === 'DESC' ? 'DESC' : 'ASC';
+    const sortDirection = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
     query += ` ORDER BY u.id ${sortDirection}`;
 
     if (pagination?.limit) {
@@ -118,7 +112,7 @@ export async function getUsers(
       users.map(async (user) => {
         const [propertiesResult, roleIds] = await Promise.all([
           getUserProperties(db, user.orgId, user.id, false),
-          getUserRoles(db, user.orgId, user.id)
+          getUserRoles(db, user.orgId, user.id),
         ]);
 
         if (!propertiesResult.success) {
@@ -128,17 +122,20 @@ export async function getUsers(
         return {
           ...user,
           roleIds: roleIds.success ? roleIds.data : [],
-          properties: propertiesResult.data.reduce((acc: Record<string, unknown>, prop: Property) => {
-            acc[prop.name] = prop.value;
-            return acc;
-          }, {} as Record<string, unknown>)
+          properties: propertiesResult.data.reduce(
+            (acc: Record<string, unknown>, prop: Property) => {
+              acc[prop.name] = prop.value;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          ),
         };
-      })
+      }),
     );
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error('Failed to get users', { error, orgId, filters });
+    logger.error("Failed to get users", { error, orgId, filters });
     return { success: false, error: error as Error };
   }
 }

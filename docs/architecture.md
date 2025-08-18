@@ -7,16 +7,20 @@ Permiso is a comprehensive Role-Based Access Control (RBAC) system designed to p
 ## Core Design Principles
 
 ### 1. Multi-Tenant Isolation
+
 Every entity in Permiso is scoped to an organization, ensuring complete data isolation between tenants.
 
 ### 2. Code Organization
+
 The codebase follows these principles:
+
 - No classes, only pure functions
 - Explicit dependency injection
 - Immutable data structures
 - Result types for error handling
 
 ### 3. Type Safety
+
 - TypeScript with strict mode enabled
 - Database types (DbRow) separate from domain types
 - Explicit type conversions through mapper functions
@@ -57,7 +61,9 @@ The codebase follows these principles:
 ### Core Entities
 
 #### Organization
+
 The top-level tenant entity. All other entities belong to an organization.
+
 ```typescript
 type Organization = {
   id: string;
@@ -66,11 +72,13 @@ type Organization = {
   properties: Property[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 ```
 
 #### User
+
 Represents an authenticated principal within an organization.
+
 ```typescript
 type User = {
   id: string;
@@ -80,11 +88,13 @@ type User = {
   properties: Property[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 ```
 
 #### Role
+
 A named collection of permissions that can be assigned to users.
+
 ```typescript
 type Role = {
   id: string;
@@ -94,25 +104,29 @@ type Role = {
   properties: Property[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 ```
 
 #### Resource
+
 A protected entity with an identifier in path-like format.
+
 ```typescript
 type Resource = {
-  id: string;  // e.g., "/api/users/*" - ID in path-like format
+  id: string; // e.g., "/api/users/*" - ID in path-like format
   orgId: string;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 ```
 
 ### Relationship Tables
 
 #### User-Role Assignment
+
 Links users to roles within an organization.
+
 ```sql
 CREATE TABLE user_role (
   user_id VARCHAR(100),
@@ -122,7 +136,9 @@ CREATE TABLE user_role (
 ```
 
 #### User Permissions
+
 Direct permissions granted to users.
+
 ```sql
 CREATE TABLE user_permission (
   user_id VARCHAR(100),
@@ -133,7 +149,9 @@ CREATE TABLE user_permission (
 ```
 
 #### Role Permissions
+
 Permissions granted to roles.
+
 ```sql
 CREATE TABLE role_permission (
   role_id VARCHAR(100),
@@ -144,15 +162,16 @@ CREATE TABLE role_permission (
 ```
 
 #### Properties
+
 Key-value metadata stored as JSONB that can be attached to organizations, users, and roles.
 
 ```typescript
 type Property = {
   name: string;
-  value: any;  // Stored as JSONB - can be string, number, boolean, object, array, or null
+  value: any; // Stored as JSONB - can be string, number, boolean, object, array, or null
   hidden: boolean;
   createdAt: Date;
-}
+};
 ```
 
 ```sql
@@ -185,6 +204,7 @@ CREATE TABLE role_property (
 ```
 
 **JSONB Advantages:**
+
 - Native JSON operations in PostgreSQL
 - GIN indexes for fast JSON queries
 - Type-safe storage with validation
@@ -202,13 +222,15 @@ CREATE TABLE role_property (
 ### Resource ID Matching
 
 Resource IDs follow a path-like format with wildcard support:
+
 - `/api/users` - Exact match
 - `/api/users/*` - Matches any child path
-- `/api/*/read` - Matches any resource with 'read' suffix
+- `/api/*/read` - Matches any resource with "read" suffix
 
 ### Permission Actions
 
 Common actions include:
+
 - `read` - View resource
 - `write` - Modify resource
 - `delete` - Remove resource
@@ -230,6 +252,7 @@ The schema is organized into logical sections:
 ### Query Design
 
 Queries follow consistent patterns:
+
 - Single entity: `entity(id: ID!): Entity`
 - List entities: `entities(orgId: ID!): [Entity!]!`
 - Relationship queries: `userRoles(orgId: ID!, userId: ID!): [Role!]!`
@@ -237,6 +260,7 @@ Queries follow consistent patterns:
 ### Mutation Design
 
 Mutations follow CRUD patterns:
+
 - Create: `createEntity(input: CreateEntityInput!): Entity!`
 - Update: `updateEntity(id: ID!, input: UpdateEntityInput!): Entity!`
 - Delete: `deleteEntity(id: ID!): Boolean!`
@@ -246,16 +270,17 @@ Mutations follow CRUD patterns:
 ### Result Type Pattern
 
 All operations return a Result type:
+
 ```typescript
 type Result<T, E = Error> =
   | { success: true; data: T }
-  | { success: false; error: E }
+  | { success: false; error: E };
 ```
 
 ### Error Categories
 
 1. **Validation Errors**: Invalid input data
-2. **Not Found Errors**: Entity doesn't exist
+2. **Not Found Errors**: Entity doesn"t exist
 3. **Permission Errors**: Insufficient permissions
 4. **Conflict Errors**: Duplicate keys or constraint violations
 5. **System Errors**: Database or network failures
@@ -270,6 +295,7 @@ type Result<T, E = Error> =
 4. **Query Optimization**: Using JOINs instead of multiple queries
 
 **Property Query Performance:**
+
 ```sql
 -- GIN indexes enable fast JSONB queries
 CREATE INDEX idx_org_property_value ON organization_property USING gin(value);
@@ -279,13 +305,14 @@ CREATE INDEX idx_role_property_value ON role_property USING gin(value);
 -- Example: Find all users with a specific department
 SELECT u.* FROM "user" u
 JOIN user_property up ON u.id = up.parent_id
-WHERE up.name = 'profile' 
+WHERE up.name = 'profile'
 AND up.value->>'department' = 'engineering';
 ```
 
 ### Caching Strategy
 
 While not yet implemented, the architecture supports:
+
 1. **Permission Cache**: Cache effective permissions with TTL
 2. **Entity Cache**: Cache frequently accessed entities
 3. **Query Result Cache**: Cache expensive query results
@@ -317,12 +344,14 @@ While not yet implemented, the architecture supports:
 The system supports arbitrary metadata through properties stored as JSONB:
 
 **Features:**
+
 - Attach to organizations, users, and roles
 - Store any JSON-compatible data type
 - Hidden flag for sensitive data
 - Unified `parent_id` pattern across all property tables
 
 **Example Use Cases:**
+
 ```typescript
 // Organization settings
 {
@@ -358,12 +387,14 @@ The system supports arbitrary metadata through properties stored as JSONB:
 ### Permission Actions
 
 Actions are strings, allowing applications to define custom actions:
+
 - Standard: read, write, delete
 - Custom: publish, approve, transfer
 
 ### Identity Providers
 
 Support for multiple identity providers:
+
 - Each user has identityProvider and identityProviderUserId
 - Allows integration with any auth system
 
@@ -376,6 +407,7 @@ See [Configuration Documentation](configuration.md) for all environment variable
 ### Scalability
 
 The stateless architecture supports:
+
 - Horizontal scaling of API servers
 - Read replicas for query performance
 - Connection pooling for database efficiency
@@ -383,6 +415,7 @@ The stateless architecture supports:
 ### Monitoring
 
 Recommended monitoring points:
+
 - GraphQL query performance
 - Database connection pool metrics
 - Permission check latency

@@ -1,20 +1,20 @@
-import { graphqlRequest } from '../http-client.js';
-import { Result, PermisoConfig } from '../types.js';
+import { graphqlRequest } from "../http-client.js";
+import { Result, PermisoConfig } from "../types.js";
 import type {
   Organization,
   CreateOrganizationInput,
   UpdateOrganizationInput,
   OrganizationFilter,
   PaginationInput,
-  Property
-} from '../generated/types.js';
+  Property,
+} from "../generated/types.js";
 
 /**
  * Get an organization by ID
  */
 export async function getOrganization(
   config: PermisoConfig,
-  id: string
+  id: string,
 ): Promise<Result<Organization | null, Error>> {
   const query = `
     query GetOrganization($id: ID!) {
@@ -34,16 +34,14 @@ export async function getOrganization(
     }
   `;
 
-  const result = await graphqlRequest<{ organization: Organization | null }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { id },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ organization: Organization | null }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { id },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -60,17 +58,22 @@ export async function listOrganizations(
   options?: {
     filter?: OrganizationFilter;
     pagination?: PaginationInput;
-  }
-): Promise<Result<{
-  nodes: Organization[];
-  totalCount: number;
-  pageInfo: {
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    startCursor?: string;
-    endCursor?: string;
-  };
-}, Error>> {
+  },
+): Promise<
+  Result<
+    {
+      nodes: Organization[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    },
+    Error
+  >
+> {
   const query = `
     query ListOrganizations($filter: OrganizationFilter, $pagination: PaginationInput) {
       organizations(filter: $filter, pagination: $pagination) {
@@ -98,19 +101,17 @@ export async function listOrganizations(
     }
   `;
 
-  const result = await graphqlRequest<{ organizations: any }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: {
-        filter: options?.filter,
-        pagination: options?.pagination
-      },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ organizations: any }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: {
+      filter: options?.filter,
+      pagination: options?.pagination,
+    },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -124,7 +125,7 @@ export async function listOrganizations(
  */
 export async function getOrganizationsByIds(
   config: PermisoConfig,
-  ids: string[]
+  ids: string[],
 ): Promise<Result<Organization[], Error>> {
   const query = `
     query GetOrganizationsByIds($ids: [ID!]!) {
@@ -144,16 +145,14 @@ export async function getOrganizationsByIds(
     }
   `;
 
-  const result = await graphqlRequest<{ organizationsByIds: Organization[] }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { ids },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ organizationsByIds: Organization[] }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { ids },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -167,7 +166,7 @@ export async function getOrganizationsByIds(
  */
 export async function createOrganization(
   config: PermisoConfig,
-  input: CreateOrganizationInput
+  input: CreateOrganizationInput,
 ): Promise<Result<Organization, Error>> {
   const mutation = `
     mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -187,16 +186,14 @@ export async function createOrganization(
     }
   `;
 
-  const result = await graphqlRequest<{ createOrganization: Organization }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ createOrganization: Organization }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -211,7 +208,7 @@ export async function createOrganization(
 export async function updateOrganization(
   config: PermisoConfig,
   id: string,
-  input: UpdateOrganizationInput
+  input: UpdateOrganizationInput,
 ): Promise<Result<Organization, Error>> {
   const mutation = `
     mutation UpdateOrganization($id: ID!, $input: UpdateOrganizationInput!) {
@@ -231,16 +228,14 @@ export async function updateOrganization(
     }
   `;
 
-  const result = await graphqlRequest<{ updateOrganization: Organization }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { id, input },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ updateOrganization: Organization }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { id, input },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -255,7 +250,7 @@ export async function updateOrganization(
 export async function deleteOrganization(
   config: PermisoConfig,
   id: string,
-  safetyKey?: string
+  safetyKey?: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation DeleteOrganization($id: ID!, $safetyKey: String) {
@@ -263,16 +258,14 @@ export async function deleteOrganization(
     }
   `;
 
-  const result = await graphqlRequest<{ deleteOrganization: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { id, safetyKey },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ deleteOrganization: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { id, safetyKey },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -287,7 +280,7 @@ export async function deleteOrganization(
 export async function getOrganizationProperty(
   config: PermisoConfig,
   orgId: string,
-  propertyName: string
+  propertyName: string,
 ): Promise<Result<Property | null, Error>> {
   const query = `
     query GetOrganizationProperty($orgId: ID!, $propertyName: String!) {
@@ -300,16 +293,16 @@ export async function getOrganizationProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ organizationProperty: Property | null }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query,
-      variables: { orgId, propertyName },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{
+    organizationProperty: Property | null;
+  }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query,
+    variables: { orgId, propertyName },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -326,7 +319,7 @@ export async function setOrganizationProperty(
   orgId: string,
   name: string,
   value: unknown,
-  hidden?: boolean
+  hidden?: boolean,
 ): Promise<Result<Property, Error>> {
   const mutation = `
     mutation SetOrganizationProperty(
@@ -349,16 +342,14 @@ export async function setOrganizationProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ setOrganizationProperty: Property }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, name, value, hidden },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ setOrganizationProperty: Property }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, name, value, hidden },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;
@@ -373,7 +364,7 @@ export async function setOrganizationProperty(
 export async function deleteOrganizationProperty(
   config: PermisoConfig,
   orgId: string,
-  name: string
+  name: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation DeleteOrganizationProperty($orgId: ID!, $name: String!) {
@@ -381,16 +372,14 @@ export async function deleteOrganizationProperty(
     }
   `;
 
-  const result = await graphqlRequest<{ deleteOrganizationProperty: boolean }>(
-    {
-      endpoint: `${config.endpoint}/graphql`,
-      query: mutation,
-      variables: { orgId, name },
-      headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined,
-      timeout: config.timeout,
-      logger: config.logger
-    }
-  );
+  const result = await graphqlRequest<{ deleteOrganizationProperty: boolean }>({
+    endpoint: `${config.endpoint}/graphql`,
+    query: mutation,
+    variables: { orgId, name },
+    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    timeout: config.timeout,
+    logger: config.logger,
+  });
 
   if (!result.success) {
     return result;

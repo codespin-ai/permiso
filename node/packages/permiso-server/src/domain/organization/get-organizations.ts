@@ -1,20 +1,18 @@
-import { createLogger } from '@codespin/permiso-logger';
-import { Result } from '@codespin/permiso-core';
-import type { Database } from '@codespin/permiso-db';
+import { createLogger } from "@codespin/permiso-logger";
+import { Result } from "@codespin/permiso-core";
+import type { Database } from "@codespin/permiso-db";
 import type {
   OrganizationDbRow,
-  OrganizationWithProperties
-} from '../../types.js';
+  OrganizationWithProperties,
+} from "../../types.js";
 import type {
   PropertyFilter,
-  PaginationInput
-} from '../../generated/graphql.js';
-import {
-  mapOrganizationFromDb
-} from '../../mappers.js';
-import { getOrganizationProperties } from './get-organization-properties.js';
+  PaginationInput,
+} from "../../generated/graphql.js";
+import { mapOrganizationFromDb } from "../../mappers.js";
+import { getOrganizationProperties } from "./get-organization-properties.js";
 
-const logger = createLogger('permiso-server:organizations');
+const logger = createLogger("permiso-server:organizations");
 
 export async function getOrganizations(
   db: Database,
@@ -22,7 +20,7 @@ export async function getOrganizations(
     ids?: string[];
     properties?: PropertyFilter[];
   },
-  pagination?: PaginationInput
+  pagination?: PaginationInput,
 ): Promise<Result<OrganizationWithProperties[]>> {
   try {
     let query: string;
@@ -38,21 +36,21 @@ export async function getOrganizations(
           FROM organization_property
           WHERE (name, value) IN (
       `;
-      
+
       const propConditions: string[] = [];
       filters.properties.forEach((prop, index) => {
         propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
         params[`propValue${index}`] = JSON.stringify(prop.value);
       });
-      
-      query += propConditions.join(', ');
+
+      query += propConditions.join(", ");
       query += `)
           GROUP BY parent_id
           HAVING COUNT(DISTINCT name) = $(propCount)
         )`;
       params.propCount = filters.properties.length;
-      
+
       if (filters?.ids && filters.ids.length > 0) {
         query += ` AND o.id = ANY($(ids))`;
         params.ids = filters.ids;
@@ -62,7 +60,7 @@ export async function getOrganizations(
         SELECT DISTINCT o.* 
         FROM organization o
       `;
-      
+
       if (filters?.ids && filters.ids.length > 0) {
         query += ` WHERE o.id = ANY($(ids))`;
         params.ids = filters.ids;
@@ -70,7 +68,7 @@ export async function getOrganizations(
     }
 
     // Apply sorting - validate and default to ASC if not specified
-    const sortDirection = pagination?.sortDirection === 'DESC' ? 'DESC' : 'ASC';
+    const sortDirection = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
     query += ` ORDER BY o.id ${sortDirection}`;
 
     if (pagination?.limit) {
@@ -95,17 +93,20 @@ export async function getOrganizations(
         const properties = propsResult.data;
         return {
           ...org,
-          properties: properties.reduce((acc, prop) => {
-            acc[prop.name] = prop.value;
-            return acc;
-          }, {} as Record<string, unknown>)
+          properties: properties.reduce(
+            (acc, prop) => {
+              acc[prop.name] = prop.value;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          ),
         };
-      })
+      }),
     );
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error('Failed to get organizations', { error, filters });
+    logger.error("Failed to get organizations", { error, filters });
     return { success: false, error: error as Error };
   }
 }

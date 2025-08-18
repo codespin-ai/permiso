@@ -1,6 +1,6 @@
 /**
  * Test logger that respects VERBOSE_TESTS environment variable
- * 
+ *
  * By default, tests run silently. Set VERBOSE_TESTS=true to see all logs.
  */
 
@@ -11,7 +11,7 @@ export type Logger = {
   error(...args: unknown[]): void;
 };
 
-const isVerbose = process.env.VERBOSE_TESTS === 'true';
+const isVerbose = process.env.VERBOSE_TESTS === "true";
 
 export const testLogger: Logger = {
   debug: isVerbose ? console.debug : () => {},

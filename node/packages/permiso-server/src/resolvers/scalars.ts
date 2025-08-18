@@ -1,8 +1,9 @@
-import { GraphQLScalarType, Kind } from 'graphql';
+import { GraphQLScalarType, Kind } from "graphql";
 
 export const JSONScalar = new GraphQLScalarType({
-  name: 'JSON',
-  description: 'The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).',
+  name: "JSON",
+  description:
+    "The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).",
   serialize(value) {
     return value; // value sent to the client
   },
@@ -37,7 +38,7 @@ export const JSONScalar = new GraphQLScalarType({
       default:
         return undefined;
     }
-  }
+  },
 });
 
 function parseLiteral(ast: any): any {
@@ -67,5 +68,5 @@ function parseLiteral(ast: any): any {
 }
 
 export const scalarResolvers = {
-  JSON: JSONScalar
+  JSON: JSONScalar,
 };

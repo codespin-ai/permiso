@@ -1,24 +1,17 @@
-import { createLogger } from '@codespin/permiso-logger';
-import { Result } from '@codespin/permiso-core';
-import type { Database } from '@codespin/permiso-db';
-import type {
-  User,
-  UserDbRow
-} from '../../types.js';
-import type {
-  UpdateUserInput
-} from '../../generated/graphql.js';
-import {
-  mapUserFromDb
-} from '../../mappers.js';
+import { createLogger } from "@codespin/permiso-logger";
+import { Result } from "@codespin/permiso-core";
+import type { Database } from "@codespin/permiso-db";
+import type { User, UserDbRow } from "../../types.js";
+import type { UpdateUserInput } from "../../generated/graphql.js";
+import { mapUserFromDb } from "../../mappers.js";
 
-const logger = createLogger('permiso-server:users');
+const logger = createLogger("permiso-server:users");
 
 export async function updateUser(
   db: Database,
   orgId: string,
   userId: string,
-  input: UpdateUserInput
+  input: UpdateUserInput,
 ): Promise<Result<User>> {
   try {
     const updates: string[] = [];
@@ -38,7 +31,7 @@ export async function updateUser(
 
     const query = `
       UPDATE "user" 
-      SET ${updates.join(', ')}
+      SET ${updates.join(", ")}
       WHERE id = $(userId) AND org_id = $(orgId)
       RETURNING *
     `;
@@ -46,7 +39,7 @@ export async function updateUser(
     const row = await db.one<UserDbRow>(query, params);
     return { success: true, data: mapUserFromDb(row) };
   } catch (error) {
-    logger.error('Failed to update user', { error, orgId, userId, input });
+    logger.error("Failed to update user", { error, orgId, userId, input });
     return { success: false, error: error as Error };
   }
 }

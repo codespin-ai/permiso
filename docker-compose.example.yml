@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Example Docker Compose for running Permiso with PostgreSQL
 # Copy this file to docker-compose.yml and adjust as needed
@@ -9,7 +9,7 @@ services:
     container_name: permiso-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword  # Change this!
+      POSTGRES_PASSWORD: mysecretpassword # Change this!
       POSTGRES_DB: permiso
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -35,15 +35,15 @@ services:
       PERMISO_DB_PORT: 5432
       PERMISO_DB_NAME: permiso
       PERMISO_DB_USER: postgres
-      PERMISO_DB_PASSWORD: mysecretpassword  # Match postgres password
-      
+      PERMISO_DB_PASSWORD: mysecretpassword # Match postgres password
+
       # Enable automatic migrations (great for development/testing)
       PERMISO_AUTO_MIGRATE: "true"
-      
+
       # Server configuration
       PERMISO_SERVER_PORT: 5001
       LOG_LEVEL: info
-      
+
       # API Key authentication (optional - uncomment to enable)
       # PERMISO_API_KEY: your-secure-api-key-here
       # PERMISO_API_KEY_ENABLED: "true"

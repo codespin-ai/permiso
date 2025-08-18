@@ -8,35 +8,35 @@ Permiso uses environment variables for configuration. All variables are optional
 
 ### Database Configuration
 
-| Variable              | Description                     | Default     |
-| --------------------- | ------------------------------- | ----------- |
-| `PERMISO_DB_HOST`     | PostgreSQL host                 | `localhost` |
-| `PERMISO_DB_PORT`     | PostgreSQL port                 | `5432`      |
-| `PERMISO_DB_NAME`     | Database name                   | `permiso`   |
-| `PERMISO_DB_USER`     | Database user                   | `postgres`  |
-| `PERMISO_DB_PASSWORD` | Database password               | `postgres`  |
+| Variable              | Description       | Default     |
+| --------------------- | ----------------- | ----------- |
+| `PERMISO_DB_HOST`     | PostgreSQL host   | `localhost` |
+| `PERMISO_DB_PORT`     | PostgreSQL port   | `5432`      |
+| `PERMISO_DB_NAME`     | Database name     | `permiso`   |
+| `PERMISO_DB_USER`     | Database user     | `postgres`  |
+| `PERMISO_DB_PASSWORD` | Database password | `postgres`  |
 
 ### Server Configuration
 
-| Variable              | Description                     | Default     |
-| --------------------- | ------------------------------- | ----------- |
-| `PERMISO_SERVER_PORT` | GraphQL server port             | `5001`      |
-| `PERMISO_LOG_LEVEL`   | Logging level (debug/info/warn/error) | `info` |
+| Variable              | Description                           | Default |
+| --------------------- | ------------------------------------- | ------- |
+| `PERMISO_SERVER_PORT` | GraphQL server port                   | `5001`  |
+| `PERMISO_LOG_LEVEL`   | Logging level (debug/info/warn/error) | `info`  |
 
 ### Authentication Configuration
 
-| Variable                   | Description                        | Default     |
-| -------------------------- | ---------------------------------- | ----------- |
-| `PERMISO_API_KEY`          | API key for authentication        | (none)      |
-| `PERMISO_API_KEY_ENABLED`  | Enable API key authentication     | `false`     |
+| Variable                  | Description                   | Default |
+| ------------------------- | ----------------------------- | ------- |
+| `PERMISO_API_KEY`         | API key for authentication    | (none)  |
+| `PERMISO_API_KEY_ENABLED` | Enable API key authentication | `false` |
 
 **Note**: Setting `PERMISO_API_KEY` automatically enables API key authentication.
 
 ### Docker-Specific Configuration
 
-| Variable                | Description                          | Default     |
-| ----------------------- | ------------------------------------ | ----------- |
-| `PERMISO_AUTO_MIGRATE` | Auto-run database migrations on startup | `false`  |
+| Variable               | Description                             | Default |
+| ---------------------- | --------------------------------------- | ------- |
+| `PERMISO_AUTO_MIGRATE` | Auto-run database migrations on startup | `false` |
 
 ## Configuration Examples
 
@@ -119,7 +119,7 @@ services:
       - PERMISO_DB_USER=postgres
       - PERMISO_DB_PASSWORD=postgres
     env_file:
-      - .env  # Optional: load from .env file
+      - .env # Optional: load from .env file
 ```
 
 ## Configuration Validation

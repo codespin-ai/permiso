@@ -1,14 +1,14 @@
-import { expect } from 'chai';
-import { gql } from '@apollo/client/core/index.js';
-import { testDb, client } from '../index.js';
+import { expect } from "chai";
+import { gql } from "@apollo/client/core/index.js";
+import { testDb, client } from "../index.js";
 
-describe('Pagination and Filtering', () => {
+describe("Pagination and Filtering", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
   });
 
-  describe('Pagination', () => {
-    describe('organizations pagination', () => {
+  describe("Pagination", () => {
+    describe("organizations pagination", () => {
       beforeEach(async () => {
         // Create multiple organizations
         const mutation = gql`
@@ -22,18 +22,18 @@ describe('Pagination and Filtering', () => {
         for (let i = 1; i <= 10; i++) {
           await client.mutate(mutation, {
             input: {
-              id: `org-${i.toString().padStart(2, '0')}`,
+              id: `org-${i.toString().padStart(2, "0")}`,
               name: `Organization ${i}`,
               properties: [
-                { name: 'tier', value: i <= 5 ? 'free' : 'premium' },
-                { name: 'size', value: i * 10 }
-              ]
-            }
+                { name: "tier", value: i <= 5 ? "free" : "premium" },
+                { name: "size", value: i * 10 },
+              ],
+            },
           });
         }
       });
 
-      it('should paginate organizations with limit', async () => {
+      it("should paginate organizations with limit", async () => {
         const query = gql`
           query ListOrganizations($pagination: PaginationInput) {
             organizations(pagination: $pagination) {
@@ -51,16 +51,17 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          pagination: { limit: 3 }
+          pagination: { limit: 3 },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(3);
         expect(result.data?.organizations?.totalCount).to.equal(10);
         expect(result.data?.organizations?.pageInfo?.hasNextPage).to.be.true;
-        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be.false;
+        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be
+          .false;
       });
 
-      it('should paginate organizations with offset and limit', async () => {
+      it("should paginate organizations with offset and limit", async () => {
         const query = gql`
           query ListOrganizations($pagination: PaginationInput) {
             organizations(pagination: $pagination) {
@@ -77,20 +78,21 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          pagination: { offset: 5, limit: 3 }
+          pagination: { offset: 5, limit: 3 },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(3);
         expect(result.data?.organizations?.totalCount).to.equal(10);
         expect(result.data?.organizations?.pageInfo?.hasNextPage).to.be.true;
-        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be.true;
-        
+        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be
+          .true;
+
         // Verify we got the right organizations
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.deep.equal(['org-06', 'org-07', 'org-08']);
+        expect(ids).to.deep.equal(["org-06", "org-07", "org-08"]);
       });
 
-      it('should handle last page correctly', async () => {
+      it("should handle last page correctly", async () => {
         const query = gql`
           query ListOrganizations($pagination: PaginationInput) {
             organizations(pagination: $pagination) {
@@ -106,16 +108,17 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          pagination: { offset: 8, limit: 5 }
+          pagination: { offset: 8, limit: 5 },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(2); // Only 2 remaining
         expect(result.data?.organizations?.pageInfo?.hasNextPage).to.be.false;
-        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be.true;
+        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be
+          .true;
       });
     });
 
-    describe('users pagination', () => {
+    describe("users pagination", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -127,7 +130,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create multiple users
@@ -142,20 +145,24 @@ describe('Pagination and Filtering', () => {
         for (let i = 1; i <= 15; i++) {
           await client.mutate(userMutation, {
             input: {
-              id: `user-${i.toString().padStart(2, '0')}`,
-              orgId: 'test-org',
-              identityProvider: i % 2 === 0 ? 'google' : 'auth0',
+              id: `user-${i.toString().padStart(2, "0")}`,
+              orgId: "test-org",
+              identityProvider: i % 2 === 0 ? "google" : "auth0",
               identityProviderUserId: `user${i}`,
               properties: [
-                { name: 'department', value: i <= 5 ? 'engineering' : i <= 10 ? 'sales' : 'marketing' },
-                { name: 'level', value: (i % 3) + 1 }
-              ]
-            }
+                {
+                  name: "department",
+                  value:
+                    i <= 5 ? "engineering" : i <= 10 ? "sales" : "marketing",
+                },
+                { name: "level", value: (i % 3) + 1 },
+              ],
+            },
           });
         }
       });
 
-      it('should paginate users within organization', async () => {
+      it("should paginate users within organization", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $pagination: PaginationInput) {
             users(orgId: $orgId, pagination: $pagination) {
@@ -172,8 +179,8 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { offset: 5, limit: 5 }
+          orgId: "test-org",
+          pagination: { offset: 5, limit: 5 },
         });
 
         expect(result.data?.users?.nodes).to.have.lengthOf(5);
@@ -184,8 +191,8 @@ describe('Pagination and Filtering', () => {
     });
   });
 
-  describe('Filtering', () => {
-    describe('organization filtering by properties', () => {
+  describe("Filtering", () => {
+    describe("organization filtering by properties", () => {
       beforeEach(async () => {
         // Create organizations with different properties
         const mutation = gql`
@@ -198,42 +205,42 @@ describe('Pagination and Filtering', () => {
 
         await client.mutate(mutation, {
           input: {
-            id: 'org-free-small',
-            name: 'Free Small Org',
+            id: "org-free-small",
+            name: "Free Small Org",
             properties: [
-              { name: 'tier', value: 'free' },
-              { name: 'size', value: 'small' },
-              { name: 'active', value: true }
-            ]
-          }
+              { name: "tier", value: "free" },
+              { name: "size", value: "small" },
+              { name: "active", value: true },
+            ],
+          },
         });
 
         await client.mutate(mutation, {
           input: {
-            id: 'org-free-large',
-            name: 'Free Large Org',
+            id: "org-free-large",
+            name: "Free Large Org",
             properties: [
-              { name: 'tier', value: 'free' },
-              { name: 'size', value: 'large' },
-              { name: 'active', value: false }
-            ]
-          }
+              { name: "tier", value: "free" },
+              { name: "size", value: "large" },
+              { name: "active", value: false },
+            ],
+          },
         });
 
         await client.mutate(mutation, {
           input: {
-            id: 'org-premium-small',
-            name: 'Premium Small Org',
+            id: "org-premium-small",
+            name: "Premium Small Org",
             properties: [
-              { name: 'tier', value: 'premium' },
-              { name: 'size', value: 'small' },
-              { name: 'active', value: true }
-            ]
-          }
+              { name: "tier", value: "premium" },
+              { name: "size", value: "small" },
+              { name: "active", value: true },
+            ],
+          },
         });
       });
 
-      it('should filter organizations by single property', async () => {
+      it("should filter organizations by single property", async () => {
         const query = gql`
           query ListOrganizations($filter: OrganizationFilter) {
             organizations(filter: $filter) {
@@ -251,17 +258,17 @@ describe('Pagination and Filtering', () => {
 
         const result = await client.query(query, {
           filter: {
-            properties: [{ name: 'tier', value: 'free' }]
-          }
+            properties: [{ name: "tier", value: "free" }],
+          },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.include.members(['org-free-small', 'org-free-large']);
-        expect(ids).to.not.include('org-premium-small');
+        expect(ids).to.include.members(["org-free-small", "org-free-large"]);
+        expect(ids).to.not.include("org-premium-small");
       });
 
-      it('should filter organizations by multiple properties (AND condition)', async () => {
+      it("should filter organizations by multiple properties (AND condition)", async () => {
         const query = gql`
           query ListOrganizations($filter: OrganizationFilter) {
             organizations(filter: $filter) {
@@ -276,17 +283,19 @@ describe('Pagination and Filtering', () => {
         const result = await client.query(query, {
           filter: {
             properties: [
-              { name: 'tier', value: 'free' },
-              { name: 'size', value: 'small' }
-            ]
-          }
+              { name: "tier", value: "free" },
+              { name: "size", value: "small" },
+            ],
+          },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(1);
-        expect(result.data?.organizations?.nodes[0].id).to.equal('org-free-small');
+        expect(result.data?.organizations?.nodes[0].id).to.equal(
+          "org-free-small",
+        );
       });
 
-      it('should filter with boolean property values', async () => {
+      it("should filter with boolean property values", async () => {
         const query = gql`
           query ListOrganizations($filter: OrganizationFilter) {
             organizations(filter: $filter) {
@@ -299,17 +308,17 @@ describe('Pagination and Filtering', () => {
 
         const result = await client.query(query, {
           filter: {
-            properties: [{ name: 'active', value: true }]
-          }
+            properties: [{ name: "active", value: true }],
+          },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.include.members(['org-free-small', 'org-premium-small']);
+        expect(ids).to.include.members(["org-free-small", "org-premium-small"]);
       });
     });
 
-    describe('user filtering', () => {
+    describe("user filtering", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -321,7 +330,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create users with different properties
@@ -335,45 +344,45 @@ describe('Pagination and Filtering', () => {
 
         await client.mutate(userMutation, {
           input: {
-            id: 'user-eng-senior',
-            orgId: 'test-org',
-            identityProvider: 'google',
-            identityProviderUserId: 'google|1',
+            id: "user-eng-senior",
+            orgId: "test-org",
+            identityProvider: "google",
+            identityProviderUserId: "google|1",
             properties: [
-              { name: 'department', value: 'engineering' },
-              { name: 'level', value: 'senior' }
-            ]
-          }
+              { name: "department", value: "engineering" },
+              { name: "level", value: "senior" },
+            ],
+          },
         });
 
         await client.mutate(userMutation, {
           input: {
-            id: 'user-eng-junior',
-            orgId: 'test-org',
-            identityProvider: 'auth0',
-            identityProviderUserId: 'auth0|2',
+            id: "user-eng-junior",
+            orgId: "test-org",
+            identityProvider: "auth0",
+            identityProviderUserId: "auth0|2",
             properties: [
-              { name: 'department', value: 'engineering' },
-              { name: 'level', value: 'junior' }
-            ]
-          }
+              { name: "department", value: "engineering" },
+              { name: "level", value: "junior" },
+            ],
+          },
         });
 
         await client.mutate(userMutation, {
           input: {
-            id: 'user-sales-senior',
-            orgId: 'test-org',
-            identityProvider: 'google',
-            identityProviderUserId: 'google|3',
+            id: "user-sales-senior",
+            orgId: "test-org",
+            identityProvider: "google",
+            identityProviderUserId: "google|3",
             properties: [
-              { name: 'department', value: 'sales' },
-              { name: 'level', value: 'senior' }
-            ]
-          }
+              { name: "department", value: "sales" },
+              { name: "level", value: "senior" },
+            ],
+          },
         });
       });
 
-      it('should filter users by properties', async () => {
+      it("should filter users by properties", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $filter: UserFilter) {
             users(orgId: $orgId, filter: $filter) {
@@ -389,18 +398,18 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            properties: [{ name: 'department', value: 'engineering' }]
-          }
+            properties: [{ name: "department", value: "engineering" }],
+          },
         });
 
         expect(result.data?.users?.nodes).to.have.lengthOf(2);
         const ids = result.data?.users?.nodes.map((u: any) => u.id);
-        expect(ids).to.include.members(['user-eng-senior', 'user-eng-junior']);
+        expect(ids).to.include.members(["user-eng-senior", "user-eng-junior"]);
       });
 
-      it('should filter users by identity provider', async () => {
+      it("should filter users by identity provider", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $filter: UserFilter) {
             users(orgId: $orgId, filter: $filter) {
@@ -413,18 +422,21 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            identityProvider: 'google'
-          }
+            identityProvider: "google",
+          },
         });
 
         expect(result.data?.users?.nodes).to.have.lengthOf(2);
         const ids = result.data?.users?.nodes.map((u: any) => u.id);
-        expect(ids).to.include.members(['user-eng-senior', 'user-sales-senior']);
+        expect(ids).to.include.members([
+          "user-eng-senior",
+          "user-sales-senior",
+        ]);
       });
 
-      it('should filter users by multiple criteria', async () => {
+      it("should filter users by multiple criteria", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $filter: UserFilter) {
             users(orgId: $orgId, filter: $filter) {
@@ -436,20 +448,23 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            identityProvider: 'google',
-            properties: [{ name: 'level', value: 'senior' }]
-          }
+            identityProvider: "google",
+            properties: [{ name: "level", value: "senior" }],
+          },
         });
 
         expect(result.data?.users?.nodes).to.have.lengthOf(2);
         const ids = result.data?.users?.nodes.map((u: any) => u.id);
-        expect(ids).to.include.members(['user-eng-senior', 'user-sales-senior']);
+        expect(ids).to.include.members([
+          "user-eng-senior",
+          "user-sales-senior",
+        ]);
       });
     });
 
-    describe('role filtering', () => {
+    describe("role filtering", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -461,7 +476,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create roles with different properties
@@ -475,42 +490,42 @@ describe('Pagination and Filtering', () => {
 
         await client.mutate(roleMutation, {
           input: {
-            id: 'admin-full',
-            orgId: 'test-org',
-            name: 'Full Admin',
+            id: "admin-full",
+            orgId: "test-org",
+            name: "Full Admin",
             properties: [
-              { name: 'access_level', value: 'full' },
-              { name: 'department', value: 'all' }
-            ]
-          }
+              { name: "access_level", value: "full" },
+              { name: "department", value: "all" },
+            ],
+          },
         });
 
         await client.mutate(roleMutation, {
           input: {
-            id: 'admin-limited',
-            orgId: 'test-org',
-            name: 'Limited Admin',
+            id: "admin-limited",
+            orgId: "test-org",
+            name: "Limited Admin",
             properties: [
-              { name: 'access_level', value: 'limited' },
-              { name: 'department', value: 'engineering' }
-            ]
-          }
+              { name: "access_level", value: "limited" },
+              { name: "department", value: "engineering" },
+            ],
+          },
         });
 
         await client.mutate(roleMutation, {
           input: {
-            id: 'viewer',
-            orgId: 'test-org',
-            name: 'Viewer',
+            id: "viewer",
+            orgId: "test-org",
+            name: "Viewer",
             properties: [
-              { name: 'access_level', value: 'read_only' },
-              { name: 'department', value: 'all' }
-            ]
-          }
+              { name: "access_level", value: "read_only" },
+              { name: "department", value: "all" },
+            ],
+          },
         });
       });
 
-      it('should filter roles by properties', async () => {
+      it("should filter roles by properties", async () => {
         const query = gql`
           query ListRoles($orgId: ID!, $filter: RoleFilter) {
             roles(orgId: $orgId, filter: $filter) {
@@ -523,19 +538,19 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            properties: [{ name: 'department', value: 'all' }]
-          }
+            properties: [{ name: "department", value: "all" }],
+          },
         });
 
         expect(result.data?.roles?.nodes).to.have.lengthOf(2);
         const ids = result.data?.roles?.nodes.map((r: any) => r.id);
-        expect(ids).to.include.members(['admin-full', 'viewer']);
+        expect(ids).to.include.members(["admin-full", "viewer"]);
       });
     });
 
-    describe('resource filtering', () => {
+    describe("resource filtering", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -547,7 +562,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create resources with different ID patterns
@@ -561,46 +576,46 @@ describe('Pagination and Filtering', () => {
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/users',
-            orgId: 'test-org',
-            name: 'Users API'
-          }
+            id: "/api/users",
+            orgId: "test-org",
+            name: "Users API",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/users/*',
-            orgId: 'test-org',
-            name: 'User API Wildcard'
-          }
+            id: "/api/users/*",
+            orgId: "test-org",
+            name: "User API Wildcard",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/posts',
-            orgId: 'test-org',
-            name: 'Posts API'
-          }
+            id: "/api/posts",
+            orgId: "test-org",
+            name: "Posts API",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/api/posts/*',
-            orgId: 'test-org',
-            name: 'Post API Wildcard'
-          }
+            id: "/api/posts/*",
+            orgId: "test-org",
+            name: "Post API Wildcard",
+          },
         });
 
         await client.mutate(resourceMutation, {
           input: {
-            id: '/admin/settings',
-            orgId: 'test-org',
-            name: 'Admin Settings'
-          }
+            id: "/admin/settings",
+            orgId: "test-org",
+            name: "Admin Settings",
+          },
         });
       });
 
-      it('should filter resources by ID prefix', async () => {
+      it("should filter resources by ID prefix", async () => {
         const query = gql`
           query ListResources($orgId: ID!, $filter: ResourceFilter) {
             resources(orgId: $orgId, filter: $filter) {
@@ -613,19 +628,24 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            idPrefix: '/api/'
-          }
+            idPrefix: "/api/",
+          },
         });
 
         expect(result.data?.resources?.nodes).to.have.lengthOf(4);
         const ids = result.data?.resources?.nodes.map((r: any) => r.id);
-        expect(ids).to.include.members(['/api/users', '/api/users/*', '/api/posts', '/api/posts/*']);
-        expect(ids).to.not.include('/admin/settings');
+        expect(ids).to.include.members([
+          "/api/users",
+          "/api/users/*",
+          "/api/posts",
+          "/api/posts/*",
+        ]);
+        expect(ids).to.not.include("/admin/settings");
       });
 
-      it('should filter resources by more specific prefix', async () => {
+      it("should filter resources by more specific prefix", async () => {
         const query = gql`
           query ListResources($orgId: ID!, $filter: ResourceFilter) {
             resources(orgId: $orgId, filter: $filter) {
@@ -637,19 +657,19 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
+          orgId: "test-org",
           filter: {
-            idPrefix: '/api/users'
-          }
+            idPrefix: "/api/users",
+          },
         });
 
         expect(result.data?.resources?.nodes).to.have.lengthOf(2);
         const ids = result.data?.resources?.nodes.map((r: any) => r.id);
-        expect(ids).to.include.members(['/api/users', '/api/users/*']);
+        expect(ids).to.include.members(["/api/users", "/api/users/*"]);
       });
     });
 
-    describe('combined pagination and filtering', () => {
+    describe("combined pagination and filtering", () => {
       beforeEach(async () => {
         // Create organizations with properties
         const mutation = gql`
@@ -663,20 +683,23 @@ describe('Pagination and Filtering', () => {
         for (let i = 1; i <= 20; i++) {
           await client.mutate(mutation, {
             input: {
-              id: `org-${i.toString().padStart(2, '0')}`,
+              id: `org-${i.toString().padStart(2, "0")}`,
               name: `Organization ${i}`,
               properties: [
-                { name: 'tier', value: i % 3 === 0 ? 'premium' : 'free' },
-                { name: 'active', value: i % 2 === 0 }
-              ]
-            }
+                { name: "tier", value: i % 3 === 0 ? "premium" : "free" },
+                { name: "active", value: i % 2 === 0 },
+              ],
+            },
           });
         }
       });
 
-      it('should apply both filtering and pagination', async () => {
+      it("should apply both filtering and pagination", async () => {
         const query = gql`
-          query ListOrganizations($filter: OrganizationFilter, $pagination: PaginationInput) {
+          query ListOrganizations(
+            $filter: OrganizationFilter
+            $pagination: PaginationInput
+          ) {
             organizations(filter: $filter, pagination: $pagination) {
               nodes {
                 id
@@ -697,25 +720,26 @@ describe('Pagination and Filtering', () => {
         // Filter for premium tier (should be orgs 3, 6, 9, 12, 15, 18)
         const result = await client.query(query, {
           filter: {
-            properties: [{ name: 'tier', value: 'premium' }]
+            properties: [{ name: "tier", value: "premium" }],
           },
-          pagination: { offset: 2, limit: 2 }
+          pagination: { offset: 2, limit: 2 },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
         expect(result.data?.organizations?.totalCount).to.equal(6); // Total premium orgs
         expect(result.data?.organizations?.pageInfo?.hasNextPage).to.be.true;
-        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be.true;
-        
+        expect(result.data?.organizations?.pageInfo?.hasPreviousPage).to.be
+          .true;
+
         // Should get orgs 9 and 12 (skipping 3 and 6)
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.deep.equal(['org-09', 'org-12']);
+        expect(ids).to.deep.equal(["org-09", "org-12"]);
       });
     });
   });
 
-  describe('Sorting', () => {
-    describe('organizations sorting', () => {
+  describe("Sorting", () => {
+    describe("organizations sorting", () => {
       beforeEach(async () => {
         // Create organizations with specific IDs to test sorting
         const mutation = gql`
@@ -726,18 +750,18 @@ describe('Pagination and Filtering', () => {
           }
         `;
 
-        const orgs = ['org-charlie', 'org-alpha', 'org-delta', 'org-bravo'];
+        const orgs = ["org-charlie", "org-alpha", "org-delta", "org-bravo"];
         for (const orgId of orgs) {
           await client.mutate(mutation, {
             input: {
               id: orgId,
-              name: `Organization ${orgId}`
-            }
+              name: `Organization ${orgId}`,
+            },
           });
         }
       });
 
-      it('should sort organizations by id ASC (default)', async () => {
+      it("should sort organizations by id ASC (default)", async () => {
         const query = gql`
           query ListOrganizations($pagination: PaginationInput) {
             organizations(pagination: $pagination) {
@@ -749,14 +773,19 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          pagination: { limit: 10 }
+          pagination: { limit: 10 },
         });
 
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.deep.equal(['org-alpha', 'org-bravo', 'org-charlie', 'org-delta']);
+        expect(ids).to.deep.equal([
+          "org-alpha",
+          "org-bravo",
+          "org-charlie",
+          "org-delta",
+        ]);
       });
 
-      it('should sort organizations by id DESC', async () => {
+      it("should sort organizations by id DESC", async () => {
         const query = gql`
           query ListOrganizations($pagination: PaginationInput) {
             organizations(pagination: $pagination) {
@@ -768,15 +797,20 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          pagination: { limit: 10, sortDirection: 'DESC' }
+          pagination: { limit: 10, sortDirection: "DESC" },
         });
 
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.deep.equal(['org-delta', 'org-charlie', 'org-bravo', 'org-alpha']);
+        expect(ids).to.deep.equal([
+          "org-delta",
+          "org-charlie",
+          "org-bravo",
+          "org-alpha",
+        ]);
       });
     });
 
-    describe('users sorting', () => {
+    describe("users sorting", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -788,7 +822,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create users with specific IDs to test sorting
@@ -800,20 +834,20 @@ describe('Pagination and Filtering', () => {
           }
         `;
 
-        const users = ['user-zulu', 'user-alpha', 'user-mike', 'user-bravo'];
+        const users = ["user-zulu", "user-alpha", "user-mike", "user-bravo"];
         for (const userId of users) {
           await client.mutate(userMutation, {
             input: {
               id: userId,
-              orgId: 'test-org',
-              identityProvider: 'auth0',
-              identityProviderUserId: userId
-            }
+              orgId: "test-org",
+              identityProvider: "auth0",
+              identityProviderUserId: userId,
+            },
           });
         }
       });
 
-      it('should sort users by id ASC', async () => {
+      it("should sort users by id ASC", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $pagination: PaginationInput) {
             users(orgId: $orgId, pagination: $pagination) {
@@ -825,15 +859,20 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { limit: 10, sortDirection: 'ASC' }
+          orgId: "test-org",
+          pagination: { limit: 10, sortDirection: "ASC" },
         });
 
         const ids = result.data?.users?.nodes.map((u: any) => u.id);
-        expect(ids).to.deep.equal(['user-alpha', 'user-bravo', 'user-mike', 'user-zulu']);
+        expect(ids).to.deep.equal([
+          "user-alpha",
+          "user-bravo",
+          "user-mike",
+          "user-zulu",
+        ]);
       });
 
-      it('should sort users by id DESC', async () => {
+      it("should sort users by id DESC", async () => {
         const query = gql`
           query ListUsers($orgId: ID!, $pagination: PaginationInput) {
             users(orgId: $orgId, pagination: $pagination) {
@@ -845,16 +884,21 @@ describe('Pagination and Filtering', () => {
         `;
 
         const result = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { limit: 10, sortDirection: 'DESC' }
+          orgId: "test-org",
+          pagination: { limit: 10, sortDirection: "DESC" },
         });
 
         const ids = result.data?.users?.nodes.map((u: any) => u.id);
-        expect(ids).to.deep.equal(['user-zulu', 'user-mike', 'user-bravo', 'user-alpha']);
+        expect(ids).to.deep.equal([
+          "user-zulu",
+          "user-mike",
+          "user-bravo",
+          "user-alpha",
+        ]);
       });
     });
 
-    describe('roles sorting', () => {
+    describe("roles sorting", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -866,7 +910,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create roles with specific IDs to test sorting
@@ -878,19 +922,24 @@ describe('Pagination and Filtering', () => {
           }
         `;
 
-        const roles = ['role-viewer', 'role-admin', 'role-editor', 'role-contributor'];
+        const roles = [
+          "role-viewer",
+          "role-admin",
+          "role-editor",
+          "role-contributor",
+        ];
         for (const roleId of roles) {
           await client.mutate(roleMutation, {
             input: {
               id: roleId,
-              orgId: 'test-org',
-              name: roleId
-            }
+              orgId: "test-org",
+              name: roleId,
+            },
           });
         }
       });
 
-      it('should sort roles by id with pagination', async () => {
+      it("should sort roles by id with pagination", async () => {
         const query = gql`
           query ListRoles($orgId: ID!, $pagination: PaginationInput) {
             roles(orgId: $orgId, pagination: $pagination) {
@@ -903,16 +952,16 @@ describe('Pagination and Filtering', () => {
 
         // Test DESC with limit
         const result = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { limit: 2, sortDirection: 'DESC' }
+          orgId: "test-org",
+          pagination: { limit: 2, sortDirection: "DESC" },
         });
 
         const ids = result.data?.roles?.nodes.map((r: any) => r.id);
-        expect(ids).to.deep.equal(['role-viewer', 'role-editor']);
+        expect(ids).to.deep.equal(["role-viewer", "role-editor"]);
       });
     });
 
-    describe('resources sorting', () => {
+    describe("resources sorting", () => {
       beforeEach(async () => {
         // Create test organization
         const orgMutation = gql`
@@ -924,7 +973,7 @@ describe('Pagination and Filtering', () => {
         `;
 
         await client.mutate(orgMutation, {
-          input: { id: 'test-org', name: 'Test Organization' }
+          input: { id: "test-org", name: "Test Organization" },
         });
 
         // Create resources with specific IDs to test sorting
@@ -936,19 +985,24 @@ describe('Pagination and Filtering', () => {
           }
         `;
 
-        const resources = ['/api/zoo', '/api/aardvark', '/api/monkey', '/api/bear'];
+        const resources = [
+          "/api/zoo",
+          "/api/aardvark",
+          "/api/monkey",
+          "/api/bear",
+        ];
         for (const resourceId of resources) {
           await client.mutate(resourceMutation, {
             input: {
               id: resourceId,
-              orgId: 'test-org',
-              name: resourceId
-            }
+              orgId: "test-org",
+              name: resourceId,
+            },
           });
         }
       });
 
-      it('should sort resources by id ASC and DESC', async () => {
+      it("should sort resources by id ASC and DESC", async () => {
         const query = gql`
           query ListResources($orgId: ID!, $pagination: PaginationInput) {
             resources(orgId: $orgId, pagination: $pagination) {
@@ -961,25 +1015,35 @@ describe('Pagination and Filtering', () => {
 
         // Test ASC
         const ascResult = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { sortDirection: 'ASC' }
+          orgId: "test-org",
+          pagination: { sortDirection: "ASC" },
         });
 
         const ascIds = ascResult.data?.resources?.nodes.map((r: any) => r.id);
-        expect(ascIds).to.deep.equal(['/api/aardvark', '/api/bear', '/api/monkey', '/api/zoo']);
+        expect(ascIds).to.deep.equal([
+          "/api/aardvark",
+          "/api/bear",
+          "/api/monkey",
+          "/api/zoo",
+        ]);
 
         // Test DESC
         const descResult = await client.query(query, {
-          orgId: 'test-org',
-          pagination: { sortDirection: 'DESC' }
+          orgId: "test-org",
+          pagination: { sortDirection: "DESC" },
         });
 
         const descIds = descResult.data?.resources?.nodes.map((r: any) => r.id);
-        expect(descIds).to.deep.equal(['/api/zoo', '/api/monkey', '/api/bear', '/api/aardvark']);
+        expect(descIds).to.deep.equal([
+          "/api/zoo",
+          "/api/monkey",
+          "/api/bear",
+          "/api/aardvark",
+        ]);
       });
     });
 
-    describe('combined sorting, filtering, and pagination', () => {
+    describe("combined sorting, filtering, and pagination", () => {
       beforeEach(async () => {
         // Create organizations with properties
         const mutation = gql`
@@ -991,27 +1055,34 @@ describe('Pagination and Filtering', () => {
         `;
 
         const orgs = [
-          'premium-zulu', 'free-alpha', 'premium-alpha', 'free-zulu',
-          'premium-mike', 'free-mike', 'premium-bravo', 'free-bravo'
+          "premium-zulu",
+          "free-alpha",
+          "premium-alpha",
+          "free-zulu",
+          "premium-mike",
+          "free-mike",
+          "premium-bravo",
+          "free-bravo",
         ];
-        
+
         for (const orgId of orgs) {
-          const tier = orgId.startsWith('premium') ? 'premium' : 'free';
+          const tier = orgId.startsWith("premium") ? "premium" : "free";
           await client.mutate(mutation, {
             input: {
               id: orgId,
               name: `Organization ${orgId}`,
-              properties: [
-                { name: 'tier', value: tier }
-              ]
-            }
+              properties: [{ name: "tier", value: tier }],
+            },
           });
         }
       });
 
-      it('should apply filtering, sorting DESC, and pagination together', async () => {
+      it("should apply filtering, sorting DESC, and pagination together", async () => {
         const query = gql`
-          query ListOrganizations($filter: OrganizationFilter, $pagination: PaginationInput) {
+          query ListOrganizations(
+            $filter: OrganizationFilter
+            $pagination: PaginationInput
+          ) {
             organizations(filter: $filter, pagination: $pagination) {
               nodes {
                 id
@@ -1024,21 +1095,21 @@ describe('Pagination and Filtering', () => {
         // Filter for premium tier, sort DESC, paginate
         const result = await client.query(query, {
           filter: {
-            properties: [{ name: 'tier', value: 'premium' }]
+            properties: [{ name: "tier", value: "premium" }],
           },
-          pagination: { 
-            offset: 1, 
+          pagination: {
+            offset: 1,
             limit: 2,
-            sortDirection: 'DESC'
-          }
+            sortDirection: "DESC",
+          },
         });
 
         expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
         expect(result.data?.organizations?.totalCount).to.equal(4); // Total premium orgs
-        
+
         // Should get premium-mike and premium-bravo (skipping premium-zulu due to offset)
         const ids = result.data?.organizations?.nodes.map((o: any) => o.id);
-        expect(ids).to.deep.equal(['premium-mike', 'premium-bravo']);
+        expect(ids).to.deep.equal(["premium-mike", "premium-bravo"]);
       });
     });
   });
