@@ -1083,6 +1083,7 @@ curl -X POST http://localhost:5001/graphql \
    ```
 
 2. **Middleware Integration**:
+
    ```javascript
    // Express middleware example
    async function checkPermission(req, res, next) {
