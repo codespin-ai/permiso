@@ -8,7 +8,7 @@
     "build": "./build.sh",
     "clean": "./clean.sh",
     "start": "./start.sh",
-    "test": "npm run test:integration:all",
+    "test": "cd node/packages/permiso-integration-tests && npm test && cd ../permiso-client && npm test",
     "migrate:all": "./scripts/db-all.sh migrate:latest",
     "migrate:all:rollback": "./scripts/db-all.sh migrate:rollback",
     "migrate:all:status": "./scripts/db-all.sh migrate:status",
@@ -20,11 +20,9 @@
     "seed:permiso:make": "knex seed:make --knexfile database/permiso/knexfile.js",
     "seed:permiso:run": "knex seed:run --knexfile database/permiso/knexfile.js",
     "db:dump-schema": "./scripts/dump-db-schema.sh",
-    "test:integration:permiso": "cd node/packages/permiso-integration-tests && npm test",
+    "test:grep": "(cd node/packages/permiso-integration-tests && npm run test:grep) ; (cd node/packages/permiso-client && npm run test:grep)",
     "test:integration:grep": "cd node/packages/permiso-integration-tests && npm run test:grep",
-    "test:client": "cd node/packages/permiso-client && npm test",
-    "test:client:grep": "cd node/packages/permiso-client && npm run test:grep",
-    "test:integration:all": "npm run test:integration:permiso && npm run test:client"
+    "test:client:grep": "cd node/packages/permiso-client && npm run test:grep"
   },
   "devDependencies": {
     "@types/chai": "^5.2.2",

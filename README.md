@@ -161,14 +161,12 @@ curl -X POST http://localhost:5001/graphql \
 ./lint-all.sh
 
 # Run tests
-npm test                          # Run full integration test suite (recommended)
-npm run test:integration:permiso  # Run all integration tests
-npm run test:client               # Run all client tests
-npm run test:integration:all      # Run both integration and client tests
+npm test                                    # Run all tests (integration + client)
 
 # Run specific test suites
-npm run test:integration:grep -- "Organizations"        # Integration tests matching pattern
-npm run test:client:grep -- "Permissions"   # Client tests matching pattern
+npm run test:grep -- "Organizations"        # Search both integration and client tests
+npm run test:integration:grep -- "Users"    # Only integration tests
+npm run test:client:grep -- "Permissions"   # Only client tests
 
 # Clean build artifacts
 ./clean.sh

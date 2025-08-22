@@ -122,17 +122,32 @@ cd node/packages/[package-name] && npm run lint
 cd node/packages/[package-name] && npm run lint:fix
 
 # Testing
-npm test                               # Run full integration test suite (recommended)
 
-# Integration tests
-npm run test:integration:permiso       # Run all integration tests
-npm run test:integration:grep -- "Pattern"         # Run specific integration test suite
-npm run test:integration:all           # Run all tests (integration + client)
+# Run all tests (integration + client)
+npm test
 
-# Client tests
-npm run test:client                    # Run all client tests
-npm run test:client:grep -- "Pattern"  # Run specific client test suite
+# Search for specific tests across BOTH integration and client
+npm run test:grep -- "pattern to match"
+
+# Search only integration tests
+npm run test:integration:grep -- "pattern to match"
+
+# Search only client tests
+npm run test:client:grep -- "pattern to match"
+
+# Examples:
+npm run test:grep -- "should create"          # Searches both integration and client
+npm run test:grep -- "GraphQL"                # Searches both integration and client
+npm run test:integration:grep -- "permission" # Only integration tests
+npm run test:client:grep -- "fetch user"      # Only client tests
 ```
+
+**IMPORTANT**: When running tests with mocha:
+
+- Always use `npm run test:grep -- "pattern"` from the root directory for specific tests
+- NEVER use `2>&1` redirection with mocha commands - it will cause errors
+- Use plain `npm test` or `npx mocha` without stderr redirection
+- If you need to capture output, use `| tee` or similar tools instead
 
 ## Critical Architecture Decisions
 
@@ -291,10 +306,10 @@ await db.none(
 **IMPORTANT**: When fixing bugs or debugging issues:
 
 1. **Always run individual tests** when fixing specific issues
-2. Use `npm run test:integration:grep -- "test name"` to run specific integration test suites
-3. Use `npm run test:client:grep -- "test name"` for client-specific tests
+2. Use `npm run test:grep -- "test name"` to search both integration and client tests
+3. Use `npm run test:integration:grep` or `test:client:grep` for specific test types
 4. Test incrementally - run the specific failing test after each change
-5. Run `npm test` for the full test suite after individual tests pass
+5. Run `npm test` for the full test suite (integration + client) after individual tests pass
 
 This approach:
 
