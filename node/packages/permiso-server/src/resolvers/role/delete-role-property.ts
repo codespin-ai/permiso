@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { deleteRoleProperty } from "../../domain/role/delete-role-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { deleteRoleProperty };
@@ -9,7 +9,7 @@ export const deleteRolePropertyResolver = {
     deleteRoleProperty: async (
       _: any,
       args: { orgId: string; roleId: string; name: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await deleteRoleProperty(
         context,

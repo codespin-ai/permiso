@@ -1,6 +1,6 @@
-import type { Database } from "@codespin/permiso-db";
 import { updateUser } from "../../domain/user/update-user.js";
 import { getUser } from "./get-user.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { updateUser };
@@ -10,7 +10,7 @@ export const updateUserResolver = {
     updateUser: async (
       _: any,
       args: { orgId: string; userId: string; input: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await updateUser(
         context,

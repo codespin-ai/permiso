@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { deleteOrganizationProperty } from "../../domain/organization/delete-organization-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const deleteOrganizationPropertyResolver = {
   Mutation: {
     deleteOrganizationProperty: async (
       _: any,
       args: { orgId: string; name: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await deleteOrganizationProperty(
         context,

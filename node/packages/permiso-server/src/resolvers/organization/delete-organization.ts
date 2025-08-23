@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { deleteOrganization } from "../../domain/organization/delete-organization.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const deleteOrganizationResolver = {
   Mutation: {
     deleteOrganization: async (
       _: any,
       args: { id: string; safetyKey?: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       // If safetyKey is provided, it must match the organization ID
       if (args.safetyKey !== undefined && args.safetyKey !== args.id) {

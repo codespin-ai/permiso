@@ -1,6 +1,6 @@
-import type { Database } from "@codespin/permiso-db";
 import { assignUserRole } from "../../domain/user/assign-user-role.js";
 import { getUser } from "./get-user.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { assignUserRole };
@@ -10,7 +10,7 @@ export const assignUserRoleResolver = {
     assignUserRole: async (
       _: any,
       args: { orgId: string; userId: string; roleId: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await assignUserRole(
         context,

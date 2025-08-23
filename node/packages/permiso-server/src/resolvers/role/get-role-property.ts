@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getRoleProperty } from "../../domain/role/get-role-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { getRoleProperty };
@@ -9,7 +9,7 @@ export const getRolePropertyResolver = {
     roleProperty: async (
       _: any,
       args: { orgId: string; roleId: string; propertyName: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRoleProperty(
         context,

@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getUserProperty } from "../../domain/user/get-user-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { getUserProperty };
@@ -9,7 +9,7 @@ export const getUserPropertyResolver = {
     userProperty: async (
       _: any,
       args: { orgId: string; userId: string; propertyName: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getUserProperty(
         context,

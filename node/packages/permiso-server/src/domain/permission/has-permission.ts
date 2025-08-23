@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { DataContext } from "../context.js";
+import type { DataContext } from "../data-context.js";
 import { getEffectivePermissions } from "./get-effective-permissions.js";
 
 const logger = createLogger("permiso-server:permissions");

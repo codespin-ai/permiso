@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { DataContext } from "../context.js";
+import type { DataContext } from "../data-context.js";
 import type { RoleDbRow, RoleWithProperties } from "../../types.js";
 import { mapRoleFromDb } from "../../mappers.js";
 import { getRoleProperties } from "./get-role-properties.js";

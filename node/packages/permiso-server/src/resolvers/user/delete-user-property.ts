@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { deleteUserProperty } from "../../domain/user/delete-user-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { deleteUserProperty };
@@ -9,7 +9,7 @@ export const deleteUserPropertyResolver = {
     deleteUserProperty: async (
       _: any,
       args: { orgId: string; userId: string; name: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await deleteUserProperty(
         context,

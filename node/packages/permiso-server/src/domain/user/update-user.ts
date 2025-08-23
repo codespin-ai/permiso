@@ -1,7 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result, typeUtils } from "@codespin/permiso-core";
 import { sql } from "@codespin/permiso-db";
-import type { DataContext } from "../context.js";
+import type { DataContext } from "../data-context.js";
 import type { User, UserDbRow } from "../../types.js";
 import type { UpdateUserInput } from "../../generated/graphql.js";
 import { mapUserFromDb } from "../../mappers.js";

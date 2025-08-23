@@ -1,17 +1,17 @@
-import type { Database } from "@codespin/permiso-db";
 import type { RoleWithProperties } from "../../types.js";
 import { getRoleProperties } from "../../domain/role/get-role-properties.js";
 import { getRoleUsers } from "../../domain/role/get-role-users.js";
 import { getUsers } from "../../domain/user/get-users.js";
 import { getRolePermissions } from "../../domain/permission/get-role-permissions.js";
 import { getOrganization } from "../../domain/organization/get-organization.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const roleFieldResolvers = {
   Role: {
     organization: async (
       parent: RoleWithProperties,
       _: any,
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
@@ -23,7 +23,7 @@ export const roleFieldResolvers = {
     properties: async (
       parent: RoleWithProperties,
       _: any,
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRoleProperties(context, parent.orgId, parent.id);
       if (!result.success) {
@@ -32,11 +32,7 @@ export const roleFieldResolvers = {
       return result.data;
     },
 
-    users: async (
-      parent: RoleWithProperties,
-      _: any,
-      context: { db: Database },
-    ) => {
+    users: async (parent: RoleWithProperties, _: any, context: DataContext) => {
       const userIdsResult = await getRoleUsers(
         context,
         parent.orgId,
@@ -62,7 +58,7 @@ export const roleFieldResolvers = {
     permissions: async (
       parent: RoleWithProperties,
       args: { resourcePath?: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRolePermissions(
         context,

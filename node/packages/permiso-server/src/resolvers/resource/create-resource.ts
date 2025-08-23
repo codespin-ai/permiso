@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { createResource } from "../../domain/resource/create-resource.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const createResourceResolver = {
   Mutation: {
     createResource: async (
       _: any,
       args: { input: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await createResource(context, args.input);
       if (!result.success) {

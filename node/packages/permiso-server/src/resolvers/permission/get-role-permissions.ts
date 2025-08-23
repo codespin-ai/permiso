@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getRolePermissions } from "../../domain/permission/get-role-permissions.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const getRolePermissionsResolver = {
   Query: {
@@ -11,7 +11,7 @@ export const getRolePermissionsResolver = {
         resourceId?: string;
         action?: string;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRolePermissions(
         context,

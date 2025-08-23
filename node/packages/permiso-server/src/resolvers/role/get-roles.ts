@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getRoles } from "../../domain/role/get-roles.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { getRoles };
@@ -9,7 +9,7 @@ export const getRolesResolver = {
     roles: async (
       _: any,
       args: { orgId: string; filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRoles(
         context,
@@ -55,7 +55,7 @@ export const getRolesResolver = {
     rolesByIds: async (
       _: any,
       args: { orgId: string; ids: string[] },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRoles(context, args.orgId, { ids: args.ids });
       if (!result.success) {

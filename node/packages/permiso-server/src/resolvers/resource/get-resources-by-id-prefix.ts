@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { getResourcesByIdPrefix } from "../../domain/resource/get-resources-by-id-prefix.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const resourcesByIdPrefixResolver = {
   Query: {
     resourcesByIdPrefix: async (
       _: any,
       args: { orgId: string; idPrefix: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getResourcesByIdPrefix(
         context,

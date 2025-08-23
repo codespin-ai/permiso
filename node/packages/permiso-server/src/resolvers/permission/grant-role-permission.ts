@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { grantRolePermission } from "../../domain/permission/grant-role-permission.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const grantRolePermissionResolver = {
   Mutation: {
@@ -13,7 +13,7 @@ export const grantRolePermissionResolver = {
           action: string;
         };
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await grantRolePermission(
         context,

@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { revokeRolePermission } from "../../domain/permission/revoke-role-permission.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const revokeRolePermissionResolver = {
   Mutation: {
@@ -11,7 +11,7 @@ export const revokeRolePermissionResolver = {
         resourceId: string;
         action: string;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await revokeRolePermission(
         context,

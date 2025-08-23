@@ -1,6 +1,6 @@
-import type { Database } from "@codespin/permiso-db";
 import { updateRole } from "../../domain/role/update-role.js";
 import { getRole } from "./get-role.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { updateRole };
@@ -10,7 +10,7 @@ export const updateRoleResolver = {
     updateRole: async (
       _: any,
       args: { orgId: string; roleId: string; input: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await updateRole(
         context,

@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { setRoleProperty } from "../../domain/role/set-role-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { setRoleProperty };
@@ -15,7 +15,7 @@ export const setRolePropertyResolver = {
         value: unknown;
         hidden?: boolean;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await setRoleProperty(
         context,

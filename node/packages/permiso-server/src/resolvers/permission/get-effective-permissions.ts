@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getEffectivePermissions } from "../../domain/permission/get-effective-permissions.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const getEffectivePermissionsResolver = {
   Query: {
@@ -11,7 +11,7 @@ export const getEffectivePermissionsResolver = {
         resourcePath?: string;
         action?: string;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getEffectivePermissions(
         context,

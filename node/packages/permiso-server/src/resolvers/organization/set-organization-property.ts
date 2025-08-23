@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { setOrganizationProperty } from "../../domain/organization/set-organization-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const setOrganizationPropertyResolver = {
   Mutation: {
     setOrganizationProperty: async (
       _: any,
       args: { orgId: string; name: string; value: unknown; hidden?: boolean },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await setOrganizationProperty(
         context,

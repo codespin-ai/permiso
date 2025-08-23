@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { setUserProperty } from "../../domain/user/set-user-property.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { setUserProperty };
@@ -15,7 +15,7 @@ export const setUserPropertyResolver = {
         value: unknown;
         hidden?: boolean;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await setUserProperty(
         context,

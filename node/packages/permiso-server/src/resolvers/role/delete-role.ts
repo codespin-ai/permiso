@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { deleteRole } from "../../domain/role/delete-role.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { deleteRole };
@@ -9,7 +9,7 @@ export const deleteRoleResolver = {
     deleteRole: async (
       _: any,
       args: { orgId: string; roleId: string; safetyKey?: string },
-      context: { db: Database; safetyKey?: string },
+      context: DataContext & { safetyKey?: string },
     ) => {
       if (context.safetyKey && context.safetyKey !== args.safetyKey) {
         throw new Error("Invalid safety key");

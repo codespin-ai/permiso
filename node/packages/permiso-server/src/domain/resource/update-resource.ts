@@ -1,7 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import { sql } from "@codespin/permiso-db";
-import type { DataContext } from "../context.js";
+import type { DataContext } from "../data-context.js";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import type { UpdateResourceInput } from "../../generated/graphql.js";
 import { mapResourceFromDb } from "../../mappers.js";

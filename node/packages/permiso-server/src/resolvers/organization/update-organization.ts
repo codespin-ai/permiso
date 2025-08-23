@@ -1,13 +1,13 @@
-import type { Database } from "@codespin/permiso-db";
 import { updateOrganization } from "../../domain/organization/update-organization.js";
 import { getOrganization } from "../../domain/organization/get-organization.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const updateOrganizationResolver = {
   Mutation: {
     updateOrganization: async (
       _: any,
       args: { id: string; input: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await updateOrganization(context, args.id, args.input);
       if (!result.success) {

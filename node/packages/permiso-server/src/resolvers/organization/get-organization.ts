@@ -1,12 +1,12 @@
-import type { Database } from "@codespin/permiso-db";
 import { getOrganization } from "../../domain/organization/get-organization.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const getOrganizationResolver = {
   Query: {
     organization: async (
       _: any,
       args: { id: string },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getOrganization(context, args.id);
       if (!result.success) {

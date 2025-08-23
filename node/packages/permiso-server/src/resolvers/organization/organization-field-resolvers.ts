@@ -1,4 +1,3 @@
-import type { Database } from "@codespin/permiso-db";
 import type { OrganizationWithProperties } from "../../types.js";
 import { getOrganizationProperties } from "../../domain/organization/get-organization-properties.js";
 import { getUsers } from "../user/get-users.js";
@@ -7,13 +6,14 @@ import {
   getResources,
   getResourcesByIdPrefix,
 } from "../../domain/resource/get-resources.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const organizationFieldResolvers = {
   Organization: {
     properties: async (
       parent: OrganizationWithProperties,
       _: any,
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getOrganizationProperties(context, parent.id);
       if (!result.success) {
@@ -25,7 +25,7 @@ export const organizationFieldResolvers = {
     users: async (
       parent: OrganizationWithProperties,
       args: { filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getUsers(
         context,
@@ -71,7 +71,7 @@ export const organizationFieldResolvers = {
     roles: async (
       parent: OrganizationWithProperties,
       args: { filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getRoles(
         context,
@@ -117,7 +117,7 @@ export const organizationFieldResolvers = {
     resources: async (
       parent: OrganizationWithProperties,
       args: { filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       let result;
       if (args.filter?.idPrefix) {

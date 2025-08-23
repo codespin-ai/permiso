@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getEffectivePermissionsByPrefix } from "../../domain/permission/get-effective-permissions-by-prefix.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const getEffectivePermissionsByPrefixResolver = {
   Query: {
@@ -11,7 +11,7 @@ export const getEffectivePermissionsByPrefixResolver = {
         resourceIdPrefix: string;
         action?: string;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getEffectivePermissionsByPrefix(
         context,

@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { getUsers } from "../../domain/user/get-users.js";
+import { DataContext } from "../../domain/data-context.js";
 
 // Re-export domain function
 export { getUsers };
@@ -9,7 +9,7 @@ export const getUsersResolver = {
     users: async (
       _: any,
       args: { orgId: string; filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getUsers(
         context,
@@ -55,7 +55,7 @@ export const getUsersResolver = {
     usersByIds: async (
       _: any,
       args: { orgId: string; ids: string[] },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await getUsers(context, args.orgId, { ids: args.ids });
       if (!result.success) {

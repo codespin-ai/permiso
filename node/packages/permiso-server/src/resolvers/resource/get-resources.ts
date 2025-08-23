@@ -1,15 +1,15 @@
-import type { Database } from "@codespin/permiso-db";
 import {
   getResources,
   getResourcesByIdPrefix,
 } from "../../domain/resource/get-resources.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const getResourcesResolver = {
   Query: {
     resources: async (
       _: any,
       args: { orgId: string; filter?: any; pagination?: any },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       let result;
       if (args.filter?.idPrefix) {

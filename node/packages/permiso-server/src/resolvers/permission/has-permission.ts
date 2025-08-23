@@ -1,5 +1,5 @@
-import type { Database } from "@codespin/permiso-db";
 import { hasPermission } from "../../domain/permission/has-permission.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const hasPermissionResolver = {
   Query: {
@@ -11,7 +11,7 @@ export const hasPermissionResolver = {
         resourcePath: string;
         action: string;
       },
-      context: { db: Database },
+      context: DataContext,
     ) => {
       const result = await hasPermission(
         context,

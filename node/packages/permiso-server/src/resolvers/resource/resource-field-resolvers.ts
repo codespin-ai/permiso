@@ -1,15 +1,11 @@
-import type { Database } from "@codespin/permiso-db";
 import type { Resource } from "../../types.js";
 import { getOrganization } from "../../domain/organization/get-organization.js";
 import { getPermissionsByResource } from "../../domain/permission/get-permissions-by-resource.js";
+import { DataContext } from "../../domain/data-context.js";
 
 export const resourceFieldResolvers = {
   Resource: {
-    organization: async (
-      parent: Resource,
-      _: any,
-      context: { db: Database },
-    ) => {
+    organization: async (parent: Resource, _: any, context: DataContext) => {
       const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
         throw result.error;
@@ -17,11 +13,7 @@ export const resourceFieldResolvers = {
       return result.data;
     },
 
-    permissions: async (
-      parent: Resource,
-      _: any,
-      context: { db: Database },
-    ) => {
+    permissions: async (parent: Resource, _: any, context: DataContext) => {
       const result = await getPermissionsByResource(
         context,
         parent.orgId,
