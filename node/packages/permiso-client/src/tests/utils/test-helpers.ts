@@ -4,6 +4,7 @@ import { testLogger } from "@codespin/permiso-test-utils";
 export function getTestConfig(): PermisoConfig {
   return {
     endpoint: "http://localhost:5003",
+    orgId: "ROOT",
     timeout: 30000,
     logger: testLogger,
   };

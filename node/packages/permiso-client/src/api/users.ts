@@ -1,5 +1,6 @@
 import { graphqlRequest } from "../http-client.js";
 import { Result, PermisoConfig } from "../types.js";
+import { buildHeaders } from "./utils.js";
 import type {
   User,
   CreateUserInput,
@@ -47,7 +48,7 @@ export async function getUser(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, userId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -125,7 +126,7 @@ export async function listUsers(
       filter: options?.filter,
       pagination: options?.pagination,
     },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -173,7 +174,7 @@ export async function getUsersByIds(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, ids },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -224,7 +225,7 @@ export async function getUsersByIdentity(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { identityProvider, identityProviderUserId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -271,7 +272,7 @@ export async function createUser(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -320,7 +321,7 @@ export async function updateUser(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId, input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -350,7 +351,7 @@ export async function deleteUser(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -386,7 +387,7 @@ export async function getUserProperty(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, userId, propertyName },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -436,7 +437,7 @@ export async function setUserProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId, name, value, hidden },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -467,7 +468,7 @@ export async function deleteUserProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId, name },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -516,7 +517,7 @@ export async function assignUserRole(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId, roleId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -565,7 +566,7 @@ export async function unassignUserRole(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, userId, roleId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });

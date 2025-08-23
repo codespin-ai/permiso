@@ -1,5 +1,6 @@
 import { graphqlRequest } from "../http-client.js";
 import { Result, PermisoConfig } from "../types.js";
+import { buildHeaders } from "./utils.js";
 import type {
   Resource,
   CreateResourceInput,
@@ -33,7 +34,7 @@ export async function getResource(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, resourceId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -100,7 +101,7 @@ export async function listResources(
       filter: options?.filter,
       pagination: options?.pagination,
     },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -137,7 +138,7 @@ export async function getResourcesByIdPrefix(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, idPrefix },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -173,7 +174,7 @@ export async function createResource(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -211,7 +212,7 @@ export async function updateResource(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, resourceId, input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -241,7 +242,7 @@ export async function deleteResource(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, resourceId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });

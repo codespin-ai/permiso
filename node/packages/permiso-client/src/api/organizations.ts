@@ -1,5 +1,6 @@
 import { graphqlRequest } from "../http-client.js";
 import { Result, PermisoConfig } from "../types.js";
+import { buildHeaders } from "./utils.js";
 import type {
   Organization,
   CreateOrganizationInput,
@@ -38,7 +39,7 @@ export async function getOrganization(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { id },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -108,7 +109,7 @@ export async function listOrganizations(
       filter: options?.filter,
       pagination: options?.pagination,
     },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -149,7 +150,7 @@ export async function getOrganizationsByIds(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { ids },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -190,7 +191,7 @@ export async function createOrganization(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -232,7 +233,7 @@ export async function updateOrganization(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { id, input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -262,7 +263,7 @@ export async function deleteOrganization(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { id, safetyKey },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -299,7 +300,7 @@ export async function getOrganizationProperty(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, propertyName },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -346,7 +347,7 @@ export async function setOrganizationProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, name, value, hidden },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -376,7 +377,7 @@ export async function deleteOrganizationProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, name },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });

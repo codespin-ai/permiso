@@ -1,5 +1,6 @@
 import { graphqlRequest } from "../http-client.js";
 import { Result, PermisoConfig } from "../types.js";
+import { buildHeaders } from "./utils.js";
 import type {
   Role,
   CreateRoleInput,
@@ -40,7 +41,7 @@ export async function getRole(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, roleId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -113,7 +114,7 @@ export async function listRoles(
       filter: options?.filter,
       pagination: options?.pagination,
     },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -156,7 +157,7 @@ export async function getRolesByIds(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, ids },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -198,7 +199,7 @@ export async function createRole(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -242,7 +243,7 @@ export async function updateRole(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, roleId, input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -272,7 +273,7 @@ export async function deleteRole(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, roleId },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -308,7 +309,7 @@ export async function getRoleProperty(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: { orgId, roleId, propertyName },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -358,7 +359,7 @@ export async function setRoleProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, roleId, name, value, hidden },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -389,7 +390,7 @@ export async function deleteRoleProperty(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { orgId, roleId, name },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });

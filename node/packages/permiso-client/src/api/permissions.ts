@@ -1,5 +1,6 @@
 import { graphqlRequest } from "../http-client.js";
 import { Result, PermisoConfig } from "../types.js";
+import { buildHeaders } from "./utils.js";
 import type {
   UserPermission,
   RolePermission,
@@ -40,7 +41,7 @@ export async function hasPermission(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -99,7 +100,7 @@ export async function getUserPermissions(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -158,7 +159,7 @@ export async function getRolePermissions(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -210,7 +211,7 @@ export async function getEffectivePermissions(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -262,7 +263,7 @@ export async function getEffectivePermissionsByPrefix(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -306,7 +307,7 @@ export async function grantUserPermission(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -350,7 +351,7 @@ export async function revokeUserPermission(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -394,7 +395,7 @@ export async function grantRolePermission(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: { input },
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });
@@ -438,7 +439,7 @@ export async function revokeRolePermission(
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
     variables: params,
-    headers: config.apiKey ? { "x-api-key": config.apiKey } : undefined,
+    headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
   });

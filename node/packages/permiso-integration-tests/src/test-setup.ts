@@ -22,8 +22,11 @@ export async function setupTests() {
   });
   await server.start();
 
-  // Initialize GraphQL client
+  // Initialize GraphQL client with ROOT org-id for unrestricted test access
   client = new GraphQLClient("http://localhost:5002/graphql", {
+    headers: {
+      "x-org-id": "ROOT",
+    },
     logger: testLogger,
   });
 
