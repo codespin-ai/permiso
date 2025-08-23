@@ -1,6 +1,13 @@
 import { baseConfig } from "../../knexfile.js";
+import { config } from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-// Test database configuration - simplified for testing
+config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export default {
   ...baseConfig,
   connection: {
@@ -11,7 +18,13 @@ export default {
     password: process.env.PERMISO_TEST_DB_PASSWORD || "postgres",
   },
   migrations: {
-    ...baseConfig.migrations,
-    directory: "../permiso/migrations",
+    directory: join(__dirname, "../permiso/migrations"),
+    extension: "js",
+    loadExtensions: [".js"],
+  },
+  seeds: {
+    directory: join(__dirname, "../permiso/seeds"),
+    extension: "js",
+    loadExtensions: [".js"],
   },
 };

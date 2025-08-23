@@ -1,6 +1,10 @@
+import { config } from "dotenv";
+config();
+
 // Base knex configuration that can be extended by database-specific configs
 export const baseConfig = {
   client: "postgresql",
+  searchPath: ["public"],
   pool: {
     min: 2,
     max: 10,
@@ -26,9 +30,13 @@ export function createDbConfig(dbName, overrides = {}) {
     migrations: {
       ...baseConfig.migrations,
       directory: "./migrations",
+      extension: "js",
+      loadExtensions: [".js"],
     },
     seeds: {
       directory: "./seeds",
+      extension: "js",
+      loadExtensions: [".js"],
     },
     ...overrides,
   };
