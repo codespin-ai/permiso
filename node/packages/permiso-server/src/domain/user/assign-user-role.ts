@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { UserRole, UserRoleDbRow } from "../../types.js";
 import { mapUserRoleFromDb } from "../../mappers.js";
 
@@ -13,12 +13,17 @@ export async function assignUserRole(
   roleId: string,
 ): Promise<Result<UserRole>> {
   try {
+    const params = {
+      user_id: userId,
+      role_id: roleId,
+      org_id: orgId,
+    };
+
     const row = await db.one<UserRoleDbRow>(
-      `INSERT INTO user_role (user_id, role_id, org_id) 
-       VALUES ($(userId), $(roleId), $(orgId)) 
+      `${sql.insert("user_role", params)}
        ON CONFLICT (user_id, role_id, org_id) DO NOTHING
        RETURNING *`,
-      { userId, roleId, orgId },
+      params,
     );
 
     return { success: true, data: mapUserRoleFromDb(row) };

@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
-import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { Result, typeUtils } from "@codespin/permiso-core";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { User, UserDbRow } from "../../types.js";
 import type { UpdateUserInput } from "../../generated/graphql.js";
 import { mapUserFromDb } from "../../mappers.js";
@@ -14,28 +14,29 @@ export async function updateUser(
   input: UpdateUserInput,
 ): Promise<Result<User>> {
   try {
-    const updates: string[] = [];
-    const params: Record<string, any> = { userId, orgId };
+    const updateParams: Record<string, any> = {};
 
     if (input.identityProvider !== undefined) {
-      updates.push(`identity_provider = $(identityProvider)`);
-      params.identityProvider = input.identityProvider;
+      updateParams.identityProvider = input.identityProvider;
     }
 
     if (input.identityProviderUserId !== undefined) {
-      updates.push(`identity_provider_user_id = $(identityProviderUserId)`);
-      params.identityProviderUserId = input.identityProviderUserId;
+      updateParams.identityProviderUserId = input.identityProviderUserId;
     }
 
-    updates.push(`updated_at = NOW()`);
+    const snakeParams = typeUtils.toSnakeCase(updateParams);
+    const whereParams = {
+      user_id: userId,
+      org_id: orgId,
+    };
 
     const query = `
-      UPDATE "user" 
-      SET ${updates.join(", ")}
-      WHERE id = $(userId) AND org_id = $(orgId)
+      ${sql.update('"user"', snakeParams)}, updated_at = NOW()
+      WHERE id = $(user_id) AND org_id = $(org_id)
       RETURNING *
     `;
 
+    const params = { ...snakeParams, ...whereParams };
     const row = await db.one<UserDbRow>(query, params);
     return { success: true, data: mapUserFromDb(row) };
   } catch (error) {

@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Organization, OrganizationDbRow } from "../../types.js";
 import type { UpdateOrganizationInput } from "../../generated/graphql.js";
 import { mapOrganizationFromDb } from "../../mappers.js";
@@ -13,28 +13,23 @@ export async function updateOrganization(
   input: UpdateOrganizationInput,
 ): Promise<Result<Organization>> {
   try {
-    const updates: string[] = [];
-    const params: Record<string, any> = { id };
+    const updateParams: Record<string, any> = {};
 
     if (input.name !== undefined) {
-      updates.push(`name = $(name)`);
-      params.name = input.name;
+      updateParams.name = input.name;
     }
 
     if (input.description !== undefined) {
-      updates.push(`description = $(description)`);
-      params.description = input.description;
+      updateParams.description = input.description;
     }
 
-    updates.push(`updated_at = NOW()`);
-
     const query = `
-      UPDATE organization 
-      SET ${updates.join(", ")}
+      ${sql.update("organization", updateParams)}, updated_at = NOW()
       WHERE id = $(id)
       RETURNING *
     `;
 
+    const params = { ...updateParams, id };
     const row = await db.one<OrganizationDbRow>(query, params);
     return { success: true, data: mapOrganizationFromDb(row) };
   } catch (error) {

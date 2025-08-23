@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Role, RoleDbRow } from "../../types.js";
 import type { CreateRoleInput } from "../../generated/graphql.js";
 import { mapRoleFromDb } from "../../mappers.js";
@@ -13,14 +13,16 @@ export async function createRole(
 ): Promise<Result<Role>> {
   try {
     const role = await db.tx(async (t) => {
+      const params = {
+        id: input.id,
+        org_id: input.orgId,
+        name: input.name,
+        description: input.description ?? null,
+      };
+
       const roleRow = await t.one<RoleDbRow>(
-        `INSERT INTO role (id, org_id, name, description) VALUES ($(id), $(orgId), $(name), $(description)) RETURNING *`,
-        {
-          id: input.id,
-          orgId: input.orgId,
-          name: input.name,
-          description: input.description ?? null,
-        },
+        `${sql.insert("role", params)} RETURNING *`,
+        params,
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -33,16 +35,7 @@ export async function createRole(
         }));
 
         for (const prop of propertyValues) {
-          await t.none(
-            `INSERT INTO role_property (parent_id, org_id, name, value, hidden) VALUES ($(parent_id), $(orgId), $(name), $(value), $(hidden))`,
-            {
-              parent_id: prop.parent_id,
-              orgId: prop.org_id,
-              name: prop.name,
-              value: prop.value,
-              hidden: prop.hidden,
-            },
-          );
+          await t.none(sql.insert("role_property", prop), prop);
         }
       }
 

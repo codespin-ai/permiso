@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import type { UpdateResourceInput } from "../../generated/graphql.js";
 import { mapResourceFromDb } from "../../mappers.js";
@@ -14,28 +14,28 @@ export async function updateResource(
   input: UpdateResourceInput,
 ): Promise<Result<Resource>> {
   try {
-    const updates: string[] = [];
-    const params: Record<string, any> = { resourceId, orgId };
+    const updateParams: Record<string, any> = {};
 
     if (input.name !== undefined) {
-      updates.push(`name = $(name)`);
-      params.name = input.name;
+      updateParams.name = input.name;
     }
 
     if (input.description !== undefined) {
-      updates.push(`description = $(description)`);
-      params.description = input.description;
+      updateParams.description = input.description;
     }
 
-    updates.push(`updated_at = NOW()`);
+    const whereParams = {
+      resource_id: resourceId,
+      org_id: orgId,
+    };
 
     const query = `
-      UPDATE resource 
-      SET ${updates.join(", ")}
-      WHERE id = $(resourceId) AND org_id = $(orgId)
+      ${sql.update("resource", updateParams)}, updated_at = NOW()
+      WHERE id = $(resource_id) AND org_id = $(org_id)
       RETURNING *
     `;
 
+    const params = { ...updateParams, ...whereParams };
     const row = await db.one<ResourceDbRow>(query, params);
     return { success: true, data: mapResourceFromDb(row) };
   } catch (error) {

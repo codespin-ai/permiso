@@ -5,4 +5,4 @@
  */
 
 export * from "./types/index.js";
-export * as stringUtils from "./string-utils.js";
+export * as typeUtils from "./type-utils.js";

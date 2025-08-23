@@ -289,6 +289,58 @@ await db.none(
 );
 ```
 
+### SQL Helper Functions
+
+Use `sql.insert()` and `sql.update()` from `@codespin/permiso-db` for safer, more consistent SQL generation:
+
+```typescript
+import { sql } from "@codespin/permiso-db";
+
+// ✅ Good - Using sql.insert()
+const params = {
+  id: input.id,
+  org_id: input.orgId,
+  name: input.name,
+};
+await db.one(`${sql.insert("user", params)} RETURNING *`, params);
+
+// ✅ Good - Using sql.update() with WHERE clause
+const updateParams = { name: input.name };
+const query = `
+  ${sql.update("role", updateParams)}
+  WHERE id = $(roleId) AND org_id = $(orgId)
+  RETURNING *
+`;
+await db.one(query, { ...updateParams, roleId, orgId });
+```
+
+### Case Conversion Pattern
+
+When working with database parameters, apply `toSnakeCase` judiciously:
+
+```typescript
+// ✅ Good - Use toSnakeCase for incoming camelCase objects
+// When you have a GraphQL input or API request object
+const snakeParams = stringUtils.toSnakeCase(input); // input has camelCase properties
+
+// ✅ Good - Directly create snake_case when building from individual parameters
+const params = {
+  user_id: userId,
+  org_id: orgId,
+  created_at: new Date(),
+};
+await db.one(`${sql.insert("user", params)} RETURNING *`, params);
+
+// ❌ Unnecessary - Don't use toSnakeCase when manually constructing
+const params = stringUtils.toSnakeCase({
+  userId: userId,
+  orgId: orgId,
+});
+// Instead, write directly: { user_id: userId, org_id: orgId }
+```
+
+**Key guideline**: Use `toSnakeCase` when converting existing camelCase objects (like GraphQL inputs), but directly create snake_case objects when constructing from individual parameters. This is a pattern to apply based on context, not a rigid rule.
+
 ## Key Documentation References
 
 - **Project Overview**: See [README.md](../README.md)

@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Property, PropertyDbRow } from "../../types.js";
 import { mapPropertyFromDb } from "../../mappers.js";
 
@@ -14,18 +14,19 @@ export async function setOrganizationProperty(
   hidden: boolean = false,
 ): Promise<Result<Property>> {
   try {
+    const params = {
+      parent_id: orgId,
+      name,
+      value: value === undefined ? null : JSON.stringify(value),
+      hidden,
+    };
+
     const row = await db.one<PropertyDbRow>(
-      `INSERT INTO organization_property (parent_id, name, value, hidden) 
-       VALUES ($(orgId), $(name), $(value), $(hidden)) 
+      `${sql.insert("organization_property", params)}
        ON CONFLICT (parent_id, name) 
        DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = NOW()
        RETURNING *`,
-      {
-        orgId,
-        name,
-        value: value === undefined ? null : JSON.stringify(value),
-        hidden,
-      },
+      params,
     );
 
     return { success: true, data: mapPropertyFromDb(row) };

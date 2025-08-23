@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Organization, OrganizationDbRow } from "../../types.js";
 import type { CreateOrganizationInput } from "../../generated/graphql.js";
 import { mapOrganizationFromDb } from "../../mappers.js";
@@ -13,14 +13,15 @@ export async function createOrganization(
 ): Promise<Result<Organization>> {
   try {
     const org = await db.tx(async (t) => {
+      const params = {
+        id: input.id,
+        name: input.name,
+        description: input.description !== undefined ? input.description : null,
+      };
+
       const orgRow = await t.one<OrganizationDbRow>(
-        `INSERT INTO organization (id, name, description) VALUES ($(id), $(name), $(description)) RETURNING *`,
-        {
-          id: input.id,
-          name: input.name,
-          description:
-            input.description !== undefined ? input.description : null,
-        },
+        `${sql.insert("organization", params)} RETURNING *`,
+        params,
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -32,15 +33,7 @@ export async function createOrganization(
         }));
 
         for (const prop of propertyValues) {
-          await t.none(
-            `INSERT INTO organization_property (parent_id, name, value, hidden) VALUES ($(parent_id), $(name), $(value), $(hidden))`,
-            {
-              parent_id: prop.parent_id,
-              name: prop.name,
-              value: prop.value,
-              hidden: prop.hidden,
-            },
-          );
+          await t.none(sql.insert("organization_property", prop), prop);
         }
       }
 

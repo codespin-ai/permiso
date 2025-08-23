@@ -1,5 +1,5 @@
 import { createLogger } from "@codespin/permiso-logger";
-import { Result, stringUtils } from "@codespin/permiso-core";
+import { Result } from "@codespin/permiso-core";
 import type { Database } from "@codespin/permiso-db";
 import { sql } from "@codespin/permiso-db";
 import type {
@@ -18,12 +18,12 @@ export async function grantUserPermission(
   action: string,
 ): Promise<Result<UserPermissionWithOrgId>> {
   try {
-    const params = stringUtils.toSnakeCase({
-      userId,
-      orgId,
-      resourceId,
-      action,
-    });
+    const params = {
+      user_id: userId,
+      org_id: orgId,
+      resource_id: resourceId,
+      action: action,
+    };
 
     const row = await db.one<UserPermissionDbRow>(
       `${sql.insert("user_permission", params)}

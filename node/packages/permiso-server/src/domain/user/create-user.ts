@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { User, UserDbRow } from "../../types.js";
 import type { CreateUserInput } from "../../generated/graphql.js";
 import { mapUserFromDb } from "../../mappers.js";
@@ -13,15 +13,16 @@ export async function createUser(
 ): Promise<Result<User>> {
   try {
     const user = await db.tx(async (t) => {
+      const params = {
+        id: input.id,
+        org_id: input.orgId,
+        identity_provider: input.identityProvider,
+        identity_provider_user_id: input.identityProviderUserId,
+      };
+
       const userRow = await t.one<UserDbRow>(
-        `INSERT INTO "user" (id, org_id, identity_provider, identity_provider_user_id) 
-         VALUES ($(id), $(orgId), $(identityProvider), $(identityProviderUserId)) RETURNING *`,
-        {
-          id: input.id,
-          orgId: input.orgId,
-          identityProvider: input.identityProvider,
-          identityProviderUserId: input.identityProviderUserId,
-        },
+        `${sql.insert('"user"', params)} RETURNING *`,
+        params,
       );
 
       if (input.properties && input.properties.length > 0) {
@@ -34,19 +35,18 @@ export async function createUser(
         }));
 
         for (const prop of propertyValues) {
-          await t.none(
-            `INSERT INTO user_property (parent_id, org_id, name, value, hidden) VALUES ($(parent_id), $(org_id), $(name), $(value), $(hidden))`,
-            prop,
-          );
+          await t.none(sql.insert("user_property", prop), prop);
         }
       }
 
       if (input.roleIds && input.roleIds.length > 0) {
         for (const roleId of input.roleIds) {
-          await t.none(
-            `INSERT INTO user_role (user_id, role_id, org_id) VALUES ($(userId), $(roleId), $(orgId))`,
-            { userId: input.id, roleId, orgId: input.orgId },
-          );
+          const roleParams = {
+            user_id: input.id,
+            role_id: roleId,
+            org_id: input.orgId,
+          };
+          await t.none(sql.insert("user_role", roleParams), roleParams);
         }
       }
 

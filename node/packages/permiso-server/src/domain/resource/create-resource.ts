@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import { type Database, sql } from "@codespin/permiso-db";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import type { CreateResourceInput } from "../../generated/graphql.js";
 import { mapResourceFromDb } from "../../mappers.js";
@@ -12,14 +12,16 @@ export async function createResource(
   input: CreateResourceInput,
 ): Promise<Result<Resource>> {
   try {
+    const params = {
+      id: input.id,
+      org_id: input.orgId,
+      name: input.name ?? null,
+      description: input.description ?? null,
+    };
+
     const row = await db.one<ResourceDbRow>(
-      `INSERT INTO resource (id, org_id, name, description) VALUES ($(id), $(orgId), $(name), $(description)) RETURNING *`,
-      {
-        id: input.id,
-        orgId: input.orgId,
-        name: input.name ?? null,
-        description: input.description ?? null,
-      },
+      `${sql.insert("resource", params)} RETURNING *`,
+      params,
     );
 
     return { success: true, data: mapResourceFromDb(row) };

@@ -6,11 +6,10 @@ export async function up(knex) {
   // Create organization table
   await knex.schema.createTable("organization", (table) => {
     table.string("id", 255).primary();
-    table.text("data");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255).notNullable().defaultTo("");
     table.text("description");
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
 
     // Indexes
     table.index("created_at");
@@ -45,11 +44,10 @@ export async function up(knex) {
   await knex.schema.createTable("role", (table) => {
     table.string("id", 255).notNullable();
     table.string("org_id", 255).notNullable();
-    table.text("data");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255).notNullable().defaultTo("");
     table.text("description");
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
 
     // Composite primary key
     table.primary(["id", "org_id"]);
@@ -98,7 +96,6 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("identity_provider", 255).notNullable();
     table.string("identity_provider_user_id", 255).notNullable();
-    table.text("data");
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
 
@@ -147,11 +144,10 @@ export async function up(knex) {
   await knex.schema.createTable("resource", (table) => {
     table.string("id", 255).notNullable();
     table.string("org_id", 255).notNullable();
-    table.text("data");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
     table.string("name", 255);
     table.text("description");
+    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
 
     // Composite primary key
     table.primary(["id", "org_id"]);
