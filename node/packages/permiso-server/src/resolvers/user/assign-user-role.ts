@@ -13,7 +13,7 @@ export const assignUserRoleResolver = {
       context: { db: Database },
     ) => {
       const result = await assignUserRole(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.roleId,
@@ -23,7 +23,7 @@ export const assignUserRoleResolver = {
       }
 
       // Return the updated user
-      const userResult = await getUser(context.db, args.orgId, args.userId);
+      const userResult = await getUser(context, args.orgId, args.userId);
       if (!userResult.success) {
         throw userResult.error;
       }

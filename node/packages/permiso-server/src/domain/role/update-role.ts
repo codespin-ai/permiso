@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Role, RoleDbRow } from "../../types.js";
 import type { UpdateRoleInput } from "../../generated/graphql.js";
 import { mapRoleFromDb } from "../../mappers.js";
@@ -8,7 +9,7 @@ import { mapRoleFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:roles");
 
 export async function updateRole(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId: string,
   input: UpdateRoleInput,
@@ -36,7 +37,7 @@ export async function updateRole(
     `;
 
     const params = { ...updateParams, ...whereParams };
-    const row = await db.one<RoleDbRow>(query, params);
+    const row = await ctx.db.one<RoleDbRow>(query, params);
     return { success: true, data: mapRoleFromDb(row) };
   } catch (error) {
     logger.error("Failed to update role", { error, orgId, roleId, input });

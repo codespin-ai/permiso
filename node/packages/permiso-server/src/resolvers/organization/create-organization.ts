@@ -9,13 +9,13 @@ export const createOrganizationResolver = {
       args: { input: any },
       context: { db: Database },
     ) => {
-      const result = await createOrganization(context.db, args.input);
+      const result = await createOrganization(context, args.input);
       if (!result.success) {
         throw result.error;
       }
 
       // Fetch with properties
-      const orgResult = await getOrganization(context.db, result.data.id);
+      const orgResult = await getOrganization(context, result.data.id);
       if (!orgResult.success) {
         throw orgResult.error;
       }

@@ -14,7 +14,7 @@ export const getRolePermissionsResolver = {
       context: { db: Database },
     ) => {
       const result = await getRolePermissions(
-        context.db,
+        context,
         args.orgId,
         args.roleId,
         args.resourceId,

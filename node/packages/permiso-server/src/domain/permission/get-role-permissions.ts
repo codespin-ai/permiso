@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type {
   RolePermissionWithOrgId,
   RolePermissionDbRow,
@@ -10,7 +10,7 @@ import { mapRolePermissionFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:permissions");
 
 export async function getRolePermissions(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId?: string,
   resourceId?: string,
@@ -37,7 +37,7 @@ export async function getRolePermissions(
 
     query += ` ORDER BY created_at DESC`;
 
-    const rows = await db.manyOrNone<RolePermissionDbRow>(query, params);
+    const rows = await ctx.db.manyOrNone<RolePermissionDbRow>(query, params);
     return { success: true, data: rows.map(mapRolePermissionFromDb) };
   } catch (error) {
     logger.error("Failed to get role permissions", {

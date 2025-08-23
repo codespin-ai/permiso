@@ -9,7 +9,7 @@ export const getOrganizationPropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await getOrganizationProperty(
-        context.db,
+        context,
         args.orgId,
         args.propertyName,
       );

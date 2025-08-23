@@ -13,7 +13,7 @@ export const updateRoleResolver = {
       context: { db: Database },
     ) => {
       const result = await updateRole(
-        context.db,
+        context,
         args.orgId,
         args.roleId,
         args.input,
@@ -23,7 +23,7 @@ export const updateRoleResolver = {
       }
 
       // Fetch with properties
-      const roleResult = await getRole(context.db, args.orgId, args.roleId);
+      const roleResult = await getRole(context, args.orgId, args.roleId);
       if (!roleResult.success) {
         throw roleResult.error;
       }

@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result, typeUtils } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { User, UserDbRow } from "../../types.js";
 import type { UpdateUserInput } from "../../generated/graphql.js";
 import { mapUserFromDb } from "../../mappers.js";
@@ -8,7 +9,7 @@ import { mapUserFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:users");
 
 export async function updateUser(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   input: UpdateUserInput,
@@ -37,7 +38,7 @@ export async function updateUser(
     `;
 
     const params = { ...snakeParams, ...whereParams };
-    const row = await db.one<UserDbRow>(query, params);
+    const row = await ctx.db.one<UserDbRow>(query, params);
     return { success: true, data: mapUserFromDb(row) };
   } catch (error) {
     logger.error("Failed to update user", { error, orgId, userId, input });

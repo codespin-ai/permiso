@@ -13,7 +13,7 @@ export const updateUserResolver = {
       context: { db: Database },
     ) => {
       const result = await updateUser(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.input,
@@ -23,7 +23,7 @@ export const updateUserResolver = {
       }
 
       // Fetch with properties
-      const userResult = await getUser(context.db, args.orgId, args.userId);
+      const userResult = await getUser(context, args.orgId, args.userId);
       if (!userResult.success) {
         throw userResult.error;
       }

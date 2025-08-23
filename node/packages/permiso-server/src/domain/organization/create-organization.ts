@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Organization, OrganizationDbRow } from "../../types.js";
 import type { CreateOrganizationInput } from "../../generated/graphql.js";
 import { mapOrganizationFromDb } from "../../mappers.js";
@@ -8,11 +9,11 @@ import { mapOrganizationFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:organizations");
 
 export async function createOrganization(
-  db: Database,
+  ctx: DataContext,
   input: CreateOrganizationInput,
 ): Promise<Result<Organization>> {
   try {
-    const org = await db.tx(async (t) => {
+    const org = await ctx.db.tx(async (t) => {
       const params = {
         id: input.id,
         name: input.name,

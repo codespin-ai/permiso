@@ -1,13 +1,14 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Property, PropertyDbRow } from "../../types.js";
 import { mapPropertyFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:users");
 
 export async function setUserProperty(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   name: string,
@@ -23,7 +24,7 @@ export async function setUserProperty(
       hidden,
     };
 
-    const row = await db.one<PropertyDbRow>(
+    const row = await ctx.db.one<PropertyDbRow>(
       `${sql.insert("user_property", params)}
        ON CONFLICT (parent_id, org_id, name) 
        DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = NOW()

@@ -1,18 +1,18 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import { mapResourceFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:resources");
 
 export async function getResourcesByIdPrefix(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   idPrefix: string,
 ): Promise<Result<Resource[]>> {
   try {
-    const rows = await db.manyOrNone<ResourceDbRow>(
+    const rows = await ctx.db.manyOrNone<ResourceDbRow>(
       `SELECT * FROM resource WHERE org_id = $(orgId) AND id LIKE $(pattern) ORDER BY id`,
       { orgId, pattern: `${idPrefix}%` },
     );

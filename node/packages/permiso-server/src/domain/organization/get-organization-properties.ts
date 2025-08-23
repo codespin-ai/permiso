@@ -1,13 +1,13 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Property, OrganizationPropertyDbRow } from "../../types.js";
 import { mapOrganizationPropertyFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:organizations");
 
 export async function getOrganizationProperties(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   includeHidden: boolean = true,
 ): Promise<Result<Property[]>> {
@@ -16,7 +16,7 @@ export async function getOrganizationProperties(
       ? `SELECT * FROM organization_property WHERE parent_id = $(orgId)`
       : `SELECT * FROM organization_property WHERE parent_id = $(orgId) AND hidden = false`;
 
-    const rows = await db.manyOrNone<OrganizationPropertyDbRow>(query, {
+    const rows = await ctx.db.manyOrNone<OrganizationPropertyDbRow>(query, {
       orgId,
     });
     return { success: true, data: rows.map(mapOrganizationPropertyFromDb) };

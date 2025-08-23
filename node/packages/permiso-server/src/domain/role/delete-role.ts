@@ -1,16 +1,16 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 
 const logger = createLogger("permiso-server:roles");
 
 export async function deleteRole(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId: string,
 ): Promise<Result<boolean>> {
   try {
-    await db.none(
+    await ctx.db.none(
       `DELETE FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
       { roleId, orgId },
     );

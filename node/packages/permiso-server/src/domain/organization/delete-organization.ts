@@ -1,15 +1,15 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 
 const logger = createLogger("permiso-server:organizations");
 
 export async function deleteOrganization(
-  db: Database,
+  ctx: DataContext,
   id: string,
 ): Promise<Result<boolean>> {
   try {
-    await db.none(`DELETE FROM organization WHERE id = $(id)`, { id });
+    await ctx.db.none(`DELETE FROM organization WHERE id = $(id)`, { id });
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to delete organization", { error, id });

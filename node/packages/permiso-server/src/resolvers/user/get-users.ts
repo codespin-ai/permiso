@@ -12,7 +12,7 @@ export const getUsersResolver = {
       context: { db: Database },
     ) => {
       const result = await getUsers(
-        context.db,
+        context,
         args.orgId,
         args.filter,
         args.pagination,
@@ -24,7 +24,7 @@ export const getUsersResolver = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getUsers(context.db, args.orgId, args.filter);
+        const countResult = await getUsers(context, args.orgId, args.filter);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -57,7 +57,7 @@ export const getUsersResolver = {
       args: { orgId: string; ids: string[] },
       context: { db: Database },
     ) => {
-      const result = await getUsers(context.db, args.orgId, { ids: args.ids });
+      const result = await getUsers(context, args.orgId, { ids: args.ids });
       if (!result.success) {
         throw result.error;
       }

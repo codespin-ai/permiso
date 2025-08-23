@@ -15,7 +15,7 @@ export const organizationFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getOrganizationProperties(context.db, parent.id);
+      const result = await getOrganizationProperties(context, parent.id);
       if (!result.success) {
         throw result.error;
       }
@@ -28,7 +28,7 @@ export const organizationFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getUsers(
-        context.db,
+        context,
         parent.id,
         args.filter,
         args.pagination,
@@ -40,7 +40,7 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getUsers(context.db, parent.id, args.filter);
+        const countResult = await getUsers(context, parent.id, args.filter);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -74,7 +74,7 @@ export const organizationFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getRoles(
-        context.db,
+        context,
         parent.id,
         args.filter,
         args.pagination,
@@ -86,7 +86,7 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getRoles(context.db, parent.id, args.filter);
+        const countResult = await getRoles(context, parent.id, args.filter);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -122,12 +122,12 @@ export const organizationFieldResolvers = {
       let result;
       if (args.filter?.idPrefix) {
         result = await getResourcesByIdPrefix(
-          context.db,
+          context,
           parent.id,
           args.filter.idPrefix,
         );
       } else {
-        result = await getResources(context.db, parent.id, args.pagination);
+        result = await getResources(context, parent.id, args.pagination);
       }
 
       if (!result.success) {
@@ -137,7 +137,7 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination && !args.filter?.idPrefix) {
-        const countResult = await getResources(context.db, parent.id);
+        const countResult = await getResources(context, parent.id);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }

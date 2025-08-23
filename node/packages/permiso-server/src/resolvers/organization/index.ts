@@ -3,7 +3,6 @@ export { getOrganizationsResolver } from "./get-organizations.js";
 export { createOrganizationResolver } from "./create-organization.js";
 export { updateOrganizationResolver } from "./update-organization.js";
 export { deleteOrganizationResolver } from "./delete-organization.js";
-export { getOrganizationProperties } from "./get-organization-properties.js";
 export { getOrganizationPropertyResolver } from "./get-organization-property.js";
 export { setOrganizationPropertyResolver } from "./set-organization-property.js";
 export { deleteOrganizationPropertyResolver } from "./delete-organization-property.js";

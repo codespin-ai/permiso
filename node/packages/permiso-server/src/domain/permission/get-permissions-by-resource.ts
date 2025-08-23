@@ -1,20 +1,20 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import { getUserPermissions } from "./get-user-permissions.js";
 import { getRolePermissions } from "./get-role-permissions.js";
 
 const logger = createLogger("permiso-server:permissions");
 
 export async function getPermissionsByResource(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   resourceId: string,
 ): Promise<Result<Array<any>>> {
   try {
     // Get user permissions for this resource
     const userPermsResult = await getUserPermissions(
-      db,
+      ctx,
       orgId,
       undefined, // no specific user filter
       resourceId,
@@ -27,7 +27,7 @@ export async function getPermissionsByResource(
 
     // Get role permissions for this resource
     const rolePermsResult = await getRolePermissions(
-      db,
+      ctx,
       orgId,
       undefined, // no specific role filter
       resourceId,

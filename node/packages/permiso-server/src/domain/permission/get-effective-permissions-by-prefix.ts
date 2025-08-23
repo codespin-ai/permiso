@@ -1,12 +1,12 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { EffectivePermission } from "../../types.js";
 
 const logger = createLogger("permiso-server:permissions");
 
 export async function getEffectivePermissionsByPrefix(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   resourceIdPrefix: string,
@@ -48,8 +48,8 @@ export async function getEffectivePermissionsByPrefix(
     if (action) rolePermsParams.action = action;
 
     const [userPerms, rolePerms] = await Promise.all([
-      db.manyOrNone(userPermsQuery, userPermsParams),
-      db.manyOrNone(rolePermsQuery, rolePermsParams),
+      ctx.db.manyOrNone(userPermsQuery, userPermsParams),
+      ctx.db.manyOrNone(rolePermsQuery, rolePermsParams),
     ]);
 
     const effectivePerms: EffectivePermission[] = [

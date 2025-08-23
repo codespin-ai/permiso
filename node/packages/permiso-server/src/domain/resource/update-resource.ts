@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import type { UpdateResourceInput } from "../../generated/graphql.js";
 import { mapResourceFromDb } from "../../mappers.js";
@@ -8,7 +9,7 @@ import { mapResourceFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:resources");
 
 export async function updateResource(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   resourceId: string,
   input: UpdateResourceInput,
@@ -36,7 +37,7 @@ export async function updateResource(
     `;
 
     const params = { ...updateParams, ...whereParams };
-    const row = await db.one<ResourceDbRow>(query, params);
+    const row = await ctx.db.one<ResourceDbRow>(query, params);
     return { success: true, data: mapResourceFromDb(row) };
   } catch (error) {
     logger.error("Failed to update resource", {

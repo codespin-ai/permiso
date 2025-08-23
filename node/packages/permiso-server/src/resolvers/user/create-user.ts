@@ -12,14 +12,14 @@ export const createUserResolver = {
       args: { input: any },
       context: { db: Database },
     ) => {
-      const result = await createUser(context.db, args.input);
+      const result = await createUser(context, args.input);
       if (!result.success) {
         throw result.error;
       }
 
       // Fetch with properties
       const userResult = await getUser(
-        context.db,
+        context,
         args.input.orgId,
         result.data.id,
       );

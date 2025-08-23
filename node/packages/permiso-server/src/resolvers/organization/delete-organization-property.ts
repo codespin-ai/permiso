@@ -9,7 +9,7 @@ export const deleteOrganizationPropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await deleteOrganizationProperty(
-        context.db,
+        context,
         args.orgId,
         args.name,
       );

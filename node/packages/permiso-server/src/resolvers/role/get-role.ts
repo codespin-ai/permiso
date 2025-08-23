@@ -11,7 +11,7 @@ export const getRoleResolver = {
       args: { orgId: string; roleId: string },
       context: { db: Database },
     ) => {
-      const result = await getRole(context.db, args.orgId, args.roleId);
+      const result = await getRole(context, args.orgId, args.roleId);
       if (!result.success) {
         throw result.error;
       }

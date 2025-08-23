@@ -1,18 +1,18 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import { mapResourceFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:resources");
 
 export async function getResource(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   resourceId: string,
 ): Promise<Result<Resource | null>> {
   try {
-    const row = await db.oneOrNone<ResourceDbRow>(
+    const row = await ctx.db.oneOrNone<ResourceDbRow>(
       `SELECT * FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
       { resourceId, orgId },
     );

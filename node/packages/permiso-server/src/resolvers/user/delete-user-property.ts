@@ -12,7 +12,7 @@ export const deleteUserPropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await deleteUserProperty(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.name,

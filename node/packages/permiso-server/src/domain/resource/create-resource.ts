@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Resource, ResourceDbRow } from "../../types.js";
 import type { CreateResourceInput } from "../../generated/graphql.js";
 import { mapResourceFromDb } from "../../mappers.js";
@@ -8,7 +9,7 @@ import { mapResourceFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:resources");
 
 export async function createResource(
-  db: Database,
+  ctx: DataContext,
   input: CreateResourceInput,
 ): Promise<Result<Resource>> {
   try {
@@ -19,7 +20,7 @@ export async function createResource(
       description: input.description ?? null,
     };
 
-    const row = await db.one<ResourceDbRow>(
+    const row = await ctx.db.one<ResourceDbRow>(
       `${sql.insert("resource", params)} RETURNING *`,
       params,
     );

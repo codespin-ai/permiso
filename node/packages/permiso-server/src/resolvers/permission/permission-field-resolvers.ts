@@ -15,7 +15,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getOrganization(context.db, parent.orgId);
+      const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
         throw result.error;
       }
@@ -28,7 +28,7 @@ export const permissionFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getResource(
-        context.db,
+        context,
         parent.orgId,
         parent.resourceId,
       );
@@ -43,7 +43,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getUser(context.db, parent.orgId, parent.userId);
+      const result = await getUser(context, parent.orgId, parent.userId);
       if (!result.success) {
         throw result.error;
       }
@@ -57,7 +57,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getOrganization(context.db, parent.orgId);
+      const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
         throw result.error;
       }
@@ -70,7 +70,7 @@ export const permissionFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getResource(
-        context.db,
+        context,
         parent.orgId,
         parent.resourceId,
       );
@@ -85,7 +85,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getRole(context.db, parent.orgId, parent.roleId);
+      const result = await getRole(context, parent.orgId, parent.roleId);
       if (!result.success) {
         throw result.error;
       }

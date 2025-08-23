@@ -11,7 +11,7 @@ export const getUserResolver = {
       args: { orgId: string; userId: string },
       context: { db: Database },
     ) => {
-      const result = await getUser(context.db, args.orgId, args.userId);
+      const result = await getUser(context, args.orgId, args.userId);
       if (!result.success) {
         throw result.error;
       }

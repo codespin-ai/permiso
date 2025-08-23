@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type {
   OrganizationDbRow,
   OrganizationWithProperties,
@@ -15,7 +15,7 @@ import { getOrganizationProperties } from "./get-organization-properties.js";
 const logger = createLogger("permiso-server:organizations");
 
 export async function getOrganizations(
-  db: Database,
+  ctx: DataContext,
   filters?: {
     ids?: string[];
     properties?: PropertyFilter[];
@@ -81,12 +81,12 @@ export async function getOrganizations(
       params.offset = pagination.offset;
     }
 
-    const rows = await db.manyOrNone<OrganizationDbRow>(query, params);
+    const rows = await ctx.db.manyOrNone<OrganizationDbRow>(query, params);
     const orgs = rows.map(mapOrganizationFromDb);
 
     const result = await Promise.all(
       orgs.map(async (org) => {
-        const propsResult = await getOrganizationProperties(db, org.id, false);
+        const propsResult = await getOrganizationProperties(ctx, org.id, false);
         if (!propsResult.success) {
           throw propsResult.error;
         }

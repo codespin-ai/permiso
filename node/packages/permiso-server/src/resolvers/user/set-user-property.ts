@@ -18,7 +18,7 @@ export const setUserPropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await setUserProperty(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.name,

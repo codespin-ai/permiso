@@ -15,7 +15,7 @@ export const deleteUserResolver = {
         throw new Error("Invalid safety key");
       }
 
-      const result = await deleteUser(context.db, args.orgId, args.userId);
+      const result = await deleteUser(context, args.orgId, args.userId);
       if (!result.success) {
         throw result.error;
       }

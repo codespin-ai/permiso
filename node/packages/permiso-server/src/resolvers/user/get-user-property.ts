@@ -12,7 +12,7 @@ export const getUserPropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await getUserProperty(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.propertyName,

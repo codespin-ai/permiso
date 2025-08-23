@@ -12,7 +12,7 @@ export const getUsersByIdentityResolver = {
       context: { db: Database },
     ) => {
       const result = await getUsersByIdentity(
-        context.db,
+        context,
         args.identityProvider,
         args.identityProviderUserId,
       );

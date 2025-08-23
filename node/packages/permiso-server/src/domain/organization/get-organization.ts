@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type {
   OrganizationDbRow,
   OrganizationWithProperties,
@@ -11,11 +11,11 @@ import { getOrganizationProperties } from "./get-organization-properties.js";
 const logger = createLogger("permiso-server:organizations");
 
 export async function getOrganization(
-  db: Database,
+  ctx: DataContext,
   id: string,
 ): Promise<Result<OrganizationWithProperties | null>> {
   try {
-    const orgRow = await db.oneOrNone<OrganizationDbRow>(
+    const orgRow = await ctx.db.oneOrNone<OrganizationDbRow>(
       `SELECT * FROM organization WHERE id = $(id)`,
       { id },
     );
@@ -24,7 +24,7 @@ export async function getOrganization(
       return { success: true, data: null };
     }
 
-    const propsResult = await getOrganizationProperties(db, id, false);
+    const propsResult = await getOrganizationProperties(ctx, id, false);
     if (!propsResult.success) {
       throw propsResult.error;
     }

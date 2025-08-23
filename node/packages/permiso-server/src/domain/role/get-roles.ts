@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { RoleDbRow, RoleWithProperties } from "../../types.js";
 import type {
   PropertyFilter,
@@ -12,7 +12,7 @@ import { getRoleProperties } from "./get-role-properties.js";
 const logger = createLogger("permiso-server:roles");
 
 export async function getRoles(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   filters?: {
     ids?: string[];
@@ -82,13 +82,13 @@ export async function getRoles(
       params.offset = pagination.offset;
     }
 
-    const rows = await db.manyOrNone<RoleDbRow>(query, params);
+    const rows = await ctx.db.manyOrNone<RoleDbRow>(query, params);
     const roles = rows.map(mapRoleFromDb);
 
     const result = await Promise.all(
       roles.map(async (role) => {
         const propertiesResult = await getRoleProperties(
-          db,
+          ctx,
           role.orgId,
           role.id,
           false,

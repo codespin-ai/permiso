@@ -1,13 +1,14 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { UserRole, UserRoleDbRow } from "../../types.js";
 import { mapUserRoleFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:users");
 
 export async function assignUserRole(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   roleId: string,
@@ -19,7 +20,7 @@ export async function assignUserRole(
       org_id: orgId,
     };
 
-    const row = await db.one<UserRoleDbRow>(
+    const row = await ctx.db.one<UserRoleDbRow>(
       `${sql.insert("user_role", params)}
        ON CONFLICT (user_id, role_id, org_id) DO NOTHING
        RETURNING *`,

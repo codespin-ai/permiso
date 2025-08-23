@@ -13,7 +13,7 @@ export const deleteResourcesByIdPrefixResolver = {
       }
 
       const result = await deleteResourcesByIdPrefix(
-        context.db,
+        context,
         args.orgId,
         args.idPrefix,
       );

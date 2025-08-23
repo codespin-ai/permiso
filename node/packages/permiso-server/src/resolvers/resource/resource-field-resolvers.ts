@@ -10,7 +10,7 @@ export const resourceFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getOrganization(context.db, parent.orgId);
+      const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
         throw result.error;
       }
@@ -23,7 +23,7 @@ export const resourceFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getPermissionsByResource(
-        context.db,
+        context,
         parent.orgId,
         parent.id,
       );

@@ -7,7 +7,6 @@ export {
 export { createUser, createUserResolver } from "./create-user.js";
 export { updateUser, updateUserResolver } from "./update-user.js";
 export { deleteUser, deleteUserResolver } from "./delete-user.js";
-export { getUserProperties } from "./get-user-properties.js";
 export {
   getUserProperty,
   getUserPropertyResolver,
@@ -25,5 +24,4 @@ export {
   unassignUserRole,
   unassignUserRoleResolver,
 } from "./unassign-user-role.js";
-export { getUserRoles } from "./get-user-roles.js";
 export { userFieldResolvers } from "./user-field-resolvers.js";

@@ -1,12 +1,12 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import { getEffectivePermissions } from "./get-effective-permissions.js";
 
 const logger = createLogger("permiso-server:permissions");
 
 export async function hasPermission(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   resourceId: string,
@@ -14,7 +14,7 @@ export async function hasPermission(
 ): Promise<Result<boolean>> {
   try {
     const result = await getEffectivePermissions(
-      db,
+      ctx,
       orgId,
       userId,
       resourceId,

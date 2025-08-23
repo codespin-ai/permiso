@@ -1,16 +1,16 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 
 const logger = createLogger("permiso-server:resources");
 
 export async function deleteResourcesByIdPrefix(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   idPrefix: string,
 ): Promise<Result<number>> {
   try {
-    const result = await db.result(
+    const result = await ctx.db.result(
       `DELETE FROM resource WHERE org_id = $(orgId) AND id LIKE $(idPattern)`,
       { orgId, idPattern: `${idPrefix}%` },
     );

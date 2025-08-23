@@ -9,7 +9,7 @@ export const updateResourceResolver = {
       context: { db: Database },
     ) => {
       const result = await updateResource(
-        context.db,
+        context,
         args.orgId,
         args.resourceId,
         args.input,

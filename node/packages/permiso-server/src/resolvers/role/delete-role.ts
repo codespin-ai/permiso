@@ -15,7 +15,7 @@ export const deleteRoleResolver = {
         throw new Error("Invalid safety key");
       }
 
-      const result = await deleteRole(context.db, args.orgId, args.roleId);
+      const result = await deleteRole(context, args.orgId, args.roleId);
       if (!result.success) {
         throw result.error;
       }

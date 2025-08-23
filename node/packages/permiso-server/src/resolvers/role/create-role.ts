@@ -12,14 +12,14 @@ export const createRoleResolver = {
       args: { input: any },
       context: { db: Database },
     ) => {
-      const result = await createRole(context.db, args.input);
+      const result = await createRole(context, args.input);
       if (!result.success) {
         throw result.error;
       }
 
       // Fetch with properties
       const roleResult = await getRole(
-        context.db,
+        context,
         args.input.orgId,
         result.data.id,
       );

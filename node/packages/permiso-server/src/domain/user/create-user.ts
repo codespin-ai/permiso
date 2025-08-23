@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { User, UserDbRow } from "../../types.js";
 import type { CreateUserInput } from "../../generated/graphql.js";
 import { mapUserFromDb } from "../../mappers.js";
@@ -8,11 +9,11 @@ import { mapUserFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:users");
 
 export async function createUser(
-  db: Database,
+  ctx: DataContext,
   input: CreateUserInput,
 ): Promise<Result<User>> {
   try {
-    const user = await db.tx(async (t) => {
+    const user = await ctx.db.tx(async (t) => {
       const params = {
         id: input.id,
         org_id: input.orgId,

@@ -14,7 +14,7 @@ export const getEffectivePermissionsResolver = {
       context: { db: Database },
     ) => {
       const result = await getEffectivePermissions(
-        context.db,
+        context,
         args.orgId,
         args.userId,
         args.resourcePath,

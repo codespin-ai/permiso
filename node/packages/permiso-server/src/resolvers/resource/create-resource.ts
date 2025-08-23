@@ -8,7 +8,7 @@ export const createResourceResolver = {
       args: { input: any },
       context: { db: Database },
     ) => {
-      const result = await createResource(context.db, args.input);
+      const result = await createResource(context, args.input);
       if (!result.success) {
         throw result.error;
       }

@@ -8,7 +8,7 @@ export const getOrganizationResolver = {
       args: { id: string },
       context: { db: Database },
     ) => {
-      const result = await getOrganization(context.db, args.id);
+      const result = await getOrganization(context, args.id);
       if (!result.success) {
         throw result.error;
       }

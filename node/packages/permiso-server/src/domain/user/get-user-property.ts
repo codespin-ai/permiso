@@ -1,19 +1,19 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { Property, PropertyDbRow } from "../../types.js";
 import { mapPropertyFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:users");
 
 export async function getUserProperty(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
   name: string,
 ): Promise<Result<Property | null>> {
   try {
-    const row = await db.oneOrNone<PropertyDbRow>(
+    const row = await ctx.db.oneOrNone<PropertyDbRow>(
       `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
       { userId, orgId, name },
     );

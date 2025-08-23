@@ -12,7 +12,7 @@ export const deleteRolePropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await deleteRoleProperty(
-        context.db,
+        context,
         args.orgId,
         args.roleId,
         args.name,

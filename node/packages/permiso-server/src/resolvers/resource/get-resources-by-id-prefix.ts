@@ -9,7 +9,7 @@ export const resourcesByIdPrefixResolver = {
       context: { db: Database },
     ) => {
       const result = await getResourcesByIdPrefix(
-        context.db,
+        context,
         args.orgId,
         args.idPrefix,
       );

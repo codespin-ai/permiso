@@ -9,7 +9,7 @@ export const getOrganizationsResolver = {
       context: { db: Database },
     ) => {
       const result = await getOrganizations(
-        context.db,
+        context,
         args.filter,
         args.pagination,
       );
@@ -20,7 +20,7 @@ export const getOrganizationsResolver = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getOrganizations(context.db, args.filter);
+        const countResult = await getOrganizations(context, args.filter);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -53,7 +53,7 @@ export const getOrganizationsResolver = {
       args: { ids: string[] },
       context: { db: Database },
     ) => {
-      const result = await getOrganizations(context.db, { ids: args.ids });
+      const result = await getOrganizations(context, { ids: args.ids });
       if (!result.success) {
         throw result.error;
       }

@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { RoleDbRow, RoleWithProperties } from "../../types.js";
 import { mapRoleFromDb } from "../../mappers.js";
 import { getRoleProperties } from "./get-role-properties.js";
@@ -8,12 +8,12 @@ import { getRoleProperties } from "./get-role-properties.js";
 const logger = createLogger("permiso-server:roles");
 
 export async function getRole(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId: string,
 ): Promise<Result<RoleWithProperties | null>> {
   try {
-    const roleRow = await db.oneOrNone<RoleDbRow>(
+    const roleRow = await ctx.db.oneOrNone<RoleDbRow>(
       `SELECT * FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
       { roleId, orgId },
     );
@@ -22,7 +22,7 @@ export async function getRole(
       return { success: true, data: null };
     }
 
-    const propertiesResult = await getRoleProperties(db, orgId, roleId, false);
+    const propertiesResult = await getRoleProperties(ctx, orgId, roleId, false);
     if (!propertiesResult.success) {
       throw propertiesResult.error;
     }

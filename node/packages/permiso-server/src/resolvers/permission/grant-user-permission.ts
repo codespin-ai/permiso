@@ -16,7 +16,7 @@ export const grantUserPermissionResolver = {
       context: { db: Database },
     ) => {
       const result = await grantUserPermission(
-        context.db,
+        context,
         args.input.orgId,
         args.input.userId,
         args.input.resourceId,

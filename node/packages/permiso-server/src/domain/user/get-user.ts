@@ -1,6 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type { UserDbRow, UserWithProperties, Property } from "../../types.js";
 import { mapUserFromDb } from "../../mappers.js";
 import { getUserProperties } from "./get-user-properties.js";
@@ -9,12 +9,12 @@ import { getUserRoles } from "./get-user-roles.js";
 const logger = createLogger("permiso-server:users");
 
 export async function getUser(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   userId: string,
 ): Promise<Result<UserWithProperties | null>> {
   try {
-    const userRow = await db.oneOrNone<UserDbRow>(
+    const userRow = await ctx.db.oneOrNone<UserDbRow>(
       `SELECT * FROM "user" WHERE id = $(userId) AND org_id = $(orgId)`,
       { userId, orgId },
     );
@@ -24,8 +24,8 @@ export async function getUser(
     }
 
     const [propertiesResult, roleIds] = await Promise.all([
-      getUserProperties(db, orgId, userId, false),
-      getUserRoles(db, orgId, userId),
+      getUserProperties(ctx, orgId, userId, false),
+      getUserRoles(ctx, orgId, userId),
     ]);
 
     if (!propertiesResult.success) {

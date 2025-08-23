@@ -13,7 +13,7 @@ export const roleFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getOrganization(context.db, parent.orgId);
+      const result = await getOrganization(context, parent.orgId);
       if (!result.success) {
         throw result.error;
       }
@@ -25,11 +25,7 @@ export const roleFieldResolvers = {
       _: any,
       context: { db: Database },
     ) => {
-      const result = await getRoleProperties(
-        context.db,
-        parent.orgId,
-        parent.id,
-      );
+      const result = await getRoleProperties(context, parent.orgId, parent.id);
       if (!result.success) {
         throw result.error;
       }
@@ -42,7 +38,7 @@ export const roleFieldResolvers = {
       context: { db: Database },
     ) => {
       const userIdsResult = await getRoleUsers(
-        context.db,
+        context,
         parent.orgId,
         parent.id,
       );
@@ -54,7 +50,7 @@ export const roleFieldResolvers = {
         return [];
       }
 
-      const result = await getUsers(context.db, parent.orgId, {
+      const result = await getUsers(context, parent.orgId, {
         ids: userIdsResult.data,
       });
       if (!result.success) {
@@ -69,7 +65,7 @@ export const roleFieldResolvers = {
       context: { db: Database },
     ) => {
       const result = await getRolePermissions(
-        context.db,
+        context,
         parent.orgId,
         parent.id,
         args.resourcePath,

@@ -13,7 +13,7 @@ export const deleteOrganizationResolver = {
         throw new Error("Invalid safety key - must match organization ID");
       }
 
-      const result = await deleteOrganization(context.db, args.id);
+      const result = await deleteOrganization(context, args.id);
       if (!result.success) {
         throw result.error;
       }

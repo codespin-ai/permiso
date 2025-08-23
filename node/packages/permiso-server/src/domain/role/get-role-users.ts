@@ -1,16 +1,16 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import type { Database } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 
 const logger = createLogger("permiso-server:roles");
 
 export async function getRoleUsers(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId: string,
 ): Promise<Result<string[]>> {
   try {
-    const rows = await db.manyOrNone<{ user_id: string }>(
+    const rows = await ctx.db.manyOrNone<{ user_id: string }>(
       `SELECT user_id FROM user_role WHERE role_id = $(roleId) AND org_id = $(orgId)`,
       { roleId, orgId },
     );

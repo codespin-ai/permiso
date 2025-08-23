@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { type Database, sql } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
+import type { DataContext } from "../context.js";
 import type {
   RolePermissionWithOrgId,
   RolePermissionDbRow,
@@ -10,7 +11,7 @@ import { mapRolePermissionFromDb } from "../../mappers.js";
 const logger = createLogger("permiso-server:permissions");
 
 export async function grantRolePermission(
-  db: Database,
+  ctx: DataContext,
   orgId: string,
   roleId: string,
   resourceId: string,
@@ -24,7 +25,7 @@ export async function grantRolePermission(
       action: action,
     };
 
-    const row = await db.one<RolePermissionDbRow>(
+    const row = await ctx.db.one<RolePermissionDbRow>(
       `${sql.insert("role_permission", params)}
        ON CONFLICT (role_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,

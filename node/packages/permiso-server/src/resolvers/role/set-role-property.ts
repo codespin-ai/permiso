@@ -18,7 +18,7 @@ export const setRolePropertyResolver = {
       context: { db: Database },
     ) => {
       const result = await setRoleProperty(
-        context.db,
+        context,
         args.orgId,
         args.roleId,
         args.name,
