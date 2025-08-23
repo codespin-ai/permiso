@@ -1,6 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
-import { Result } from "@codespin/permiso-core";
+import { Result, stringUtils } from "@codespin/permiso-core";
 import type { Database } from "@codespin/permiso-db";
+import { sql } from "@codespin/permiso-db";
 import type {
   UserPermissionWithOrgId,
   UserPermissionDbRow,
@@ -17,12 +18,18 @@ export async function grantUserPermission(
   action: string,
 ): Promise<Result<UserPermissionWithOrgId>> {
   try {
+    const params = stringUtils.toSnakeCase({
+      userId,
+      orgId,
+      resourceId,
+      action,
+    });
+
     const row = await db.one<UserPermissionDbRow>(
-      `INSERT INTO user_permission (user_id, org_id, resource_id, action) 
-       VALUES ($(userId), $(orgId), $(resourceId), $(action)) 
+      `${sql.insert("user_permission", params)}
        ON CONFLICT (user_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
-      { userId, orgId, resourceId, action },
+      params,
     );
 
     return { success: true, data: mapUserPermissionFromDb(row) };

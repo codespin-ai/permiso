@@ -1,4 +1,5 @@
 import pgPromise from "pg-promise";
+export * as sql from "./sql.js";
 
 const pgp = pgPromise({});
 
