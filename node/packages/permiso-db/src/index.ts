@@ -64,14 +64,17 @@ function getOrCreateConnection(
   return connectionPools.get(key)!;
 }
 
+// Get the ROOT organization ID from environment or use default
+const ROOT_ORG_ID = process.env.PERMISO_ROOT_ORG_ID || "$ROOT";
+
 // Create RLS-enabled database connection
 export function createRlsDb(orgId: string): Database {
   if (!orgId) {
     throw new Error("Organization ID is required for RLS database");
   }
 
-  // Special case: "ROOT" organization bypasses RLS
-  if (orgId === "ROOT") {
+  // Special case: ROOT organization bypasses RLS
+  if (orgId === ROOT_ORG_ID) {
     return createUnrestrictedDb();
   }
 

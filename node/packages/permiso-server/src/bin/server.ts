@@ -16,6 +16,9 @@ import { getApiKeyConfig, validateApiKey } from "../auth/api-key.js";
 
 const logger = createLogger("GraphQLServer");
 
+// Get the ROOT organization ID from environment or use default
+const ROOT_ORG_ID = process.env.PERMISO_ROOT_ORG_ID || "$ROOT";
+
 async function startServer() {
   // Initialize health check database (uses legacy connection for system operations)
   const dbConfig = {
@@ -103,10 +106,10 @@ async function startServer() {
         }
 
         // Create RLS-aware database connection
-        // Special case: "ROOT" organization gets unrestricted access
+        // Special case: ROOT organization gets unrestricted access
         let db;
         try {
-          if (orgId === "ROOT") {
+          if (orgId === ROOT_ORG_ID) {
             // For ROOT requests, try unrestricted first, fall back to legacy for dev/test
             try {
               db = createUnrestrictedDb();
@@ -114,7 +117,7 @@ async function startServer() {
               // If RLS is not configured, fall back to legacy for ROOT requests only
               if (rlsError.message?.includes("UNRESTRICTED_DB_USER_PASSWORD")) {
                 logger.warn(
-                  "RLS not configured, using legacy database connection for ROOT",
+                  `RLS not configured, using legacy database connection for ${ROOT_ORG_ID}`,
                 );
                 db = createDatabaseConnection({
                   host: process.env.PERMISO_DB_HOST || "localhost",

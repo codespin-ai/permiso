@@ -32,6 +32,16 @@ Permiso uses environment variables for configuration. All variables are optional
 
 **Note**: Setting `PERMISO_API_KEY` automatically enables API key authentication.
 
+### Row Level Security (RLS) Configuration
+
+| Variable                        | Description                             | Default                |
+| ------------------------------- | --------------------------------------- | ---------------------- |
+| `PERMISO_ROOT_ORG_ID`           | Organization ID that bypasses RLS       | `$ROOT`                |
+| `RLS_DB_USER`                   | Database user for RLS-filtered access   | `rls_db_user`          |
+| `RLS_DB_USER_PASSWORD`          | Password for RLS database user          | (required)             |
+| `UNRESTRICTED_DB_USER`          | Database user for unrestricted access   | `unrestricted_db_user` |
+| `UNRESTRICTED_DB_USER_PASSWORD` | Password for unrestricted database user | (required)             |
+
 ### Docker-Specific Configuration
 
 | Variable               | Description                             | Default |
