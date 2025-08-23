@@ -1,6 +1,6 @@
 import type { Database } from "@codespin/permiso-db";
 import type { OrganizationWithProperties } from "../../types.js";
-import { getOrganizationProperties } from "./get-organization-properties.js";
+import { getOrganizationProperties } from "../../domain/organization/get-organization-properties.js";
 import { getUsers } from "../user/get-users.js";
 import { getRoles } from "../role/get-roles.js";
 import {
