@@ -31,7 +31,7 @@ export async function getRoles(
         WHERE r.id IN (
             SELECT parent_id 
             FROM role_property
-              AND (name, value) IN (
+            WHERE (name, value) IN (
       `;
 
       const propConditions: string[] = [];
@@ -59,7 +59,7 @@ export async function getRoles(
       `;
 
       if (filters?.ids && filters.ids.length > 0) {
-        query += ` AND r.id = ANY($(ids))`;
+        query += ` WHERE r.id = ANY($(ids))`;
         params.ids = filters.ids;
       }
     }

@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext, createOrgClient } from "../index.js";
 
 describe("Resources", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
-    // Create test organization
+    // Create test organization using ROOT client
     const mutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
         createOrganization(input: $input) {
@@ -15,12 +15,15 @@ describe("Resources", () => {
       }
     `;
 
-    await client.mutate(mutation, {
+    await rootClient.mutate(mutation, {
       input: {
         id: "test-org",
         name: "Test Organization",
       },
     });
+
+    // Switch to organization context for RLS operations
+    switchToOrgContext("test-org");
   });
 
   describe("createResource", () => {
@@ -51,7 +54,10 @@ describe("Resources", () => {
       expect(resource?.description).to.equal("User management endpoints");
     });
 
-    it("should fail with non-existent organization", async () => {
+    it("should fail when trying to access non-existent organization", async () => {
+      // Switch to a non-existent organization context
+      const nonExistentOrgClient = createOrgClient("non-existent-org");
+      
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -61,7 +67,7 @@ describe("Resources", () => {
       `;
 
       try {
-        const result = await client.mutate(mutation, {
+        const result = await nonExistentOrgClient.mutate(mutation, {
           input: {
             id: "/api/users/*",
             name: "User API",
@@ -75,7 +81,9 @@ describe("Resources", () => {
             (msg: string) =>
               msg.includes("foreign key violation") ||
               msg.includes("is not present in table") ||
-              msg.includes("constraint"),
+              msg.includes("constraint") ||
+              msg.includes("organization") ||
+              msg.includes("not found"),
           );
         } else {
           expect.fail("Should have returned an error");
@@ -88,7 +96,9 @@ describe("Resources", () => {
           (msg: string) =>
             msg.includes("foreign key violation") ||
             msg.includes("is not present in table") ||
-            msg.includes("constraint"),
+            msg.includes("constraint") ||
+            msg.includes("organization") ||
+            msg.includes("not found"),
         );
       }
     });

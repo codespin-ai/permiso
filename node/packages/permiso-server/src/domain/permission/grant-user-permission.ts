@@ -18,6 +18,7 @@ export async function grantUserPermission(
 ): Promise<Result<UserPermissionWithOrgId>> {
   try {
     const params = {
+      org_id: ctx.orgId,
       user_id: userId,
       resource_id: resourceId,
       action: action,
@@ -25,7 +26,7 @@ export async function grantUserPermission(
 
     const row = await ctx.db.one<UserPermissionDbRow>(
       `${sql.insert("user_permission", params)}
-       ON CONFLICT (user_id, resource_id, action) DO UPDATE SET created_at = NOW()
+       ON CONFLICT (org_id, user_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
       params,
     );
