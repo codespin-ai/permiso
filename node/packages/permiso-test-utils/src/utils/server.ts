@@ -62,6 +62,11 @@ export class TestServer {
         PERMISO_DB_NAME: this.dbName, // Use test database
         PERMISO_DB_USER: process.env.PERMISO_DB_USER || "postgres",
         PERMISO_DB_PASSWORD: process.env.PERMISO_DB_PASSWORD || "postgres",
+        // RLS database users - required for RLS operations
+        RLS_DB_USER: process.env.RLS_DB_USER || "rls_db_user",
+        RLS_DB_USER_PASSWORD: process.env.RLS_DB_USER_PASSWORD || "changeme_rls_password",
+        UNRESTRICTED_DB_USER: process.env.UNRESTRICTED_DB_USER || "unrestricted_db_user",
+        UNRESTRICTED_DB_USER_PASSWORD: process.env.UNRESTRICTED_DB_USER_PASSWORD || "changeme_admin_password",
         // Include API key settings if present
         PERMISO_API_KEY: process.env.PERMISO_API_KEY || "",
         PERMISO_API_KEY_ENABLED: process.env.PERMISO_API_KEY_ENABLED || "false",

@@ -8,12 +8,11 @@ export const getRolePropertyResolver = {
   Query: {
     roleProperty: async (
       _: any,
-      args: { orgId: string; roleId: string; propertyName: string },
+      args: { roleId: string; propertyName: string },
       context: DataContext,
     ) => {
       const result = await getRoleProperty(
         context,
-        args.orgId,
         args.roleId,
         args.propertyName,
       );

@@ -92,7 +92,8 @@ export const up = async (knex) => {
       CREATE POLICY ${table}_isolation ON "${table}"
         FOR ALL
         TO rls_db_user
-        USING (org_id = current_setting('app.current_org_id', true));
+        USING (org_id = current_setting('app.current_org_id', true))
+        WITH CHECK (org_id = current_setting('app.current_org_id', true));
     `);
   }
 
@@ -107,7 +108,8 @@ export const up = async (knex) => {
       CREATE POLICY ${table}_isolation ON "${table}"
         FOR ALL
         TO rls_db_user
-        USING (org_id = current_setting('app.current_org_id', true));
+        USING (org_id = current_setting('app.current_org_id', true))
+        WITH CHECK (org_id = current_setting('app.current_org_id', true));
     `);
   }
 
@@ -123,7 +125,8 @@ export const up = async (knex) => {
       CREATE POLICY ${table}_isolation ON "${table}"
         FOR ALL
         TO rls_db_user
-        USING (org_id = current_setting('app.current_org_id', true));
+        USING (org_id = current_setting('app.current_org_id', true))
+        WITH CHECK (org_id = current_setting('app.current_org_id', true));
     `);
   }
 

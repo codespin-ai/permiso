@@ -15,7 +15,6 @@ export const getRolePermissionsResolver = {
     ) => {
       const result = await getRolePermissions(
         context,
-        args.orgId,
         args.roleId,
         args.resourceId,
         args.action,

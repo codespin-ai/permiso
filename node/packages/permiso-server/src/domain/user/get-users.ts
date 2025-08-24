@@ -14,7 +14,6 @@ const logger = createLogger("permiso-server:users");
 
 export async function getUsers(
   ctx: DataContext,
-  orgId: string,
   filters?: {
     ids?: string[];
     properties?: PropertyFilter[];
@@ -25,18 +24,16 @@ export async function getUsers(
 ): Promise<Result<UserWithProperties[]>> {
   try {
     let query: string;
-    const params: Record<string, any> = { orgId };
+    const params: Record<string, any> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
       // Use a subquery to find users that have ALL the requested properties
       query = `
         SELECT DISTINCT u.* 
         FROM "user" u
-        WHERE u.org_id = $(orgId)
-          AND u.id IN (
+        WHERE u.id IN (
             SELECT parent_id 
             FROM user_property
-            WHERE org_id = $(orgId)
               AND (name, value) IN (
       `;
 
@@ -72,7 +69,6 @@ export async function getUsers(
       query = `
         SELECT DISTINCT u.* 
         FROM "user" u
-        WHERE u.org_id = $(orgId)
       `;
 
       if (filters?.ids && filters.ids.length > 0) {
@@ -111,8 +107,8 @@ export async function getUsers(
     const result = await Promise.all(
       users.map(async (user) => {
         const [propertiesResult, roleIds] = await Promise.all([
-          getUserProperties(ctx, user.orgId, user.id, false),
-          getUserRoles(ctx, user.orgId, user.id),
+          getUserProperties(ctx, user.id, false),
+          getUserRoles(ctx, user.id),
         ]);
 
         if (!propertiesResult.success) {
@@ -135,7 +131,7 @@ export async function getUsers(
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error("Failed to get users", { error, orgId, filters });
+    logger.error("Failed to get users", { error, filters });
     return { success: false, error: error as Error };
   }
 }

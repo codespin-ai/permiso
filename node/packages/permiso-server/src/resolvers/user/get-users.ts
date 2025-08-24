@@ -8,12 +8,11 @@ export const getUsersResolver = {
   Query: {
     users: async (
       _: any,
-      args: { orgId: string; filter?: any; pagination?: any },
+      args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
       const result = await getUsers(
         context,
-        args.orgId,
         args.filter,
         args.pagination,
       );
@@ -24,7 +23,7 @@ export const getUsersResolver = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getUsers(context, args.orgId, args.filter);
+        const countResult = await getUsers(context, args.filter);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -54,10 +53,10 @@ export const getUsersResolver = {
 
     usersByIds: async (
       _: any,
-      args: { orgId: string; ids: string[] },
+      args: { ids: string[] },
       context: DataContext,
     ) => {
-      const result = await getUsers(context, args.orgId, { ids: args.ids });
+      const result = await getUsers(context, { ids: args.ids });
       if (!result.success) {
         throw result.error;
       }

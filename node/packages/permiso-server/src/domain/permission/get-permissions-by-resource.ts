@@ -8,14 +8,12 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function getPermissionsByResource(
   ctx: DataContext,
-  orgId: string,
   resourceId: string,
 ): Promise<Result<Array<any>>> {
   try {
     // Get user permissions for this resource
     const userPermsResult = await getUserPermissions(
       ctx,
-      orgId,
       undefined, // no specific user filter
       resourceId,
       undefined, // no specific action filter
@@ -28,7 +26,6 @@ export async function getPermissionsByResource(
     // Get role permissions for this resource
     const rolePermsResult = await getRolePermissions(
       ctx,
-      orgId,
       undefined, // no specific role filter
       resourceId,
       undefined, // no specific action filter
@@ -62,7 +59,6 @@ export async function getPermissionsByResource(
   } catch (error) {
     logger.error("Failed to get permissions by resource", {
       error,
-      orgId,
       resourceId,
     });
     return { success: false, error: error as Error };

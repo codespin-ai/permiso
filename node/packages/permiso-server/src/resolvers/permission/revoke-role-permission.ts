@@ -15,7 +15,6 @@ export const revokeRolePermissionResolver = {
     ) => {
       const result = await revokeRolePermission(
         context,
-        args.orgId,
         args.roleId,
         args.resourceId,
         args.action,

@@ -11,14 +11,13 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function getRolePermissions(
   ctx: DataContext,
-  orgId: string,
   roleId?: string,
   resourceId?: string,
   action?: string,
 ): Promise<Result<RolePermissionWithOrgId[]>> {
   try {
-    let query = `SELECT * FROM role_permission WHERE org_id = $(orgId)`;
-    const params: Record<string, any> = { orgId };
+    let query = `SELECT * FROM role_permission WHERE 1=1`;
+    const params: Record<string, any> = {};
 
     if (roleId) {
       query += ` AND role_id = $(roleId)`;
@@ -42,7 +41,6 @@ export async function getRolePermissions(
   } catch (error) {
     logger.error("Failed to get role permissions", {
       error,
-      orgId,
       roleId,
       resourceId,
       action,

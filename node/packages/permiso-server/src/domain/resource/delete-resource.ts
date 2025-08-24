@@ -6,17 +6,16 @@ const logger = createLogger("permiso-server:resources");
 
 export async function deleteResource(
   ctx: DataContext,
-  orgId: string,
   resourceId: string,
 ): Promise<Result<boolean>> {
   try {
     await ctx.db.none(
-      `DELETE FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
-      { resourceId, orgId },
+      `DELETE FROM resource WHERE id = $(resourceId)`,
+      { resourceId },
     );
     return { success: true, data: true };
   } catch (error) {
-    logger.error("Failed to delete resource", { error, orgId, resourceId });
+    logger.error("Failed to delete resource", { error, resourceId });
     return { success: false, error: error as Error };
   }
 }

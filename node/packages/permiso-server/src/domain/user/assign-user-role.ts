@@ -9,7 +9,6 @@ const logger = createLogger("permiso-server:users");
 
 export async function assignUserRole(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   roleId: string,
 ): Promise<Result<UserRole>> {
@@ -17,12 +16,11 @@ export async function assignUserRole(
     const params = {
       user_id: userId,
       role_id: roleId,
-      org_id: orgId,
     };
 
     const row = await ctx.db.one<UserRoleDbRow>(
       `${sql.insert("user_role", params)}
-       ON CONFLICT (user_id, role_id, org_id) DO NOTHING
+       ON CONFLICT (user_id, role_id) DO NOTHING
        RETURNING *`,
       params,
     );
@@ -31,7 +29,6 @@ export async function assignUserRole(
   } catch (error) {
     logger.error("Failed to assign user role", {
       error,
-      orgId,
       userId,
       roleId,
     });

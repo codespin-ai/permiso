@@ -8,12 +8,11 @@ export const deleteUserPropertyResolver = {
   Mutation: {
     deleteUserProperty: async (
       _: any,
-      args: { orgId: string; userId: string; name: string },
+      args: { userId: string; name: string },
       context: DataContext,
     ) => {
       const result = await deleteUserProperty(
         context,
-        args.orgId,
         args.userId,
         args.name,
       );

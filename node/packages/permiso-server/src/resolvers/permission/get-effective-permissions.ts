@@ -15,7 +15,6 @@ export const getEffectivePermissionsResolver = {
     ) => {
       const result = await getEffectivePermissions(
         context,
-        args.orgId,
         args.userId,
         args.resourcePath,
         args.action,

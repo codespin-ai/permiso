@@ -7,7 +7,8 @@ import { GraphQLClient } from "./utils/graphql-client.js";
 
 export let testDb: TestDatabase;
 export let server: TestServer;
-export let client: GraphQLClient;
+export let rootClient: GraphQLClient; // For organization management (ROOT operations)
+export let client: GraphQLClient; // For backward compatibility - will point to orgClient
 
 export async function setupTests() {
   // Setup database
@@ -22,21 +23,49 @@ export async function setupTests() {
   });
   await server.start();
 
-  // Initialize GraphQL client with ROOT org-id for unrestricted test access
-  client = new GraphQLClient("http://localhost:5002/graphql", {
+  // Initialize ROOT client for organization management
+  rootClient = new GraphQLClient("http://localhost:5002/graphql", {
     headers: {
       "x-org-id": "$ROOT",
     },
     logger: testLogger,
   });
 
+  // For backward compatibility, client initially points to rootClient
+  // Individual tests will switch to organization-specific context
+  client = rootClient;
+
   testLogger.info("Test environment ready");
+}
+
+/**
+ * Create a GraphQL client for a specific organization context
+ * Use this for RLS operations within a specific organization
+ */
+export function createOrgClient(orgId: string): GraphQLClient {
+  return new GraphQLClient("http://localhost:5002/graphql", {
+    headers: {
+      "x-org-id": orgId,
+    },
+    logger: testLogger,
+  });
+}
+
+/**
+ * Switch the default client to a specific organization context
+ * Useful for tests that need to operate within a single organization
+ */
+export function switchToOrgContext(orgId: string) {
+  client = createOrgClient(orgId);
 }
 
 export async function teardownTests() {
   try {
-    // Stop GraphQL client first
-    if (client) {
+    // Stop GraphQL clients
+    if (rootClient) {
+      await rootClient.stop();
+    }
+    if (client && client !== rootClient) {
       await client.stop();
     }
 

@@ -9,12 +9,11 @@ export const assignUserRoleResolver = {
   Mutation: {
     assignUserRole: async (
       _: any,
-      args: { orgId: string; userId: string; roleId: string },
+      args: { userId: string; roleId: string },
       context: DataContext,
     ) => {
       const result = await assignUserRole(
         context,
-        args.orgId,
         args.userId,
         args.roleId,
       );
@@ -23,7 +22,7 @@ export const assignUserRoleResolver = {
       }
 
       // Return the updated user
-      const userResult = await getUser(context, args.orgId, args.userId);
+      const userResult = await getUser(context, args.userId);
       if (!userResult.success) {
         throw userResult.error;
       }

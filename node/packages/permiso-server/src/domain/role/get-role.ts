@@ -9,20 +9,19 @@ const logger = createLogger("permiso-server:roles");
 
 export async function getRole(
   ctx: DataContext,
-  orgId: string,
   roleId: string,
 ): Promise<Result<RoleWithProperties | null>> {
   try {
     const roleRow = await ctx.db.oneOrNone<RoleDbRow>(
-      `SELECT * FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
-      { roleId, orgId },
+      `SELECT * FROM role WHERE id = $(roleId)`,
+      { roleId },
     );
 
     if (!roleRow) {
       return { success: true, data: null };
     }
 
-    const propertiesResult = await getRoleProperties(ctx, orgId, roleId, false);
+    const propertiesResult = await getRoleProperties(ctx, roleId, false);
     if (!propertiesResult.success) {
       throw propertiesResult.error;
     }
@@ -42,7 +41,7 @@ export async function getRole(
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error("Failed to get role", { error, orgId, roleId });
+    logger.error("Failed to get role", { error, roleId });
     return { success: false, error: error as Error };
   }
 }

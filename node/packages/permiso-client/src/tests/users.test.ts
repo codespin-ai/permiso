@@ -37,7 +37,6 @@ describe("Users API", () => {
       const userId = generateTestId("user");
       const result = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "user@example.com",
         properties: [
@@ -63,14 +62,12 @@ describe("Users API", () => {
 
       const role1Result = await createRole(config, {
         id: role1Id,
-        orgId: testOrgId,
         name: "Admin",
       });
       expect(role1Result.success).to.be.true;
 
       const role2Result = await createRole(config, {
         id: role2Id,
-        orgId: testOrgId,
         name: "Editor",
       });
       expect(role2Result.success).to.be.true;
@@ -79,7 +76,6 @@ describe("Users API", () => {
       const userId = generateTestId("user");
       const result = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "auth0",
         identityProviderUserId: "auth0|123456",
         roleIds: [role1Id, role2Id],
@@ -102,7 +98,6 @@ describe("Users API", () => {
       // Create user
       const createResult = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "user@example.com",
       });
@@ -135,7 +130,6 @@ describe("Users API", () => {
         userIds.push(userId);
         const result = await createUser(config, {
           id: userId,
-          orgId: testOrgId,
           identityProvider: "google",
           identityProviderUserId: `user${i}@example.com`,
         });
@@ -159,14 +153,12 @@ describe("Users API", () => {
       // Create users with different providers
       await createUser(config, {
         id: generateTestId("user-google"),
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "google@example.com",
       });
 
       await createUser(config, {
         id: generateTestId("user-auth0"),
-        orgId: testOrgId,
         identityProvider: "auth0",
         identityProviderUserId: "auth0|123",
       });
@@ -192,7 +184,6 @@ describe("Users API", () => {
         userIds.push(userId);
         const result = await createUser(config, {
           id: userId,
-          orgId: testOrgId,
           identityProvider: "google",
           identityProviderUserId: `user${i}@example.com`,
         });
@@ -217,7 +208,6 @@ describe("Users API", () => {
       // Create user in one org
       await createUser(config, {
         id: generateTestId("user1"),
-        orgId: testOrgId,
         identityProvider,
         identityProviderUserId,
       });
@@ -231,7 +221,6 @@ describe("Users API", () => {
 
       await createUser(config, {
         id: generateTestId("user2"),
-        orgId: org2Id,
         identityProvider,
         identityProviderUserId,
       });
@@ -260,7 +249,6 @@ describe("Users API", () => {
       // Create user
       const createResult = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "old@example.com",
       });
@@ -286,7 +274,6 @@ describe("Users API", () => {
       userId = generateTestId("user");
       const result = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "user@example.com",
       });
@@ -366,7 +353,6 @@ describe("Users API", () => {
       userId = generateTestId("user");
       const userResult = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "user@example.com",
       });
@@ -376,7 +362,6 @@ describe("Users API", () => {
       roleId = generateTestId("role");
       const roleResult = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Test Role",
       });
       expect(roleResult.success).to.be.true;
@@ -417,7 +402,6 @@ describe("Users API", () => {
       // Create user
       const createResult = await createUser(config, {
         id: userId,
-        orgId: testOrgId,
         identityProvider: "google",
         identityProviderUserId: "user@example.com",
       });

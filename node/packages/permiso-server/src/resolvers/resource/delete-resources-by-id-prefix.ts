@@ -14,7 +14,6 @@ export const deleteResourcesByIdPrefixResolver = {
 
       const result = await deleteResourcesByIdPrefix(
         context,
-        args.orgId,
         args.idPrefix,
       );
       if (!result.success) {

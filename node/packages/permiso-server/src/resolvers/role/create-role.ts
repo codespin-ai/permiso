@@ -16,7 +16,6 @@ export const createRoleResolver = {
       // Fetch with properties
       const roleResult = await getRole(
         context,
-        args.input.orgId,
         result.data.id,
       );
       if (!roleResult.success) {

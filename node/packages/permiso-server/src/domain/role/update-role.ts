@@ -10,7 +10,6 @@ const logger = createLogger("permiso-server:roles");
 
 export async function updateRole(
   ctx: DataContext,
-  orgId: string,
   roleId: string,
   input: UpdateRoleInput,
 ): Promise<Result<Role>> {
@@ -27,12 +26,11 @@ export async function updateRole(
 
     const whereParams = {
       role_id: roleId,
-      org_id: orgId,
     };
 
     const query = `
       ${sql.update("role", updateParams)}, updated_at = NOW()
-      WHERE id = $(role_id) AND org_id = $(org_id)
+      WHERE id = $(role_id)
       RETURNING *
     `;
 
@@ -40,7 +38,7 @@ export async function updateRole(
     const row = await ctx.db.one<RoleDbRow>(query, params);
     return { success: true, data: mapRoleFromDb(row) };
   } catch (error) {
-    logger.error("Failed to update role", { error, orgId, roleId, input });
+    logger.error("Failed to update role", { error, roleId, input });
     return { success: false, error: error as Error };
   }
 }

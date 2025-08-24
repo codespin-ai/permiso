@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext, createOrgClient } from "../index.js";
 
 describe("Users", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
-    // Create test organization
+    // Create test organization using ROOT client
     const mutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
         createOrganization(input: $input) {
@@ -15,12 +15,15 @@ describe("Users", () => {
       }
     `;
 
-    await client.mutate(mutation, {
+    await rootClient.mutate(mutation, {
       input: {
         id: "test-org",
         name: "Test Organization",
       },
     });
+
+    // Switch to organization context for RLS operations
+    switchToOrgContext("test-org");
   });
 
   describe("createUser", () => {
@@ -44,7 +47,6 @@ describe("Users", () => {
       const result = await client.mutate(mutation, {
         input: {
           id: "user-123",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|12345",
           properties: [
@@ -53,7 +55,7 @@ describe("Users", () => {
           ],
         },
       });
-
+      
       const user = result.data?.createUser;
       expect(user?.id).to.equal("user-123");
       expect(user?.orgId).to.equal("test-org");
@@ -78,7 +80,10 @@ describe("Users", () => {
       });
     });
 
-    it("should fail with non-existent organization", async () => {
+    it("should fail when trying to access non-existent organization", async () => {
+      // Switch to a non-existent organization context
+      const nonExistentOrgClient = createOrgClient("non-existent-org");
+      
       const mutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
@@ -88,10 +93,9 @@ describe("Users", () => {
       `;
 
       try {
-        const result = await client.mutate(mutation, {
+        const result = await nonExistentOrgClient.mutate(mutation, {
           input: {
             id: "user-123",
-            orgId: "non-existent-org",
             identityProvider: "auth0",
             identityProviderUserId: "auth0|12345",
           },
@@ -104,7 +108,9 @@ describe("Users", () => {
             (msg: string) =>
               msg.includes("foreign key violation") ||
               msg.includes("is not present in table") ||
-              msg.includes("constraint"),
+              msg.includes("constraint") ||
+              msg.includes("organization") ||
+              msg.includes("not found"),
           );
         } else {
           expect.fail("Should have returned an error");
@@ -117,7 +123,9 @@ describe("Users", () => {
           (msg: string) =>
             msg.includes("foreign key violation") ||
             msg.includes("is not present in table") ||
-            msg.includes("constraint"),
+            msg.includes("constraint") ||
+            msg.includes("organization") ||
+            msg.includes("not found"),
         );
       }
     });
@@ -137,7 +145,6 @@ describe("Users", () => {
       await client.mutate(createUserMutation, {
         input: {
           id: "user-1",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|1",
         },
@@ -146,7 +153,6 @@ describe("Users", () => {
       await client.mutate(createUserMutation, {
         input: {
           id: "user-2",
-          orgId: "test-org",
           identityProvider: "google",
           identityProviderUserId: "google|2",
         },
@@ -154,8 +160,8 @@ describe("Users", () => {
 
       // Query users
       const query = gql`
-        query ListUsers($orgId: ID!) {
-          users(orgId: $orgId) {
+        query ListUsers {
+          users {
             nodes {
               id
               orgId
@@ -166,7 +172,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "test-org" });
+      const result = await client.query(query, {});
 
       expect(result.data?.users?.nodes).to.have.lengthOf(2);
       const userIds = result.data?.users?.nodes.map((u: any) => u.id);
@@ -175,8 +181,8 @@ describe("Users", () => {
 
     it("should return empty array for organization with no users", async () => {
       const query = gql`
-        query ListUsers($orgId: ID!) {
-          users(orgId: $orgId) {
+        query ListUsers {
+          users {
             nodes {
               id
             }
@@ -184,7 +190,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "test-org" });
+      const result = await client.query(query, {});
 
       expect(result.data?.users?.nodes).to.deep.equal([]);
     });
@@ -204,7 +210,6 @@ describe("Users", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-123",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|12345",
           properties: [{ name: "email", value: "user@example.com" }],
@@ -213,8 +218,8 @@ describe("Users", () => {
 
       // Query user
       const query = gql`
-        query GetUser($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query GetUser($userId: ID!) {
+          user(userId: $userId) {
             id
             orgId
             identityProvider
@@ -231,7 +236,6 @@ describe("Users", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         userId: "user-123",
       });
 
@@ -261,7 +265,6 @@ describe("Users", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-123",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|12345",
         },
@@ -270,11 +273,10 @@ describe("Users", () => {
       // Update user
       const updateMutation = gql`
         mutation UpdateUser(
-          $orgId: ID!
           $userId: ID!
           $input: UpdateUserInput!
         ) {
-          updateUser(orgId: $orgId, userId: $userId, input: $input) {
+          updateUser(userId: $userId, input: $input) {
             id
             identityProvider
             identityProviderUserId
@@ -283,7 +285,6 @@ describe("Users", () => {
       `;
 
       const result = await client.mutate(updateMutation, {
-        orgId: "test-org",
         userId: "user-123",
         input: {
           identityProvider: "google",
@@ -312,7 +313,6 @@ describe("Users", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-123",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|12345",
         },
@@ -320,13 +320,12 @@ describe("Users", () => {
 
       // Delete user
       const deleteMutation = gql`
-        mutation DeleteUser($orgId: ID!, $userId: ID!) {
-          deleteUser(orgId: $orgId, userId: $userId)
+        mutation DeleteUser($userId: ID!) {
+          deleteUser(userId: $userId)
         }
       `;
 
       const result = await client.mutate(deleteMutation, {
-        orgId: "test-org",
         userId: "user-123",
       });
 
@@ -334,15 +333,14 @@ describe("Users", () => {
 
       // Verify deletion
       const query = gql`
-        query GetUser($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query GetUser($userId: ID!) {
+          user(userId: $userId) {
             id
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: "test-org",
         userId: "user-123",
       });
 

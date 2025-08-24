@@ -9,7 +9,6 @@ export const setUserPropertyResolver = {
     setUserProperty: async (
       _: any,
       args: {
-        orgId: string;
         userId: string;
         name: string;
         value: unknown;
@@ -19,7 +18,6 @@ export const setUserPropertyResolver = {
     ) => {
       const result = await setUserProperty(
         context,
-        args.orgId,
         args.userId,
         args.name,
         args.value,

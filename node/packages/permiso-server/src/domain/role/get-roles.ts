@@ -13,7 +13,6 @@ const logger = createLogger("permiso-server:roles");
 
 export async function getRoles(
   ctx: DataContext,
-  orgId: string,
   filters?: {
     ids?: string[];
     properties?: PropertyFilter[];
@@ -22,18 +21,16 @@ export async function getRoles(
 ): Promise<Result<RoleWithProperties[]>> {
   try {
     let query: string;
-    const params: Record<string, any> = { orgId };
+    const params: Record<string, any> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
       // Use a subquery to find roles that have ALL the requested properties
       query = `
         SELECT DISTINCT r.* 
         FROM role r
-        WHERE r.org_id = $(orgId)
-          AND r.id IN (
+        WHERE r.id IN (
             SELECT parent_id 
             FROM role_property
-            WHERE org_id = $(orgId)
               AND (name, value) IN (
       `;
 
@@ -59,7 +56,6 @@ export async function getRoles(
       query = `
         SELECT DISTINCT r.* 
         FROM role r
-        WHERE r.org_id = $(orgId)
       `;
 
       if (filters?.ids && filters.ids.length > 0) {
@@ -89,7 +85,6 @@ export async function getRoles(
       roles.map(async (role) => {
         const propertiesResult = await getRoleProperties(
           ctx,
-          role.orgId,
           role.id,
           false,
         );
@@ -111,7 +106,7 @@ export async function getRoles(
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error("Failed to get roles", { error, orgId, filters });
+    logger.error("Failed to get roles", { error, filters });
     return { success: false, error: error as Error };
   }
 }

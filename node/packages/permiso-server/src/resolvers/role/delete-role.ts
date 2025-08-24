@@ -8,14 +8,14 @@ export const deleteRoleResolver = {
   Mutation: {
     deleteRole: async (
       _: any,
-      args: { orgId: string; roleId: string; safetyKey?: string },
+      args: { roleId: string; safetyKey?: string },
       context: DataContext & { safetyKey?: string },
     ) => {
       if (context.safetyKey && context.safetyKey !== args.safetyKey) {
         throw new Error("Invalid safety key");
       }
 
-      const result = await deleteRole(context, args.orgId, args.roleId);
+      const result = await deleteRole(context, args.roleId);
       if (!result.success) {
         throw result.error;
       }

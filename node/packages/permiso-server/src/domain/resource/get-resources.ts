@@ -9,14 +9,13 @@ const logger = createLogger("permiso-server:resources");
 
 export async function getResources(
   ctx: DataContext,
-  orgId: string,
   pagination?: PaginationInput,
 ): Promise<Result<Resource[]>> {
   try {
     // Apply sorting - validate and default to ASC if not specified
     const sortDirection = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
-    let query = `SELECT * FROM resource WHERE org_id = $(orgId) ORDER BY id ${sortDirection}`;
-    const params: Record<string, any> = { orgId };
+    let query = `SELECT * FROM resource ORDER BY id ${sortDirection}`;
+    const params: Record<string, any> = {};
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;
@@ -31,29 +30,27 @@ export async function getResources(
     const rows = await ctx.db.manyOrNone<ResourceDbRow>(query, params);
     return { success: true, data: rows.map(mapResourceFromDb) };
   } catch (error) {
-    logger.error("Failed to get resources", { error, orgId });
+    logger.error("Failed to get resources", { error });
     return { success: false, error: error as Error };
   }
 }
 
 export async function getResourcesByIdPrefix(
   ctx: DataContext,
-  orgId: string,
   idPrefix: string,
 ): Promise<Result<Resource[]>> {
   try {
     const rows = await ctx.db.manyOrNone<ResourceDbRow>(
       `SELECT * FROM resource 
-       WHERE org_id = $(orgId) AND id LIKE $(idPattern) 
+       WHERE id LIKE $(idPattern) 
        ORDER BY id`,
-      { orgId, idPattern: `${idPrefix}%` },
+      { idPattern: `${idPrefix}%` },
     );
 
     return { success: true, data: rows.map(mapResourceFromDb) };
   } catch (error) {
     logger.error("Failed to get resources by id prefix", {
       error,
-      orgId,
       idPrefix,
     });
     return { success: false, error: error as Error };

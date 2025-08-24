@@ -30,7 +30,6 @@ describe("Resources API", () => {
       const resourceId = "/api/users/*";
       const result = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "User API",
         description: "All user-related API endpoints",
       });
@@ -57,7 +56,6 @@ describe("Resources API", () => {
       for (const testCase of testCases) {
         const result = await createResource(config, {
           id: testCase.id,
-          orgId: testOrgId,
           name: testCase.name,
         });
         expect(result.success).to.be.true;
@@ -73,7 +71,6 @@ describe("Resources API", () => {
       // Create first resource
       const result1 = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Products API",
       });
       expect(result1.success).to.be.true;
@@ -81,7 +78,6 @@ describe("Resources API", () => {
       // Try to create duplicate
       const result2 = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Duplicate Products",
       });
       expect(result2.success).to.be.false;
@@ -98,7 +94,6 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Orders API",
         description: "Order management endpoints",
       });
@@ -134,7 +129,6 @@ describe("Resources API", () => {
         resourceIds.push(resourceId);
         const result = await createResource(config, {
           id: resourceId,
-          orgId: testOrgId,
           name: `Resource ${i}`,
         });
         expect(result.success).to.be.true;
@@ -159,7 +153,6 @@ describe("Resources API", () => {
       for (const resourceId of resourceIds) {
         const result = await createResource(config, {
           id: resourceId,
-          orgId: testOrgId,
           name: `Test ${resourceId}`,
         });
         expect(result.success).to.be.true;
@@ -185,19 +178,16 @@ describe("Resources API", () => {
       // Create resources with different prefixes
       await createResource(config, {
         id: "/api/users/create",
-        orgId: testOrgId,
         name: "Create User",
       });
 
       await createResource(config, {
         id: "/api/users/update",
-        orgId: testOrgId,
         name: "Update User",
       });
 
       await createResource(config, {
         id: "/api/posts/create",
-        orgId: testOrgId,
         name: "Create Post",
       });
 
@@ -229,7 +219,6 @@ describe("Resources API", () => {
       for (const resource of resources) {
         const result = await createResource(config, {
           ...resource,
-          orgId: testOrgId,
         });
         expect(result.success).to.be.true;
       }
@@ -253,13 +242,11 @@ describe("Resources API", () => {
       // Create resources with wildcards
       await createResource(config, {
         id: "/api/users/*",
-        orgId: testOrgId,
         name: "All User Endpoints",
       });
 
       await createResource(config, {
         id: "/api/users/profile",
-        orgId: testOrgId,
         name: "User Profile",
       });
 
@@ -284,7 +271,6 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Original Name",
         description: "Original description",
       });
@@ -310,7 +296,6 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Analytics Feature",
         description: "Analytics and reporting",
       });
@@ -337,7 +322,6 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Temporary Resource",
       });
       expect(createResult.success).to.be.true;

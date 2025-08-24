@@ -8,10 +8,10 @@ export const getRoleResolver = {
   Query: {
     role: async (
       _: any,
-      args: { orgId: string; roleId: string },
+      args: { roleId: string },
       context: DataContext,
     ) => {
-      const result = await getRole(context, args.orgId, args.roleId);
+      const result = await getRole(context, args.roleId);
       if (!result.success) {
         throw result.error;
       }

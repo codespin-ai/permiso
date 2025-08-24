@@ -20,6 +20,7 @@ export class RlsDatabaseWrapper implements Database {
     }
   }
 
+
   /**
    * Wraps a database operation with organization context
    * Uses SET LOCAL within a transaction to ensure proper scoping
@@ -95,6 +96,7 @@ class TransactionWrapper implements Database {
     private t: pgPromise.ITask<any>,
     private orgId: string,
   ) {}
+
 
   async query<T = any>(query: string, values?: any): Promise<T[]> {
     return this.t.query<T>(query, values) as Promise<T[]>;

@@ -10,13 +10,12 @@ const logger = createLogger("permiso-server:users");
 
 export async function getUser(
   ctx: DataContext,
-  orgId: string,
   userId: string,
 ): Promise<Result<UserWithProperties | null>> {
   try {
     const userRow = await ctx.db.oneOrNone<UserDbRow>(
-      `SELECT * FROM "user" WHERE id = $(userId) AND org_id = $(orgId)`,
-      { userId, orgId },
+      `SELECT * FROM "user" WHERE id = $(userId)`,
+      { userId },
     );
 
     if (!userRow) {
@@ -24,8 +23,8 @@ export async function getUser(
     }
 
     const [propertiesResult, roleIds] = await Promise.all([
-      getUserProperties(ctx, orgId, userId, false),
-      getUserRoles(ctx, orgId, userId),
+      getUserProperties(ctx, userId, false),
+      getUserRoles(ctx, userId),
     ]);
 
     if (!propertiesResult.success) {
@@ -48,7 +47,7 @@ export async function getUser(
 
     return { success: true, data: result };
   } catch (error) {
-    logger.error("Failed to get user", { error, orgId, userId });
+    logger.error("Failed to get user", { error, userId });
     return { success: false, error: error as Error };
   }
 }

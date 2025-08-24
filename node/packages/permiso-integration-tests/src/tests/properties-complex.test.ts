@@ -31,7 +31,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       await client.mutate(createUserMutation, {
         input: {
           id: "test-user",
-          orgId: "test-org",
           identityProvider: "test",
           identityProviderUserId: "user123",
         },
@@ -41,13 +40,11 @@ describe("Properties - Complex JSON and Initial Values", () => {
     it("should handle complex JSON objects in user properties", async () => {
       const setPropMutation = gql`
         mutation SetUserProperty(
-          $orgId: ID!
           $userId: ID!
           $name: String!
           $value: JSON
         ) {
           setUserProperty(
-            orgId: $orgId
             userId: $userId
             name: $name
             value: $value
@@ -76,7 +73,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       };
 
       const result = await client.mutate(setPropMutation, {
-        orgId: "test-org",
         userId: "test-user",
         name: "settings",
         value: complexValue,
@@ -110,7 +106,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       await client.mutate(createRoleMutation, {
         input: {
           id: "test-role",
-          orgId: "test-org",
           name: "Test Role",
         },
       });
@@ -119,13 +114,11 @@ describe("Properties - Complex JSON and Initial Values", () => {
     it("should handle arrays and nested structures in role properties", async () => {
       const setPropMutation = gql`
         mutation SetRoleProperty(
-          $orgId: ID!
           $roleId: ID!
           $name: String!
           $value: JSON
         ) {
           setRoleProperty(
-            orgId: $orgId
             roleId: $roleId
             name: $name
             value: $value
@@ -144,7 +137,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       ];
 
       const result = await client.mutate(setPropMutation, {
-        orgId: "test-org",
         roleId: "test-role",
         name: "customPermissions",
         value: permissionsValue,
@@ -232,7 +224,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       const result = await client.mutate(mutation, {
         input: {
           id: "user-with-props",
-          orgId: "test-org",
           identityProvider: "test",
           identityProviderUserId: "user456",
           properties: [

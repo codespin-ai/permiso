@@ -7,7 +7,6 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function getEffectivePermissions(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   resourceId?: string,
   action?: string,
@@ -18,22 +17,22 @@ export async function getEffectivePermissions(
       const userPermsQuery = action
         ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
            FROM user_permission 
-           WHERE user_id = $(userId) AND org_id = $(orgId) AND action = $(action)`
+           WHERE user_id = $(userId) AND action = $(action)`
         : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
            FROM user_permission 
-           WHERE user_id = $(userId) AND org_id = $(orgId)`;
+           WHERE user_id = $(userId)`;
 
       const rolePermsQuery = action
         ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
            FROM role_permission rp
-           INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-           WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.action = $(action)`
+           INNER JOIN user_role ur ON rp.role_id = ur.role_id
+           WHERE ur.user_id = $(userId) AND rp.action = $(action)`
         : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
            FROM role_permission rp
-           INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-           WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId)`;
+           INNER JOIN user_role ur ON rp.role_id = ur.role_id
+           WHERE ur.user_id = $(userId)`;
 
-      const params = action ? { userId, orgId, action } : { userId, orgId };
+      const params = action ? { userId, action } : { userId };
 
       const [userPerms, rolePerms] = await Promise.all([
         ctx.db.manyOrNone(userPermsQuery, params),
@@ -65,32 +64,32 @@ export async function getEffectivePermissions(
     const userPermsQuery = action
       ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $(userId) AND org_id = $(orgId) 
+         WHERE user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(resource_id, '*', '') || '%'
          AND action = $(action)`
       : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $(userId) AND org_id = $(orgId) 
+         WHERE user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(resource_id, '*', '') || '%'`;
 
-    const userPermsParams: Record<string, any> = { userId, orgId, resourceId };
+    const userPermsParams: Record<string, any> = { userId, resourceId };
     if (action) userPermsParams.action = action;
 
     // Get permissions from user's roles - find permissions where the requested resourceId starts with the permission's resource_id
     const rolePermsQuery = action
       ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) 
+         INNER JOIN user_role ur ON rp.role_id = ur.role_id
+         WHERE ur.user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(rp.resource_id, '*', '') || '%'
          AND rp.action = $(action)`
       : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) 
+         INNER JOIN user_role ur ON rp.role_id = ur.role_id
+         WHERE ur.user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(rp.resource_id, '*', '') || '%'`;
 
-    const rolePermsParams: Record<string, any> = { userId, orgId, resourceId };
+    const rolePermsParams: Record<string, any> = { userId, resourceId };
     if (action) rolePermsParams.action = action;
 
     const [userPerms, rolePerms] = await Promise.all([
@@ -119,7 +118,6 @@ export async function getEffectivePermissions(
   } catch (error) {
     logger.error("Failed to get effective permissions", {
       error,
-      orgId,
       userId,
       resourceId,
       action,

@@ -8,14 +8,13 @@ const logger = createLogger("permiso-server:roles");
 
 export async function getRoleProperty(
   ctx: DataContext,
-  orgId: string,
   roleId: string,
   name: string,
 ): Promise<Result<Property | null>> {
   try {
     const row = await ctx.db.oneOrNone<PropertyDbRow>(
-      `SELECT * FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
-      { roleId, orgId, name },
+      `SELECT * FROM role_property WHERE parent_id = $(roleId) AND name = $(name)`,
+      { roleId, name },
     );
 
     return {
@@ -23,7 +22,7 @@ export async function getRoleProperty(
       data: row ? mapPropertyFromDb(row) : null,
     };
   } catch (error) {
-    logger.error("Failed to get role property", { error, orgId, roleId, name });
+    logger.error("Failed to get role property", { error, roleId, name });
     return { success: false, error: error as Error };
   }
 }

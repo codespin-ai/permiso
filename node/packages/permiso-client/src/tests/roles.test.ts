@@ -33,7 +33,6 @@ describe("Roles API", () => {
       const roleId = generateTestId("role");
       const result = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Administrator",
         description: "Full system access",
         properties: [
@@ -61,7 +60,6 @@ describe("Roles API", () => {
       // Create first role
       const result1 = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Test Role",
       });
       expect(result1.success).to.be.true;
@@ -69,7 +67,6 @@ describe("Roles API", () => {
       // Try to create duplicate
       const result2 = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Duplicate Role",
       });
       expect(result2.success).to.be.false;
@@ -86,7 +83,6 @@ describe("Roles API", () => {
       // Create role
       const createResult = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Test Role",
         description: "Test description",
       });
@@ -120,7 +116,6 @@ describe("Roles API", () => {
         roleIds.push(roleId);
         const result = await createRole(config, {
           id: roleId,
-          orgId: testOrgId,
           name: `Role ${i}`,
         });
         expect(result.success).to.be.true;
@@ -145,7 +140,6 @@ describe("Roles API", () => {
       for (const roleId of roleIds) {
         const result = await createRole(config, {
           id: roleId,
-          orgId: testOrgId,
           name: `Test ${roleId}`,
         });
         expect(result.success).to.be.true;
@@ -171,14 +165,12 @@ describe("Roles API", () => {
       // Create roles with different properties
       await createRole(config, {
         id: generateTestId("role-admin"),
-        orgId: testOrgId,
         name: "Admin Role",
         properties: [{ name: "level", value: "admin" }],
       });
 
       await createRole(config, {
         id: generateTestId("role-user"),
-        orgId: testOrgId,
         name: "User Role",
         properties: [{ name: "level", value: "user" }],
       });
@@ -206,7 +198,6 @@ describe("Roles API", () => {
         roleIds.push(roleId);
         const result = await createRole(config, {
           id: roleId,
-          orgId: testOrgId,
           name: `Role ${i}`,
         });
         expect(result.success).to.be.true;
@@ -229,7 +220,6 @@ describe("Roles API", () => {
       // Create role
       const createResult = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Original Name",
         description: "Original description",
       });
@@ -255,7 +245,6 @@ describe("Roles API", () => {
       roleId = generateTestId("role");
       const result = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "Test Role",
       });
       expect(result.success).to.be.true;
@@ -346,7 +335,6 @@ describe("Roles API", () => {
       // Create role
       const createResult = await createRole(config, {
         id: roleId,
-        orgId: testOrgId,
         name: "To Delete",
       });
       expect(createResult.success).to.be.true;

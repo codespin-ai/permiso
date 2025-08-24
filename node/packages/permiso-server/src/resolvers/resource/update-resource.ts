@@ -10,7 +10,6 @@ export const updateResourceResolver = {
     ) => {
       const result = await updateResource(
         context,
-        args.orgId,
         args.resourceId,
         args.input,
       );

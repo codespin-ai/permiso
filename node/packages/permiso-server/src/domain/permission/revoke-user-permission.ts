@@ -6,7 +6,6 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function revokeUserPermission(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   resourceId: string,
   action: string,
@@ -14,14 +13,13 @@ export async function revokeUserPermission(
   try {
     await ctx.db.none(
       `DELETE FROM user_permission 
-       WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id = $(resourceId) AND action = $(action)`,
-      { userId, orgId, resourceId, action },
+       WHERE user_id = $(userId) AND resource_id = $(resourceId) AND action = $(action)`,
+      { userId, resourceId, action },
     );
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to revoke user permission", {
       error,
-      orgId,
       userId,
       resourceId,
       action,

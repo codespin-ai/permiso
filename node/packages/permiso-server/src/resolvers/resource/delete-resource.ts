@@ -12,7 +12,7 @@ export const deleteResourceResolver = {
         throw new Error("Invalid safety key");
       }
 
-      const result = await deleteResource(context, args.orgId, args.resourceId);
+      const result = await deleteResource(context, args.resourceId);
       if (!result.success) {
         throw result.error;
       }

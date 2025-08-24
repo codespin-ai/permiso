@@ -124,7 +124,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-1",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|1",
         },
@@ -132,7 +131,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-2",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|2",
         },
@@ -140,7 +138,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-3",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|3",
         },
@@ -148,8 +145,8 @@ describe("Batch Queries", () => {
 
       // Query by IDs
       const query = gql`
-        query GetUsersByIds($orgId: ID!, $ids: [ID!]!) {
-          usersByIds(orgId: $orgId, ids: $ids) {
+        query GetUsersByIds($ids: [ID!]!) {
+          usersByIds(ids: $ids) {
             id
             orgId
             identityProvider
@@ -158,7 +155,6 @@ describe("Batch Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         ids: ["user-1", "user-3"],
       });
 
@@ -194,7 +190,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-test-org",
-          orgId: "test-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|test",
         },
@@ -202,7 +197,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-other-org",
-          orgId: "other-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|other",
         },
@@ -210,8 +204,8 @@ describe("Batch Queries", () => {
 
       // Query should only return user from test-org
       const query = gql`
-        query GetUsersByIds($orgId: ID!, $ids: [ID!]!) {
-          usersByIds(orgId: $orgId, ids: $ids) {
+        query GetUsersByIds($ids: [ID!]!) {
+          usersByIds(ids: $ids) {
             id
             orgId
           }
@@ -258,29 +252,26 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
         },
       });
       await client.mutate(createMutation, {
         input: {
           id: "editor",
-          orgId: "test-org",
           name: "Editor",
         },
       });
       await client.mutate(createMutation, {
         input: {
           id: "viewer",
-          orgId: "test-org",
           name: "Viewer",
         },
       });
 
       // Query by IDs
       const query = gql`
-        query GetRolesByIds($orgId: ID!, $ids: [ID!]!) {
-          rolesByIds(orgId: $orgId, ids: $ids) {
+        query GetRolesByIds($ids: [ID!]!) {
+          rolesByIds(ids: $ids) {
             id
             orgId
             name
@@ -332,7 +323,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-org1",
-          orgId: "org-1",
           identityProvider: "google",
           identityProviderUserId: "google|12345",
         },
@@ -340,7 +330,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-org2",
-          orgId: "org-2",
           identityProvider: "google",
           identityProviderUserId: "google|12345",
         },
@@ -410,7 +399,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-google",
-          orgId: "org-1",
           identityProvider: "google",
           identityProviderUserId: "user123",
         },
@@ -418,7 +406,6 @@ describe("Batch Queries", () => {
       await client.mutate(createMutation, {
         input: {
           id: "user-auth0",
-          orgId: "org-1",
           identityProvider: "auth0",
           identityProviderUserId: "user123",
         },

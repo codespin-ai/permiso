@@ -8,12 +8,11 @@ export const getUserPropertyResolver = {
   Query: {
     userProperty: async (
       _: any,
-      args: { orgId: string; userId: string; propertyName: string },
+      args: { userId: string; propertyName: string },
       context: DataContext,
     ) => {
       const result = await getUserProperty(
         context,
-        args.orgId,
         args.userId,
         args.propertyName,
       );

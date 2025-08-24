@@ -6,17 +6,16 @@ const logger = createLogger("permiso-server:roles");
 
 export async function deleteRole(
   ctx: DataContext,
-  orgId: string,
   roleId: string,
 ): Promise<Result<boolean>> {
   try {
     await ctx.db.none(
-      `DELETE FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
-      { roleId, orgId },
+      `DELETE FROM role WHERE id = $(roleId)`,
+      { roleId },
     );
     return { success: true, data: true };
   } catch (error) {
-    logger.error("Failed to delete role", { error, orgId, roleId });
+    logger.error("Failed to delete role", { error, roleId });
     return { success: false, error: error as Error };
   }
 }

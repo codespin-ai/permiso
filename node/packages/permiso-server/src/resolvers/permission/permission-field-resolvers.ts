@@ -29,7 +29,6 @@ export const permissionFieldResolvers = {
     ) => {
       const result = await getResource(
         context,
-        parent.orgId,
         parent.resourceId,
       );
       if (!result.success) {
@@ -43,7 +42,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: DataContext,
     ) => {
-      const result = await getUser(context, parent.orgId, parent.userId);
+      const result = await getUser(context, parent.userId);
       if (!result.success) {
         throw result.error;
       }
@@ -71,7 +70,6 @@ export const permissionFieldResolvers = {
     ) => {
       const result = await getResource(
         context,
-        parent.orgId,
         parent.resourceId,
       );
       if (!result.success) {
@@ -85,7 +83,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: DataContext,
     ) => {
-      const result = await getRole(context, parent.orgId, parent.roleId);
+      const result = await getRole(context, parent.roleId);
       if (!result.success) {
         throw result.error;
       }
