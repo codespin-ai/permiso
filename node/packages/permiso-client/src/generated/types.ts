@@ -40,14 +40,12 @@ export type CreateResourceInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
   name?: InputMaybe<Scalars["String"]["input"]>;
-  orgId: Scalars["ID"]["input"];
 };
 
 export type CreateRoleInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
   name: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   properties?: InputMaybe<Array<PropertyInput>>;
 };
 
@@ -55,7 +53,6 @@ export type CreateUserInput = {
   id: Scalars["ID"]["input"];
   identityProvider: Scalars["String"]["input"];
   identityProviderUserId: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   properties?: InputMaybe<Array<PropertyInput>>;
   roleIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
 };
@@ -71,14 +68,12 @@ export type EffectivePermission = {
 
 export type GrantRolePermissionInput = {
   action: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type GrantUserPermissionInput = {
   action: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
@@ -112,7 +107,6 @@ export type Mutation = {
 };
 
 export type MutationAssignUserRoleArgs = {
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
@@ -144,29 +138,24 @@ export type MutationDeleteOrganizationPropertyArgs = {
 };
 
 export type MutationDeleteResourceArgs = {
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
 };
 
 export type MutationDeleteRoleArgs = {
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type MutationDeleteRolePropertyArgs = {
   name: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type MutationDeleteUserArgs = {
-  orgId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
 export type MutationDeleteUserPropertyArgs = {
   name: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
@@ -180,14 +169,12 @@ export type MutationGrantUserPermissionArgs = {
 
 export type MutationRevokeRolePermissionArgs = {
   action: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type MutationRevokeUserPermissionArgs = {
   action: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
@@ -202,7 +189,6 @@ export type MutationSetOrganizationPropertyArgs = {
 export type MutationSetRolePropertyArgs = {
   hidden?: InputMaybe<Scalars["Boolean"]["input"]>;
   name: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
   value?: InputMaybe<Scalars["JSON"]["input"]>;
 };
@@ -210,13 +196,11 @@ export type MutationSetRolePropertyArgs = {
 export type MutationSetUserPropertyArgs = {
   hidden?: InputMaybe<Scalars["Boolean"]["input"]>;
   name: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
   value?: InputMaybe<Scalars["JSON"]["input"]>;
 };
 
 export type MutationUnassignUserRoleArgs = {
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
@@ -228,19 +212,16 @@ export type MutationUpdateOrganizationArgs = {
 
 export type MutationUpdateResourceArgs = {
   input: UpdateResourceInput;
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
 };
 
 export type MutationUpdateRoleArgs = {
   input: UpdateRoleInput;
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
-  orgId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
@@ -351,21 +332,18 @@ export type Query = {
 
 export type QueryEffectivePermissionsArgs = {
   action?: InputMaybe<Scalars["String"]["input"]>;
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["String"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
 export type QueryEffectivePermissionsByPrefixArgs = {
   action?: InputMaybe<Scalars["String"]["input"]>;
-  orgId: Scalars["ID"]["input"];
   resourceIdPrefix: Scalars["String"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
 export type QueryHasPermissionArgs = {
   action: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["String"]["input"];
   userId: Scalars["ID"]["input"];
 };
@@ -389,71 +367,59 @@ export type QueryOrganizationsByIdsArgs = {
 };
 
 export type QueryResourceArgs = {
-  orgId: Scalars["ID"]["input"];
   resourceId: Scalars["ID"]["input"];
 };
 
 export type QueryResourcesArgs = {
   filter?: InputMaybe<ResourceFilter>;
-  orgId: Scalars["ID"]["input"];
   pagination?: InputMaybe<PaginationInput>;
 };
 
 export type QueryResourcesByIdPrefixArgs = {
   idPrefix: Scalars["String"]["input"];
-  orgId: Scalars["ID"]["input"];
 };
 
 export type QueryRoleArgs = {
-  orgId: Scalars["ID"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type QueryRolePermissionsArgs = {
   action?: InputMaybe<Scalars["String"]["input"]>;
-  orgId: Scalars["ID"]["input"];
   resourceId?: InputMaybe<Scalars["String"]["input"]>;
   roleId: Scalars["ID"]["input"];
 };
 
 export type QueryRolePropertyArgs = {
-  orgId: Scalars["ID"]["input"];
   propertyName: Scalars["String"]["input"];
   roleId: Scalars["ID"]["input"];
 };
 
 export type QueryRolesArgs = {
   filter?: InputMaybe<RoleFilter>;
-  orgId: Scalars["ID"]["input"];
   pagination?: InputMaybe<PaginationInput>;
 };
 
 export type QueryRolesByIdsArgs = {
   ids: Array<Scalars["ID"]["input"]>;
-  orgId: Scalars["ID"]["input"];
 };
 
 export type QueryUserArgs = {
-  orgId: Scalars["ID"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
 export type QueryUserPermissionsArgs = {
   action?: InputMaybe<Scalars["String"]["input"]>;
-  orgId: Scalars["ID"]["input"];
   resourceId?: InputMaybe<Scalars["String"]["input"]>;
   userId: Scalars["ID"]["input"];
 };
 
 export type QueryUserPropertyArgs = {
-  orgId: Scalars["ID"]["input"];
   propertyName: Scalars["String"]["input"];
   userId: Scalars["ID"]["input"];
 };
 
 export type QueryUsersArgs = {
   filter?: InputMaybe<UserFilter>;
-  orgId: Scalars["ID"]["input"];
   pagination?: InputMaybe<PaginationInput>;
 };
 
@@ -464,7 +430,6 @@ export type QueryUsersByIdentityArgs = {
 
 export type QueryUsersByIdsArgs = {
   ids: Array<Scalars["ID"]["input"]>;
-  orgId: Scalars["ID"]["input"];
 };
 
 export type Resource = {

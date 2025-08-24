@@ -17,7 +17,6 @@ export const grantUserPermissionResolver = {
     ) => {
       const result = await grantUserPermission(
         context,
-        args.input.orgId,
         args.input.userId,
         args.input.resourceId,
         args.input.action,

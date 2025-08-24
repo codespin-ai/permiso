@@ -7,7 +7,6 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function hasPermission(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   resourceId: string,
   action: string,
@@ -15,7 +14,6 @@ export async function hasPermission(
   try {
     const result = await getEffectivePermissions(
       ctx,
-      orgId,
       userId,
       resourceId,
       action,
@@ -29,7 +27,6 @@ export async function hasPermission(
   } catch (error) {
     logger.error("Failed to check permission", {
       error,
-      orgId,
       userId,
       resourceId,
       action,

@@ -25,7 +25,7 @@ export const roleFieldResolvers = {
       _: any,
       context: DataContext,
     ) => {
-      const result = await getRoleProperties(context, parent.orgId, parent.id);
+      const result = await getRoleProperties(context, parent.id);
       if (!result.success) {
         throw result.error;
       }
@@ -33,11 +33,7 @@ export const roleFieldResolvers = {
     },
 
     users: async (parent: RoleWithProperties, _: any, context: DataContext) => {
-      const userIdsResult = await getRoleUsers(
-        context,
-        parent.orgId,
-        parent.id,
-      );
+      const userIdsResult = await getRoleUsers(context, parent.id);
       if (!userIdsResult.success) {
         throw userIdsResult.error;
       }
@@ -46,7 +42,7 @@ export const roleFieldResolvers = {
         return [];
       }
 
-      const result = await getUsers(context, parent.orgId, {
+      const result = await getUsers(context, {
         ids: userIdsResult.data,
       });
       if (!result.success) {
@@ -62,7 +58,6 @@ export const roleFieldResolvers = {
     ) => {
       const result = await getRolePermissions(
         context,
-        parent.orgId,
         parent.id,
         args.resourcePath,
       );

@@ -13,13 +13,9 @@ export const getResourcesResolver = {
     ) => {
       let result;
       if (args.filter?.idPrefix) {
-        result = await getResourcesByIdPrefix(
-          context,
-          args.orgId,
-          args.filter.idPrefix,
-        );
+        result = await getResourcesByIdPrefix(context, args.filter.idPrefix);
       } else {
-        result = await getResources(context, args.orgId, args.pagination);
+        result = await getResources(context, args.pagination);
       }
 
       if (!result.success) {
@@ -29,7 +25,7 @@ export const getResourcesResolver = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination && !args.filter?.idPrefix) {
-        const countResult = await getResources(context, args.orgId);
+        const countResult = await getResources(context);
         if (countResult.success) {
           totalCount = countResult.data.length;
         }

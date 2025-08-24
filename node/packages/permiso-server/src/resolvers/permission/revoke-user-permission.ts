@@ -15,7 +15,6 @@ export const revokeUserPermissionResolver = {
     ) => {
       const result = await revokeUserPermission(
         context,
-        args.orgId,
         args.userId,
         args.resourceId,
         args.action,

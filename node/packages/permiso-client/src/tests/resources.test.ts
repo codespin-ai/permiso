@@ -12,17 +12,21 @@ import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
 import "./setup.js";
 
 describe("Resources API", () => {
-  const config = getTestConfig();
+  let config: ReturnType<typeof getTestConfig>;
   let testOrgId: string;
 
   beforeEach(async () => {
     // Create a test organization for each test
     testOrgId = generateTestId("org");
-    const orgResult = await createOrganization(config, {
+    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
+
+    // Update config with the test org ID for subsequent operations
+    config = { ...rootConfig, orgId: testOrgId };
   });
 
   describe("createResource", () => {
@@ -30,7 +34,6 @@ describe("Resources API", () => {
       const resourceId = "/api/users/*";
       const result = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "User API",
         description: "All user-related API endpoints",
       });
@@ -57,7 +60,6 @@ describe("Resources API", () => {
       for (const testCase of testCases) {
         const result = await createResource(config, {
           id: testCase.id,
-          orgId: testOrgId,
           name: testCase.name,
         });
         expect(result.success).to.be.true;
@@ -73,7 +75,6 @@ describe("Resources API", () => {
       // Create first resource
       const result1 = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Products API",
       });
       expect(result1.success).to.be.true;
@@ -81,7 +82,6 @@ describe("Resources API", () => {
       // Try to create duplicate
       const result2 = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Duplicate Products",
       });
       expect(result2.success).to.be.false;
@@ -98,14 +98,13 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Orders API",
         description: "Order management endpoints",
       });
       expect(createResult.success).to.be.true;
 
       // Get resource
-      const getResult = await getResource(config, testOrgId, resourceId);
+      const getResult = await getResource(config, resourceId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data?.id).to.equal(resourceId);
@@ -117,7 +116,7 @@ describe("Resources API", () => {
     });
 
     it("should return null for non-existent resource", async () => {
-      const result = await getResource(config, testOrgId, "/non/existent/*");
+      const result = await getResource(config, "/non/existent/*");
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.be.null;
@@ -134,14 +133,13 @@ describe("Resources API", () => {
         resourceIds.push(resourceId);
         const result = await createResource(config, {
           id: resourceId,
-          orgId: testOrgId,
           name: `Resource ${i}`,
         });
         expect(result.success).to.be.true;
       }
 
       // List with pagination
-      const listResult = await listResources(config, testOrgId, {
+      const listResult = await listResources(config, {
         pagination: { limit: 3, offset: 0 },
       });
 
@@ -159,14 +157,13 @@ describe("Resources API", () => {
       for (const resourceId of resourceIds) {
         const result = await createResource(config, {
           id: resourceId,
-          orgId: testOrgId,
           name: `Test ${resourceId}`,
         });
         expect(result.success).to.be.true;
       }
 
       // List with DESC sort
-      const listResult = await listResources(config, testOrgId, {
+      const listResult = await listResources(config, {
         pagination: { sortDirection: "DESC" },
       });
 
@@ -185,24 +182,21 @@ describe("Resources API", () => {
       // Create resources with different prefixes
       await createResource(config, {
         id: "/api/users/create",
-        orgId: testOrgId,
         name: "Create User",
       });
 
       await createResource(config, {
         id: "/api/users/update",
-        orgId: testOrgId,
         name: "Update User",
       });
 
       await createResource(config, {
         id: "/api/posts/create",
-        orgId: testOrgId,
         name: "Create Post",
       });
 
       // Filter by prefix
-      const result = await listResources(config, testOrgId, {
+      const result = await listResources(config, {
         filter: { idPrefix: "/api/users/" },
       });
 
@@ -229,17 +223,12 @@ describe("Resources API", () => {
       for (const resource of resources) {
         const result = await createResource(config, {
           ...resource,
-          orgId: testOrgId,
         });
         expect(result.success).to.be.true;
       }
 
       // Get resources by prefix
-      const result = await getResourcesByIdPrefix(
-        config,
-        testOrgId,
-        "/api/v1/",
-      );
+      const result = await getResourcesByIdPrefix(config, "/api/v1/");
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.have.lengthOf(2);
@@ -253,22 +242,16 @@ describe("Resources API", () => {
       // Create resources with wildcards
       await createResource(config, {
         id: "/api/users/*",
-        orgId: testOrgId,
         name: "All User Endpoints",
       });
 
       await createResource(config, {
         id: "/api/users/profile",
-        orgId: testOrgId,
         name: "User Profile",
       });
 
       // Search with prefix
-      const result = await getResourcesByIdPrefix(
-        config,
-        testOrgId,
-        "/api/users/",
-      );
+      const result = await getResourcesByIdPrefix(config, "/api/users/");
       expect(result.success).to.be.true;
       if (result.success) {
         // Should find both the wildcard and specific resource
@@ -284,14 +267,13 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Original Name",
         description: "Original description",
       });
       expect(createResult.success).to.be.true;
 
       // Update resource
-      const updateResult = await updateResource(config, testOrgId, resourceId, {
+      const updateResult = await updateResource(config, resourceId, {
         name: "Customer Management API",
         description: "Complete customer management endpoints",
       });
@@ -310,14 +292,13 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Analytics Feature",
         description: "Analytics and reporting",
       });
       expect(createResult.success).to.be.true;
 
       // Update only description
-      const updateResult = await updateResource(config, testOrgId, resourceId, {
+      const updateResult = await updateResource(config, resourceId, {
         description: "Advanced analytics and reporting",
       });
       expect(updateResult.success).to.be.true;
@@ -337,20 +318,19 @@ describe("Resources API", () => {
       // Create resource
       const createResult = await createResource(config, {
         id: resourceId,
-        orgId: testOrgId,
         name: "Temporary Resource",
       });
       expect(createResult.success).to.be.true;
 
       // Delete resource
-      const deleteResult = await deleteResource(config, testOrgId, resourceId);
+      const deleteResult = await deleteResource(config, resourceId);
       expect(deleteResult.success).to.be.true;
       if (deleteResult.success) {
         expect(deleteResult.data).to.be.true;
       }
 
       // Verify deletion
-      const getResult = await getResource(config, testOrgId, resourceId);
+      const getResult = await getResource(config, resourceId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data).to.be.null;

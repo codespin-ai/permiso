@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
 
 describe("Pagination and Filtering", () => {
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe("Pagination and Filtering", () => {
         `;
 
         for (let i = 1; i <= 10; i++) {
-          await client.mutate(mutation, {
+          await rootClient.mutate(mutation, {
             input: {
               id: `org-${i.toString().padStart(2, "0")}`,
               name: `Organization ${i}`,
@@ -50,7 +50,7 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await rootClient.query(query, {
           pagination: { limit: 3 },
         });
 
@@ -77,7 +77,7 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await rootClient.query(query, {
           pagination: { offset: 5, limit: 3 },
         });
 
@@ -107,7 +107,7 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await rootClient.query(query, {
           pagination: { offset: 8, limit: 5 },
         });
 
@@ -120,7 +120,7 @@ describe("Pagination and Filtering", () => {
 
     describe("users pagination", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -129,9 +129,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create multiple users
         const userMutation = gql`
@@ -146,7 +149,6 @@ describe("Pagination and Filtering", () => {
           await client.mutate(userMutation, {
             input: {
               id: `user-${i.toString().padStart(2, "0")}`,
-              orgId: "test-org",
               identityProvider: i % 2 === 0 ? "google" : "auth0",
               identityProviderUserId: `user${i}`,
               properties: [
@@ -164,8 +166,8 @@ describe("Pagination and Filtering", () => {
 
       it("should paginate users within organization", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $pagination: PaginationInput) {
-            users(orgId: $orgId, pagination: $pagination) {
+          query ListUsers($pagination: PaginationInput) {
+            users(pagination: $pagination) {
               nodes {
                 id
               }
@@ -179,7 +181,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           pagination: { offset: 5, limit: 5 },
         });
 
@@ -320,7 +321,7 @@ describe("Pagination and Filtering", () => {
 
     describe("user filtering", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -329,9 +330,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create users with different properties
         const userMutation = gql`
@@ -345,7 +349,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-eng-senior",
-            orgId: "test-org",
             identityProvider: "google",
             identityProviderUserId: "google|1",
             properties: [
@@ -358,7 +361,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-eng-junior",
-            orgId: "test-org",
             identityProvider: "auth0",
             identityProviderUserId: "auth0|2",
             properties: [
@@ -371,7 +373,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-sales-senior",
-            orgId: "test-org",
             identityProvider: "google",
             identityProviderUserId: "google|3",
             properties: [
@@ -384,8 +385,8 @@ describe("Pagination and Filtering", () => {
 
       it("should filter users by properties", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $filter: UserFilter) {
-            users(orgId: $orgId, filter: $filter) {
+          query ListUsers($filter: UserFilter) {
+            users(filter: $filter) {
               nodes {
                 id
                 properties {
@@ -398,21 +399,20 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             properties: [{ name: "department", value: "engineering" }],
           },
         });
 
         expect(result.data?.users?.nodes).to.have.lengthOf(2);
-        const ids = result.data?.users?.nodes.map((u: any) => u.id);
+        const ids = result.data?.users?.nodes?.map((u: any) => u.id) || [];
         expect(ids).to.include.members(["user-eng-senior", "user-eng-junior"]);
       });
 
       it("should filter users by identity provider", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $filter: UserFilter) {
-            users(orgId: $orgId, filter: $filter) {
+          query ListUsers($filter: UserFilter) {
+            users(filter: $filter) {
               nodes {
                 id
                 identityProvider
@@ -422,7 +422,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             identityProvider: "google",
           },
@@ -438,8 +437,8 @@ describe("Pagination and Filtering", () => {
 
       it("should filter users by multiple criteria", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $filter: UserFilter) {
-            users(orgId: $orgId, filter: $filter) {
+          query ListUsers($filter: UserFilter) {
+            users(filter: $filter) {
               nodes {
                 id
               }
@@ -448,7 +447,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             identityProvider: "google",
             properties: [{ name: "level", value: "senior" }],
@@ -466,7 +464,7 @@ describe("Pagination and Filtering", () => {
 
     describe("role filtering", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -475,9 +473,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create roles with different properties
         const roleMutation = gql`
@@ -491,7 +492,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "admin-full",
-            orgId: "test-org",
             name: "Full Admin",
             properties: [
               { name: "access_level", value: "full" },
@@ -503,7 +503,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "admin-limited",
-            orgId: "test-org",
             name: "Limited Admin",
             properties: [
               { name: "access_level", value: "limited" },
@@ -515,7 +514,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "viewer",
-            orgId: "test-org",
             name: "Viewer",
             properties: [
               { name: "access_level", value: "read_only" },
@@ -527,8 +525,8 @@ describe("Pagination and Filtering", () => {
 
       it("should filter roles by properties", async () => {
         const query = gql`
-          query ListRoles($orgId: ID!, $filter: RoleFilter) {
-            roles(orgId: $orgId, filter: $filter) {
+          query ListRoles($filter: RoleFilter) {
+            roles(filter: $filter) {
               nodes {
                 id
                 name
@@ -538,7 +536,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             properties: [{ name: "department", value: "all" }],
           },
@@ -552,7 +549,7 @@ describe("Pagination and Filtering", () => {
 
     describe("resource filtering", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -561,9 +558,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create resources with different ID patterns
         const resourceMutation = gql`
@@ -577,7 +577,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/users",
-            orgId: "test-org",
             name: "Users API",
           },
         });
@@ -585,7 +584,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/users/*",
-            orgId: "test-org",
             name: "User API Wildcard",
           },
         });
@@ -593,7 +591,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/posts",
-            orgId: "test-org",
             name: "Posts API",
           },
         });
@@ -601,7 +598,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/posts/*",
-            orgId: "test-org",
             name: "Post API Wildcard",
           },
         });
@@ -609,7 +605,6 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/admin/settings",
-            orgId: "test-org",
             name: "Admin Settings",
           },
         });
@@ -617,8 +612,8 @@ describe("Pagination and Filtering", () => {
 
       it("should filter resources by ID prefix", async () => {
         const query = gql`
-          query ListResources($orgId: ID!, $filter: ResourceFilter) {
-            resources(orgId: $orgId, filter: $filter) {
+          query ListResources($filter: ResourceFilter) {
+            resources(filter: $filter) {
               nodes {
                 id
                 name
@@ -628,7 +623,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             idPrefix: "/api/",
           },
@@ -647,8 +641,8 @@ describe("Pagination and Filtering", () => {
 
       it("should filter resources by more specific prefix", async () => {
         const query = gql`
-          query ListResources($orgId: ID!, $filter: ResourceFilter) {
-            resources(orgId: $orgId, filter: $filter) {
+          query ListResources($filter: ResourceFilter) {
+            resources(filter: $filter) {
               nodes {
                 id
               }
@@ -657,7 +651,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           filter: {
             idPrefix: "/api/users",
           },
@@ -812,7 +805,7 @@ describe("Pagination and Filtering", () => {
 
     describe("users sorting", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -821,9 +814,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create users with specific IDs to test sorting
         const userMutation = gql`
@@ -839,7 +835,6 @@ describe("Pagination and Filtering", () => {
           await client.mutate(userMutation, {
             input: {
               id: userId,
-              orgId: "test-org",
               identityProvider: "auth0",
               identityProviderUserId: userId,
             },
@@ -849,8 +844,8 @@ describe("Pagination and Filtering", () => {
 
       it("should sort users by id ASC", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $pagination: PaginationInput) {
-            users(orgId: $orgId, pagination: $pagination) {
+          query ListUsers($pagination: PaginationInput) {
+            users(pagination: $pagination) {
               nodes {
                 id
               }
@@ -859,7 +854,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           pagination: { limit: 10, sortDirection: "ASC" },
         });
 
@@ -874,8 +868,8 @@ describe("Pagination and Filtering", () => {
 
       it("should sort users by id DESC", async () => {
         const query = gql`
-          query ListUsers($orgId: ID!, $pagination: PaginationInput) {
-            users(orgId: $orgId, pagination: $pagination) {
+          query ListUsers($pagination: PaginationInput) {
+            users(pagination: $pagination) {
               nodes {
                 id
               }
@@ -884,7 +878,6 @@ describe("Pagination and Filtering", () => {
         `;
 
         const result = await client.query(query, {
-          orgId: "test-org",
           pagination: { limit: 10, sortDirection: "DESC" },
         });
 
@@ -900,7 +893,7 @@ describe("Pagination and Filtering", () => {
 
     describe("roles sorting", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -909,9 +902,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create roles with specific IDs to test sorting
         const roleMutation = gql`
@@ -932,7 +928,6 @@ describe("Pagination and Filtering", () => {
           await client.mutate(roleMutation, {
             input: {
               id: roleId,
-              orgId: "test-org",
               name: roleId,
             },
           });
@@ -941,8 +936,8 @@ describe("Pagination and Filtering", () => {
 
       it("should sort roles by id with pagination", async () => {
         const query = gql`
-          query ListRoles($orgId: ID!, $pagination: PaginationInput) {
-            roles(orgId: $orgId, pagination: $pagination) {
+          query ListRoles($pagination: PaginationInput) {
+            roles(pagination: $pagination) {
               nodes {
                 id
               }
@@ -952,7 +947,6 @@ describe("Pagination and Filtering", () => {
 
         // Test DESC with limit
         const result = await client.query(query, {
-          orgId: "test-org",
           pagination: { limit: 2, sortDirection: "DESC" },
         });
 
@@ -963,7 +957,7 @@ describe("Pagination and Filtering", () => {
 
     describe("resources sorting", () => {
       beforeEach(async () => {
-        // Create test organization
+        // Create test organization using ROOT client
         const orgMutation = gql`
           mutation CreateOrganization($input: CreateOrganizationInput!) {
             createOrganization(input: $input) {
@@ -972,9 +966,12 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(orgMutation, {
+        await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
+
+        // Switch to organization context for RLS operations
+        switchToOrgContext("test-org");
 
         // Create resources with specific IDs to test sorting
         const resourceMutation = gql`
@@ -995,7 +992,6 @@ describe("Pagination and Filtering", () => {
           await client.mutate(resourceMutation, {
             input: {
               id: resourceId,
-              orgId: "test-org",
               name: resourceId,
             },
           });
@@ -1004,8 +1000,8 @@ describe("Pagination and Filtering", () => {
 
       it("should sort resources by id ASC and DESC", async () => {
         const query = gql`
-          query ListResources($orgId: ID!, $pagination: PaginationInput) {
-            resources(orgId: $orgId, pagination: $pagination) {
+          query ListResources($pagination: PaginationInput) {
+            resources(pagination: $pagination) {
               nodes {
                 id
               }
@@ -1015,7 +1011,6 @@ describe("Pagination and Filtering", () => {
 
         // Test ASC
         const ascResult = await client.query(query, {
-          orgId: "test-org",
           pagination: { sortDirection: "ASC" },
         });
 
@@ -1029,7 +1024,6 @@ describe("Pagination and Filtering", () => {
 
         // Test DESC
         const descResult = await client.query(query, {
-          orgId: "test-org",
           pagination: { sortDirection: "DESC" },
         });
 

@@ -18,7 +18,7 @@ import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
 import "./setup.js";
 
 describe("Permissions API", () => {
-  const config = getTestConfig();
+  let config: ReturnType<typeof getTestConfig>;
   let testOrgId: string;
   let testUserId: string;
   let testRoleId: string;
@@ -27,17 +27,20 @@ describe("Permissions API", () => {
   beforeEach(async () => {
     // Create test organization
     testOrgId = generateTestId("org");
-    const orgResult = await createOrganization(config, {
+    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
 
+    // Update config with the test org ID for subsequent operations
+    config = { ...rootConfig, orgId: testOrgId };
+
     // Create test user
     testUserId = generateTestId("user");
     const userResult = await createUser(config, {
       id: testUserId,
-      orgId: testOrgId,
       identityProvider: "google",
       identityProviderUserId: "user@example.com",
     });
@@ -47,7 +50,6 @@ describe("Permissions API", () => {
     testRoleId = generateTestId("role");
     const roleResult = await createRole(config, {
       id: testRoleId,
-      orgId: testOrgId,
       name: "Test Role",
     });
     expect(roleResult.success).to.be.true;
@@ -56,7 +58,6 @@ describe("Permissions API", () => {
     testResourceId = "/api/test/*";
     const resourceResult = await createResource(config, {
       id: testResourceId,
-      orgId: testOrgId,
       name: "Test Resource",
     });
     expect(resourceResult.success).to.be.true;
@@ -65,7 +66,6 @@ describe("Permissions API", () => {
   describe("User Permissions", () => {
     it("should grant permission to user", async () => {
       const result = await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "read",
@@ -82,7 +82,6 @@ describe("Permissions API", () => {
     it("should handle duplicate permission grant", async () => {
       // Grant permission first time
       const result1 = await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "write",
@@ -91,7 +90,6 @@ describe("Permissions API", () => {
 
       // Try to grant same permission again
       const result2 = await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "write",
@@ -111,14 +109,12 @@ describe("Permissions API", () => {
     it("should get user permissions", async () => {
       // Grant multiple permissions
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "read",
       });
 
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "write",
@@ -126,7 +122,6 @@ describe("Permissions API", () => {
 
       // Get all permissions
       const result = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
       });
 
@@ -144,20 +139,17 @@ describe("Permissions API", () => {
       const resource2Id = "/api/other/*";
       await createResource(config, {
         id: resource2Id,
-        orgId: testOrgId,
         name: "Other Resource",
       });
 
       // Grant permissions on different resources
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "read",
       });
 
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: resource2Id,
         action: "read",
@@ -165,7 +157,6 @@ describe("Permissions API", () => {
 
       // Filter by resource
       const result = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });
@@ -180,7 +171,6 @@ describe("Permissions API", () => {
     it("should revoke user permission", async () => {
       // Grant permission
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -188,7 +178,6 @@ describe("Permissions API", () => {
 
       // Revoke permission
       const revokeResult = await revokeUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -201,7 +190,6 @@ describe("Permissions API", () => {
 
       // Verify permission is revoked
       const permissions = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -217,7 +205,6 @@ describe("Permissions API", () => {
   describe("Role Permissions", () => {
     it("should grant permission to role", async () => {
       const result = await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "read",
@@ -234,14 +221,12 @@ describe("Permissions API", () => {
     it("should get role permissions", async () => {
       // Grant multiple permissions
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "read",
       });
 
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "write",
@@ -249,7 +234,6 @@ describe("Permissions API", () => {
 
       // Get all permissions
       const result = await getRolePermissions(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
       });
 
@@ -265,7 +249,6 @@ describe("Permissions API", () => {
     it("should revoke role permission", async () => {
       // Grant permission
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "admin",
@@ -273,7 +256,6 @@ describe("Permissions API", () => {
 
       // Revoke permission
       const revokeResult = await revokeRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "admin",
@@ -290,7 +272,6 @@ describe("Permissions API", () => {
     it("should check if user has permission", async () => {
       // Grant permission
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "read",
@@ -298,7 +279,6 @@ describe("Permissions API", () => {
 
       // Check permission
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/test/specific",
         action: "read",
@@ -313,18 +293,16 @@ describe("Permissions API", () => {
     it("should check permission through role", async () => {
       // Grant permission to role
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "write",
       });
 
       // Assign role to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, testRoleId);
 
       // Check permission
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/test/specific",
         action: "write",
@@ -341,13 +319,11 @@ describe("Permissions API", () => {
       const wildcardResource = "/*";
       await createResource(config, {
         id: wildcardResource,
-        orgId: testOrgId,
         name: "All Resources",
       });
 
       // Grant permission on wildcard
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: wildcardResource,
         action: "read",
@@ -355,7 +331,6 @@ describe("Permissions API", () => {
 
       // Check permission on specific resource
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/any/path/here",
         action: "read",
@@ -372,7 +347,6 @@ describe("Permissions API", () => {
     it("should get effective permissions combining user and role", async () => {
       // Grant direct permission to user
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "read",
@@ -380,18 +354,16 @@ describe("Permissions API", () => {
 
       // Grant permission to role
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "write",
       });
 
       // Assign role to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, testRoleId);
 
       // Get effective permissions
       const result = await getEffectivePermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });
@@ -420,21 +392,18 @@ describe("Permissions API", () => {
       for (const resourceId of resources) {
         await createResource(config, {
           id: resourceId,
-          orgId: testOrgId,
           name: `Resource ${resourceId}`,
         });
       }
 
       // Grant permissions
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/users/create",
         action: "execute",
       });
 
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/users/update",
         action: "execute",
@@ -442,7 +411,6 @@ describe("Permissions API", () => {
 
       // Get permissions by prefix
       const result = await getEffectivePermissionsByPrefix(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceIdPrefix: "/api/users/",
         action: "execute",
@@ -463,32 +431,28 @@ describe("Permissions API", () => {
       const role2Id = generateTestId("role2");
       await createRole(config, {
         id: role2Id,
-        orgId: testOrgId,
         name: "Second Role",
       });
 
       // Grant different permissions to roles
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "read",
       });
 
       await grantRolePermission(config, {
-        orgId: testOrgId,
         roleId: role2Id,
         resourceId: testResourceId,
         action: "write",
       });
 
       // Assign both roles to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
-      await assignUserRole(config, testOrgId, testUserId, role2Id);
+      await assignUserRole(config, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, role2Id);
 
       // Also grant direct permission
       await grantUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -496,7 +460,6 @@ describe("Permissions API", () => {
 
       // Get effective permissions
       const result = await getEffectivePermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });

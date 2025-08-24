@@ -143,37 +143,36 @@ type Query {
   organizationsByIds(ids: [ID!]!): [Organization!]!
   organizationProperty(orgId: ID!, propertyName: String!): Property
   
-  # Users (scoped to org)
-  user(orgId: ID!, userId: ID!): User
-  users(orgId: ID!, filter: UserFilter, pagination: PaginationInput): UserConnection!
-  usersByIds(orgId: ID!, ids: [ID!]!): [User!]!
+  # Users (scoped to org via x-org-id header)
+  user(userId: ID!): User
+  users(filter: UserFilter, pagination: PaginationInput): UserConnection!
+  usersByIds(ids: [ID!]!): [User!]!
   usersByIdentity(identityProvider: String!, identityProviderUserId: String!): [User!]!
-  userProperty(orgId: ID!, userId: ID!, propertyName: String!): Property
+  userProperty(userId: ID!, propertyName: String!): Property
   
-  # Roles (scoped to org)
-  role(orgId: ID!, roleId: ID!): Role
-  roles(orgId: ID!, filter: RoleFilter, pagination: PaginationInput): RoleConnection!
-  rolesByIds(orgId: ID!, ids: [ID!]!): [Role!]!
-  roleProperty(orgId: ID!, roleId: ID!, propertyName: String!): Property
+  # Roles (scoped to org via x-org-id header)
+  role(roleId: ID!): Role
+  roles(filter: RoleFilter, pagination: PaginationInput): RoleConnection!
+  rolesByIds(ids: [ID!]!): [Role!]!
+  roleProperty(roleId: ID!, propertyName: String!): Property
   
-  # Resources (scoped to org)
-  resource(orgId: ID!, resourceId: ID!): Resource
-  resources(orgId: ID!, filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
-  resourcesByIdPrefix(orgId: ID!, idPrefix: String!): [Resource!]!
+  # Resources (scoped to org via x-org-id header)
+  resource(resourceId: ID!): Resource
+  resources(filter: ResourceFilter, pagination: PaginationInput): ResourceConnection!
+  resourcesByIdPrefix(idPrefix: String!): [Resource!]!
   
-  # Permissions
-  userPermissions(orgId: ID!, userId: ID!, resourceId: String, action: String): [UserPermission!]!
-  rolePermissions(orgId: ID!, roleId: ID!, resourceId: String, action: String): [RolePermission!]!
-  effectivePermissions(orgId: ID!, userId: ID!, resourceId: String!, action: String): [EffectivePermission!]!
+  # Permissions (scoped to org via x-org-id header)
+  userPermissions(userId: ID!, resourceId: String, action: String): [UserPermission!]!
+  rolePermissions(roleId: ID!, resourceId: String, action: String): [RolePermission!]!
+  effectivePermissions(userId: ID!, resourceId: String!, action: String): [EffectivePermission!]!
   effectivePermissionsByPrefix(
-    orgId: ID!, 
     userId: ID!, 
     resourceIdPrefix: String!, 
     action: String
   ): [EffectivePermission!]!
   
   # Check permission (returns boolean)
-  hasPermission(orgId: ID!, userId: ID!, resourceId: String!, action: String!): Boolean!
+  hasPermission(userId: ID!, resourceId: String!, action: String!): Boolean!
 }
 
 # Mutation type
@@ -187,39 +186,39 @@ type Mutation {
   setOrganizationProperty(orgId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
   deleteOrganizationProperty(orgId: ID!, name: String!): Boolean!
   
-  # Users
+  # Users (scoped to org via x-org-id header)
   createUser(input: CreateUserInput!): User!
-  updateUser(orgId: ID!, userId: ID!, input: UpdateUserInput!): User!
-  deleteUser(orgId: ID!, userId: ID!): Boolean!
+  updateUser(userId: ID!, input: UpdateUserInput!): User!
+  deleteUser(userId: ID!): Boolean!
   
   # User Properties
-  setUserProperty(orgId: ID!, userId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
-  deleteUserProperty(orgId: ID!, userId: ID!, name: String!): Boolean!
+  setUserProperty(userId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
+  deleteUserProperty(userId: ID!, name: String!): Boolean!
   
   # User Roles
-  assignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
-  unassignUserRole(orgId: ID!, userId: ID!, roleId: ID!): User!
+  assignUserRole(userId: ID!, roleId: ID!): User!
+  unassignUserRole(userId: ID!, roleId: ID!): User!
   
-  # Roles
+  # Roles (scoped to org via x-org-id header)
   createRole(input: CreateRoleInput!): Role!
-  updateRole(orgId: ID!, roleId: ID!, input: UpdateRoleInput!): Role!
-  deleteRole(orgId: ID!, roleId: ID!): Boolean!
+  updateRole(roleId: ID!, input: UpdateRoleInput!): Role!
+  deleteRole(roleId: ID!): Boolean!
   
   # Role Properties
-  setRoleProperty(orgId: ID!, roleId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
-  deleteRoleProperty(orgId: ID!, roleId: ID!, name: String!): Boolean!
+  setRoleProperty(roleId: ID!, name: String!, value: JSON, hidden: Boolean): Property!
+  deleteRoleProperty(roleId: ID!, name: String!): Boolean!
   
-  # Resources
+  # Resources (scoped to org via x-org-id header)
   createResource(input: CreateResourceInput!): Resource!
-  updateResource(orgId: ID!, resourceId: ID!, input: UpdateResourceInput!): Resource!
-  deleteResource(orgId: ID!, resourceId: ID!): Boolean!
+  updateResource(resourceId: ID!, input: UpdateResourceInput!): Resource!
+  deleteResource(resourceId: ID!): Boolean!
   
-  # Permissions
+  # Permissions (scoped to org via x-org-id header)
   grantUserPermission(input: GrantUserPermissionInput!): UserPermission!
-  revokeUserPermission(orgId: ID!, userId: ID!, resourceId: ID!, action: String!): Boolean!
+  revokeUserPermission(userId: ID!, resourceId: ID!, action: String!): Boolean!
   
   grantRolePermission(input: GrantRolePermissionInput!): RolePermission!
-  revokeRolePermission(orgId: ID!, roleId: ID!, resourceId: ID!, action: String!): Boolean!
+  revokeRolePermission(roleId: ID!, resourceId: ID!, action: String!): Boolean!
 }
 
 # Input types
@@ -237,7 +236,6 @@ input UpdateOrganizationInput {
 
 input CreateUserInput {
   id: ID!
-  orgId: ID!
   identityProvider: String!
   identityProviderUserId: String!
   properties: [PropertyInput!]
@@ -251,7 +249,6 @@ input UpdateUserInput {
 
 input CreateRoleInput {
   id: ID!
-  orgId: ID!
   name: String!
   description: String
   properties: [PropertyInput!]
@@ -264,7 +261,6 @@ input UpdateRoleInput {
 
 input CreateResourceInput {
   id: ID!
-  orgId: ID!
   name: String
   description: String
 }
@@ -281,14 +277,12 @@ input PropertyInput {
 }
 
 input GrantUserPermissionInput {
-  orgId: ID!
   userId: ID!
   resourceId: ID!
   action: String!
 }
 
 input GrantRolePermissionInput {
-  orgId: ID!
   roleId: ID!
   resourceId: ID!
   action: String!

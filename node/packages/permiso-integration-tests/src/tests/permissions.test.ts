@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
 
 describe("Permissions", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
-    // Create test organization
+    // Create test organization using ROOT client
     const orgMutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
         createOrganization(input: $input) {
@@ -15,12 +15,15 @@ describe("Permissions", () => {
       }
     `;
 
-    await client.mutate(orgMutation, {
+    await rootClient.mutate(orgMutation, {
       input: {
         id: "test-org",
         name: "Test Organization",
       },
     });
+
+    // Switch to organization context for RLS operations
+    switchToOrgContext("test-org");
 
     // Create test user
     const userMutation = gql`
@@ -34,7 +37,6 @@ describe("Permissions", () => {
     await client.mutate(userMutation, {
       input: {
         id: "test-user",
-        orgId: "test-org",
         identityProvider: "auth0",
         identityProviderUserId: "auth0|12345",
       },
@@ -52,7 +54,6 @@ describe("Permissions", () => {
     await client.mutate(roleMutation, {
       input: {
         id: "admin",
-        orgId: "test-org",
         name: "Administrator",
       },
     });
@@ -69,7 +70,6 @@ describe("Permissions", () => {
     await client.mutate(resourceMutation, {
       input: {
         id: "/api/users/*",
-        orgId: "test-org",
         name: "User API",
       },
     });
@@ -89,7 +89,6 @@ describe("Permissions", () => {
 
       const result = await client.mutate(mutation, {
         input: {
-          orgId: "test-org",
           userId: "test-user",
           resourceId: "/api/users/*",
           action: "read",
@@ -114,7 +113,6 @@ describe("Permissions", () => {
       try {
         const result = await client.mutate(mutation, {
           input: {
-            orgId: "test-org",
             userId: "non-existent",
             resourceId: "/api/users/*",
             action: "read",
@@ -163,7 +161,6 @@ describe("Permissions", () => {
 
       const result = await client.mutate(mutation, {
         input: {
-          orgId: "test-org",
           roleId: "admin",
           resourceId: "/api/users/*",
           action: "write",
@@ -180,8 +177,8 @@ describe("Permissions", () => {
   describe("assignUserRole", () => {
     it("should assign a role to a user", async () => {
       const mutation = gql`
-        mutation AssignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
-          assignUserRole(orgId: $orgId, userId: $userId, roleId: $roleId) {
+        mutation AssignUserRole($userId: ID!, $roleId: ID!) {
+          assignUserRole(userId: $userId, roleId: $roleId) {
             id
             roles {
               id
@@ -192,7 +189,6 @@ describe("Permissions", () => {
       `;
 
       const result = await client.mutate(mutation, {
-        orgId: "test-org",
         userId: "test-user",
         roleId: "admin",
       });
@@ -218,7 +214,6 @@ describe("Permissions", () => {
 
       await client.mutate(grantMutation, {
         input: {
-          orgId: "test-org",
           userId: "test-user",
           resourceId: "/api/users/*",
           action: "read",
@@ -227,16 +222,8 @@ describe("Permissions", () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $orgId: ID!
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            orgId: $orgId
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -245,7 +232,6 @@ describe("Permissions", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -270,7 +256,6 @@ describe("Permissions", () => {
 
       await client.mutate(grantRoleMutation, {
         input: {
-          orgId: "test-org",
           roleId: "admin",
           resourceId: "/api/users/*",
           action: "write",
@@ -279,31 +264,22 @@ describe("Permissions", () => {
 
       // Assign role to user
       const assignMutation = gql`
-        mutation AssignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
-          assignUserRole(orgId: $orgId, userId: $userId, roleId: $roleId) {
+        mutation AssignUserRole($userId: ID!, $roleId: ID!) {
+          assignUserRole(userId: $userId, roleId: $roleId) {
             id
           }
         }
       `;
 
       await client.mutate(assignMutation, {
-        orgId: "test-org",
         userId: "test-user",
         roleId: "admin",
       });
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $orgId: ID!
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            orgId: $orgId
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -313,7 +289,6 @@ describe("Permissions", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -339,7 +314,6 @@ describe("Permissions", () => {
 
       await client.mutate(grantUserMutation, {
         input: {
-          orgId: "test-org",
           userId: "test-user",
           resourceId: "/api/users/*",
           action: "read",
@@ -357,7 +331,6 @@ describe("Permissions", () => {
 
       await client.mutate(grantRoleMutation, {
         input: {
-          orgId: "test-org",
           roleId: "admin",
           resourceId: "/api/users/*",
           action: "write",
@@ -366,31 +339,22 @@ describe("Permissions", () => {
 
       // Assign role to user
       const assignMutation = gql`
-        mutation AssignUserRole($orgId: ID!, $userId: ID!, $roleId: ID!) {
-          assignUserRole(orgId: $orgId, userId: $userId, roleId: $roleId) {
+        mutation AssignUserRole($userId: ID!, $roleId: ID!) {
+          assignUserRole(userId: $userId, roleId: $roleId) {
             id
           }
         }
       `;
 
       await client.mutate(assignMutation, {
-        orgId: "test-org",
         userId: "test-user",
         roleId: "admin",
       });
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $orgId: ID!
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            orgId: $orgId
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -399,7 +363,6 @@ describe("Permissions", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -425,7 +388,6 @@ describe("Permissions", () => {
 
       await client.mutate(grantMutation, {
         input: {
-          orgId: "test-org",
           userId: "test-user",
           resourceId: "/api/users/*",
           action: "read",
@@ -435,13 +397,11 @@ describe("Permissions", () => {
       // Revoke permission
       const revokeMutation = gql`
         mutation RevokeUserPermission(
-          $orgId: ID!
           $userId: ID!
           $resourceId: ID!
           $action: String!
         ) {
           revokeUserPermission(
-            orgId: $orgId
             userId: $userId
             resourceId: $resourceId
             action: $action
@@ -450,7 +410,6 @@ describe("Permissions", () => {
       `;
 
       const result = await client.mutate(revokeMutation, {
-        orgId: "test-org",
         userId: "test-user",
         resourceId: "/api/users/*",
         action: "read",
@@ -460,23 +419,14 @@ describe("Permissions", () => {
 
       // Verify permission is revoked
       const query = gql`
-        query GetEffectivePermissions(
-          $orgId: ID!
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            orgId: $orgId
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: "test-org",
         userId: "test-user",
         resourceId: "/api/users/123",
       });

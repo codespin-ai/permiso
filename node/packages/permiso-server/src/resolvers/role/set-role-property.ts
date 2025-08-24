@@ -9,7 +9,6 @@ export const setRolePropertyResolver = {
     setRoleProperty: async (
       _: any,
       args: {
-        orgId: string;
         roleId: string;
         name: string;
         value: unknown;
@@ -19,7 +18,6 @@ export const setRolePropertyResolver = {
     ) => {
       const result = await setRoleProperty(
         context,
-        args.orgId,
         args.roleId,
         args.name,
         args.value,

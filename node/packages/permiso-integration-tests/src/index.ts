@@ -15,7 +15,14 @@ import "./tests/edge-cases.test.js";
 import "./tests/field-resolvers.test.js";
 
 // Re-export for backward compatibility
-export { testDb, server, client } from "./test-setup.js";
+export {
+  testDb,
+  server,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "./test-setup.js";
 
 // Setup global hooks for full test suite
 setupGlobalHooks();

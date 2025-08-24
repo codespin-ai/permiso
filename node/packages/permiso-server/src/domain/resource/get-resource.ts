@@ -8,13 +8,12 @@ const logger = createLogger("permiso-server:resources");
 
 export async function getResource(
   ctx: DataContext,
-  orgId: string,
   resourceId: string,
 ): Promise<Result<Resource | null>> {
   try {
     const row = await ctx.db.oneOrNone<ResourceDbRow>(
-      `SELECT * FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
-      { resourceId, orgId },
+      `SELECT * FROM resource WHERE id = $(resourceId)`,
+      { resourceId },
     );
 
     return {
@@ -22,7 +21,7 @@ export async function getResource(
       data: row ? mapResourceFromDb(row) : null,
     };
   } catch (error) {
-    logger.error("Failed to get resource", { error, orgId, resourceId });
+    logger.error("Failed to get resource", { error, resourceId });
     return { success: false, error: error as Error };
   }
 }

@@ -14,11 +14,7 @@ export const resourceFieldResolvers = {
     },
 
     permissions: async (parent: Resource, _: any, context: DataContext) => {
-      const result = await getPermissionsByResource(
-        context,
-        parent.orgId,
-        parent.id,
-      );
+      const result = await getPermissionsByResource(context, parent.id);
 
       if (!result.success) {
         throw result.error;

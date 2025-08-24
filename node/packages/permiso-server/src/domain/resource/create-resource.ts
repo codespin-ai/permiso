@@ -15,7 +15,7 @@ export async function createResource(
   try {
     const params = {
       id: input.id,
-      org_id: input.orgId,
+      org_id: ctx.orgId,
       name: input.name ?? null,
       description: input.description ?? null,
     };

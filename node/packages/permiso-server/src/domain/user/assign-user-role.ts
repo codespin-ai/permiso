@@ -9,29 +9,36 @@ const logger = createLogger("permiso-server:users");
 
 export async function assignUserRole(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   roleId: string,
 ): Promise<Result<UserRole>> {
   try {
     const params = {
+      org_id: ctx.orgId,
       user_id: userId,
       role_id: roleId,
-      org_id: orgId,
     };
 
-    const row = await ctx.db.one<UserRoleDbRow>(
+    const row = await ctx.db.oneOrNone<UserRoleDbRow>(
       `${sql.insert("user_role", params)}
-       ON CONFLICT (user_id, role_id, org_id) DO NOTHING
+       ON CONFLICT (org_id, user_id, role_id) DO NOTHING
        RETURNING *`,
       params,
     );
+
+    // If row is null due to DO NOTHING, fetch the existing row
+    if (!row) {
+      const existingRow = await ctx.db.one<UserRoleDbRow>(
+        `SELECT * FROM user_role WHERE org_id = $(orgId) AND user_id = $(userId) AND role_id = $(roleId)`,
+        { orgId: ctx.orgId, userId, roleId },
+      );
+      return { success: true, data: mapUserRoleFromDb(existingRow) };
+    }
 
     return { success: true, data: mapUserRoleFromDb(row) };
   } catch (error) {
     logger.error("Failed to assign user role", {
       error,
-      orgId,
       userId,
       roleId,
     });

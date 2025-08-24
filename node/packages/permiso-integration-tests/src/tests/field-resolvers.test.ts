@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
 
 describe("Field Resolvers and Nested Queries", () => {
   beforeEach(async () => {
@@ -20,7 +20,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(orgMutation, {
+    await rootClient.mutate(orgMutation, {
       input: {
         id: "acme-corp",
         name: "ACME Corporation",
@@ -32,13 +32,16 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(orgMutation, {
+    await rootClient.mutate(orgMutation, {
       input: {
         id: "startup-inc",
         name: "Startup Inc",
         properties: [{ name: "tier", value: "startup" }],
       },
     });
+
+    // Switch to acme-corp context for RLS operations
+    switchToOrgContext("acme-corp");
 
     // Create roles
     const roleMutation = gql`
@@ -52,7 +55,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(roleMutation, {
       input: {
         id: "admin",
-        orgId: "acme-corp",
         name: "Administrator",
         description: "Full system access",
         properties: [{ name: "level", value: "super" }],
@@ -62,7 +64,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(roleMutation, {
       input: {
         id: "editor",
-        orgId: "acme-corp",
         name: "Editor",
         description: "Content management access",
       },
@@ -71,7 +72,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(roleMutation, {
       input: {
         id: "viewer",
-        orgId: "acme-corp",
         name: "Viewer",
         description: "Read-only access",
       },
@@ -89,7 +89,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(userMutation, {
       input: {
         id: "john-doe",
-        orgId: "acme-corp",
         identityProvider: "google",
         identityProviderUserId: "google|john",
         properties: [
@@ -104,7 +103,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(userMutation, {
       input: {
         id: "jane-smith",
-        orgId: "acme-corp",
         identityProvider: "auth0",
         identityProviderUserId: "auth0|jane",
         properties: [{ name: "department", value: "sales" }],
@@ -115,7 +113,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(userMutation, {
       input: {
         id: "bob-wilson",
-        orgId: "acme-corp",
         identityProvider: "google",
         identityProviderUserId: "google|bob",
         roleIds: ["editor"],
@@ -134,7 +131,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(resourceMutation, {
       input: {
         id: "/api/users",
-        orgId: "acme-corp",
         name: "Users API",
         description: "User management endpoints",
       },
@@ -143,7 +139,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(resourceMutation, {
       input: {
         id: "/api/users/*",
-        orgId: "acme-corp",
         name: "User Details API",
       },
     });
@@ -151,7 +146,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(resourceMutation, {
       input: {
         id: "/api/posts/*",
-        orgId: "acme-corp",
         name: "Posts API",
       },
     });
@@ -159,7 +153,6 @@ describe("Field Resolvers and Nested Queries", () => {
     await client.mutate(resourceMutation, {
       input: {
         id: "/admin/*",
-        orgId: "acme-corp",
         name: "Admin Panel",
       },
     });
@@ -175,7 +168,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantUserMutation, {
       input: {
-        orgId: "acme-corp",
         userId: "john-doe",
         resourceId: "/admin/*",
         action: "admin",
@@ -184,7 +176,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantUserMutation, {
       input: {
-        orgId: "acme-corp",
         userId: "jane-smith",
         resourceId: "/api/users",
         action: "read",
@@ -201,7 +192,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantRoleMutation, {
       input: {
-        orgId: "acme-corp",
         roleId: "admin",
         resourceId: "/api/users/*",
         action: "write",
@@ -210,7 +200,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantRoleMutation, {
       input: {
-        orgId: "acme-corp",
         roleId: "admin",
         resourceId: "/api/users/*",
         action: "delete",
@@ -219,7 +208,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantRoleMutation, {
       input: {
-        orgId: "acme-corp",
         roleId: "editor",
         resourceId: "/api/posts/*",
         action: "write",
@@ -228,7 +216,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantRoleMutation, {
       input: {
-        orgId: "acme-corp",
         roleId: "viewer",
         resourceId: "/api/users/*",
         action: "read",
@@ -237,7 +224,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
     await client.mutate(grantRoleMutation, {
       input: {
-        orgId: "acme-corp",
         roleId: "viewer",
         resourceId: "/api/posts/*",
         action: "read",
@@ -276,7 +262,7 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       // Test with filter
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         id: "acme-corp",
         userFilter: {
           properties: [{ name: "department", value: "engineering" }],
@@ -290,7 +276,7 @@ describe("Field Resolvers and Nested Queries", () => {
       expect(result.data?.organization?.users?.totalCount).to.equal(1);
 
       // Test with pagination
-      const paginatedResult = await client.query(query, {
+      const paginatedResult = await rootClient.query(query, {
         id: "acme-corp",
         userPagination: { limit: 2, offset: 0 },
       });
@@ -326,7 +312,7 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       // Test with property filter
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         id: "acme-corp",
         roleFilter: {
           properties: [{ name: "level", value: "super" }],
@@ -338,7 +324,7 @@ describe("Field Resolvers and Nested Queries", () => {
       expect(result.data?.organization?.roles?.totalCount).to.equal(1);
 
       // Test without filter
-      const allRolesResult = await client.query(query, {
+      const allRolesResult = await rootClient.query(query, {
         id: "acme-corp",
       });
 
@@ -393,8 +379,8 @@ describe("Field Resolvers and Nested Queries", () => {
   describe("User Field Resolvers", () => {
     it("should resolve user organization", async () => {
       const query = gql`
-        query GetUserWithOrganization($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query GetUserWithOrganization($userId: ID!) {
+          user(userId: $userId) {
             id
             organization {
               id
@@ -410,7 +396,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -423,8 +408,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve user roles", async () => {
       const query = gql`
-        query GetUserWithRoles($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query GetUserWithRoles($userId: ID!) {
+          user(userId: $userId) {
             id
             roles {
               id
@@ -440,7 +425,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -460,8 +444,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve user permissions", async () => {
       const query = gql`
-        query GetUserWithPermissions($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query GetUserWithPermissions($userId: ID!) {
+          user(userId: $userId) {
             id
             permissions {
               resourceId
@@ -478,7 +462,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -493,12 +476,11 @@ describe("Field Resolvers and Nested Queries", () => {
     it("should resolve user effective permissions with filtering", async () => {
       const query = gql`
         query GetUserEffectivePermissions(
-          $orgId: ID!
           $userId: ID!
           $resourceId: String
           $action: String
         ) {
-          user(orgId: $orgId, userId: $userId) {
+          user(userId: $userId) {
             id
             effectivePermissions(resourceId: $resourceId, action: $action) {
               resourceId
@@ -512,7 +494,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
       // Test without filters - should get all effective permissions
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -521,7 +502,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
       // Test with resource filter
       const filteredResult = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
         resourceId: "/api/users/123",
       });
@@ -541,7 +521,6 @@ describe("Field Resolvers and Nested Queries", () => {
 
       // Test with action filter
       const actionFilteredResult = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
         action: "write",
       });
@@ -557,8 +536,8 @@ describe("Field Resolvers and Nested Queries", () => {
   describe("Role Field Resolvers", () => {
     it("should resolve role organization", async () => {
       const query = gql`
-        query GetRoleWithOrganization($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRoleWithOrganization($roleId: ID!) {
+          role(roleId: $roleId) {
             id
             organization {
               id
@@ -569,7 +548,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         roleId: "admin",
       });
 
@@ -581,8 +559,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve role users", async () => {
       const query = gql`
-        query GetRoleWithUsers($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRoleWithUsers($roleId: ID!) {
+          role(roleId: $roleId) {
             id
             users {
               id
@@ -598,7 +576,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         roleId: "editor",
       });
 
@@ -609,8 +586,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve role permissions", async () => {
       const query = gql`
-        query GetRoleWithPermissions($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRoleWithPermissions($roleId: ID!) {
+          role(roleId: $roleId) {
             id
             permissions {
               resourceId
@@ -626,7 +603,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         roleId: "viewer",
       });
 
@@ -653,8 +629,8 @@ describe("Field Resolvers and Nested Queries", () => {
   describe("Resource Field Resolvers", () => {
     it("should resolve resource organization", async () => {
       const query = gql`
-        query GetResourceWithOrganization($orgId: ID!, $resourceId: ID!) {
-          resource(orgId: $orgId, resourceId: $resourceId) {
+        query GetResourceWithOrganization($resourceId: ID!) {
+          resource(resourceId: $resourceId) {
             id
             organization {
               id
@@ -665,7 +641,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         resourceId: "/api/users/*",
       });
 
@@ -677,8 +652,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve resource permissions", async () => {
       const query = gql`
-        query GetResourceWithPermissions($orgId: ID!, $resourceId: ID!) {
-          resource(orgId: $orgId, resourceId: $resourceId) {
+        query GetResourceWithPermissions($resourceId: ID!) {
+          resource(resourceId: $resourceId) {
             id
             permissions {
               __typename
@@ -704,7 +679,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         resourceId: "/api/users/*",
       });
 
@@ -732,8 +706,8 @@ describe("Field Resolvers and Nested Queries", () => {
   describe("Permission Field Resolvers", () => {
     it("should resolve permission organization", async () => {
       const query = gql`
-        query GetUserPermissions($orgId: ID!, $userId: ID!) {
-          userPermissions(orgId: $orgId, userId: $userId) {
+        query GetUserPermissions($userId: ID!) {
+          userPermissions(userId: $userId) {
             resourceId
             action
             organization {
@@ -745,7 +719,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -760,8 +733,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should resolve permission resource", async () => {
       const query = gql`
-        query GetRolePermissions($orgId: ID!, $roleId: ID!) {
-          rolePermissions(orgId: $orgId, roleId: $roleId) {
+        query GetRolePermissions($roleId: ID!) {
+          rolePermissions(roleId: $roleId) {
             resourceId
             action
             resource {
@@ -774,7 +747,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         roleId: "admin",
       });
 
@@ -790,11 +762,11 @@ describe("Field Resolvers and Nested Queries", () => {
   describe("Deep Nested Queries", () => {
     it("should handle deeply nested queries efficiently", async () => {
       const query = gql`
-        query DeepNestedQuery($orgId: ID!) {
+        query DeepNestedQuery($orgId: ID!, $userPagination: PaginationInput) {
           organization(id: $orgId) {
             id
             name
-            users(pagination: { limit: 5 }) {
+            users(pagination: $userPagination) {
               nodes {
                 id
                 roles {
@@ -853,7 +825,10 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "acme-corp" });
+      const result = await rootClient.query(query, {
+        orgId: "acme-corp",
+        userPagination: { limit: 5 },
+      });
 
       // Verify the structure is resolved correctly
       const org = result.data?.organization;
@@ -884,8 +859,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should handle circular references in nested queries", async () => {
       const query = gql`
-        query CircularQuery($orgId: ID!, $userId: ID!) {
-          user(orgId: $orgId, userId: $userId) {
+        query CircularQuery($userId: ID!) {
+          user(userId: $userId) {
             id
             organization {
               id
@@ -914,7 +889,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -952,7 +926,7 @@ describe("Field Resolvers and Nested Queries", () => {
               totalCount
             }
           }
-          users(orgId: $orgId, pagination: { limit: 1 }) {
+          users(pagination: { limit: 1 }) {
             nodes {
               id
               roles {
@@ -961,7 +935,7 @@ describe("Field Resolvers and Nested Queries", () => {
             }
             totalCount
           }
-          roles(orgId: $orgId) {
+          roles {
             nodes {
               id
               users {
@@ -969,7 +943,7 @@ describe("Field Resolvers and Nested Queries", () => {
               }
             }
           }
-          resources(orgId: $orgId, filter: { idPrefix: "/api/" }) {
+          resources(filter: { idPrefix: "/api/" }) {
             nodes {
               id
               permissions {
@@ -981,7 +955,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "acme-corp" });
+      const result = await rootClient.query(query, { orgId: "acme-corp" });
 
       // Verify all root fields resolved
       expect(result.data?.organization?.id).to.equal("acme-corp");
@@ -1000,8 +974,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
     it("should handle field aliases correctly", async () => {
       const query = gql`
-        query AliasedQuery($orgId: ID!, $userId: ID!) {
-          primaryUser: user(orgId: $orgId, userId: $userId) {
+        query AliasedQuery($userId: ID!) {
+          primaryUser: user(userId: $userId) {
             id
             userRoles: roles {
               roleId: id
@@ -1012,7 +986,7 @@ describe("Field Resolvers and Nested Queries", () => {
               act: action
             }
           }
-          allUsers: users(orgId: $orgId) {
+          allUsers: users {
             count: totalCount
             items: nodes {
               userId: id
@@ -1022,7 +996,6 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "acme-corp",
         userId: "john-doe",
       });
 
@@ -1061,8 +1034,8 @@ describe("Field Resolvers and Nested Queries", () => {
           }
         }
 
-        query FragmentQuery($orgId: ID!) {
-          users(orgId: $orgId) {
+        query FragmentQuery {
+          users {
             nodes {
               ...UserBasics
               roles {
@@ -1070,7 +1043,7 @@ describe("Field Resolvers and Nested Queries", () => {
               }
             }
           }
-          roles(orgId: $orgId) {
+          roles {
             nodes {
               ...RoleDetails
               users {
@@ -1081,7 +1054,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "acme-corp" });
+      const result = await client.query(query, {});
 
       // Verify fragments expanded correctly
       expect(result.data?.users?.nodes).to.have.length.at.least(1);

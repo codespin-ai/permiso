@@ -9,21 +9,16 @@ export const updateRoleResolver = {
   Mutation: {
     updateRole: async (
       _: any,
-      args: { orgId: string; roleId: string; input: any },
+      args: { roleId: string; input: any },
       context: DataContext,
     ) => {
-      const result = await updateRole(
-        context,
-        args.orgId,
-        args.roleId,
-        args.input,
-      );
+      const result = await updateRole(context, args.roleId, args.input);
       if (!result.success) {
         throw result.error;
       }
 
       // Fetch with properties
-      const roleResult = await getRole(context, args.orgId, args.roleId);
+      const roleResult = await getRole(context, args.roleId);
       if (!roleResult.success) {
         throw roleResult.error;
       }

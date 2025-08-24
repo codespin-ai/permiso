@@ -9,21 +9,16 @@ export const updateUserResolver = {
   Mutation: {
     updateUser: async (
       _: any,
-      args: { orgId: string; userId: string; input: any },
+      args: { userId: string; input: any },
       context: DataContext,
     ) => {
-      const result = await updateUser(
-        context,
-        args.orgId,
-        args.userId,
-        args.input,
-      );
+      const result = await updateUser(context, args.userId, args.input);
       if (!result.success) {
         throw result.error;
       }
 
       // Fetch with properties
-      const userResult = await getUser(context, args.orgId, args.userId);
+      const userResult = await getUser(context, args.userId);
       if (!userResult.success) {
         throw userResult.error;
       }

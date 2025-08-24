@@ -1,11 +1,8 @@
 import type { OrganizationWithProperties } from "../../types.js";
 import { getOrganizationProperties } from "../../domain/organization/get-organization-properties.js";
-import { getUsers } from "../user/get-users.js";
-import { getRoles } from "../role/get-roles.js";
-import {
-  getResources,
-  getResourcesByIdPrefix,
-} from "../../domain/resource/get-resources.js";
+import { getUsersByOrg } from "../../domain/user/get-users-by-org.js";
+import { getRolesByOrg } from "../../domain/role/get-roles-by-org.js";
+import { getResourcesByOrg } from "../../domain/resource/get-resources-by-org.js";
 import { DataContext } from "../../domain/data-context.js";
 
 export const organizationFieldResolvers = {
@@ -27,7 +24,7 @@ export const organizationFieldResolvers = {
       args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
-      const result = await getUsers(
+      const result = await getUsersByOrg(
         context,
         parent.id,
         args.filter,
@@ -40,7 +37,11 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getUsers(context, parent.id, args.filter);
+        const countResult = await getUsersByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -73,7 +74,7 @@ export const organizationFieldResolvers = {
       args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
-      const result = await getRoles(
+      const result = await getRolesByOrg(
         context,
         parent.id,
         args.filter,
@@ -86,7 +87,11 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getRoles(context, parent.id, args.filter);
+        const countResult = await getRolesByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -119,16 +124,12 @@ export const organizationFieldResolvers = {
       args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
-      let result;
-      if (args.filter?.idPrefix) {
-        result = await getResourcesByIdPrefix(
-          context,
-          parent.id,
-          args.filter.idPrefix,
-        );
-      } else {
-        result = await getResources(context, parent.id, args.pagination);
-      }
+      const result = await getResourcesByOrg(
+        context,
+        parent.id,
+        args.filter,
+        args.pagination,
+      );
 
       if (!result.success) {
         throw result.error;
@@ -136,8 +137,12 @@ export const organizationFieldResolvers = {
 
       // Get total count without pagination
       let totalCount = result.data.length;
-      if (args.pagination && !args.filter?.idPrefix) {
-        const countResult = await getResources(context, parent.id);
+      if (args.pagination) {
+        const countResult = await getResourcesByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }

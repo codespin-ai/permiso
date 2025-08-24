@@ -1,12 +1,18 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import {
+  testDb,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "../index.js";
 
 describe("Resources", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
-    // Create test organization
+    // Create test organization using ROOT client
     const mutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
         createOrganization(input: $input) {
@@ -15,12 +21,15 @@ describe("Resources", () => {
       }
     `;
 
-    await client.mutate(mutation, {
+    await rootClient.mutate(mutation, {
       input: {
         id: "test-org",
         name: "Test Organization",
       },
     });
+
+    // Switch to organization context for RLS operations
+    switchToOrgContext("test-org");
   });
 
   describe("createResource", () => {
@@ -39,7 +48,6 @@ describe("Resources", () => {
       const result = await client.mutate(mutation, {
         input: {
           id: "/api/users/*",
-          orgId: "test-org",
           name: "User API",
           description: "User management endpoints",
         },
@@ -52,7 +60,10 @@ describe("Resources", () => {
       expect(resource?.description).to.equal("User management endpoints");
     });
 
-    it("should fail with non-existent organization", async () => {
+    it("should fail when trying to access non-existent organization", async () => {
+      // Switch to a non-existent organization context
+      const nonExistentOrgClient = createOrgClient("non-existent-org");
+
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -62,10 +73,9 @@ describe("Resources", () => {
       `;
 
       try {
-        const result = await client.mutate(mutation, {
+        const result = await nonExistentOrgClient.mutate(mutation, {
           input: {
             id: "/api/users/*",
-            orgId: "non-existent-org",
             name: "User API",
           },
         });
@@ -77,7 +87,9 @@ describe("Resources", () => {
             (msg: string) =>
               msg.includes("foreign key violation") ||
               msg.includes("is not present in table") ||
-              msg.includes("constraint"),
+              msg.includes("constraint") ||
+              msg.includes("organization") ||
+              msg.includes("not found"),
           );
         } else {
           expect.fail("Should have returned an error");
@@ -90,7 +102,9 @@ describe("Resources", () => {
           (msg: string) =>
             msg.includes("foreign key violation") ||
             msg.includes("is not present in table") ||
-            msg.includes("constraint"),
+            msg.includes("constraint") ||
+            msg.includes("organization") ||
+            msg.includes("not found"),
         );
       }
     });
@@ -110,7 +124,6 @@ describe("Resources", () => {
       await client.mutate(createResourceMutation, {
         input: {
           id: "/api/users/*",
-          orgId: "test-org",
           name: "User API",
         },
       });
@@ -118,15 +131,14 @@ describe("Resources", () => {
       await client.mutate(createResourceMutation, {
         input: {
           id: "/api/roles/*",
-          orgId: "test-org",
           name: "Role API",
         },
       });
 
       // Query resources
       const query = gql`
-        query ListResources($orgId: ID!) {
-          resources(orgId: $orgId) {
+        query ListResources {
+          resources {
             nodes {
               id
               orgId
@@ -137,7 +149,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "test-org" });
+      const result = await client.query(query, {});
 
       expect(result.data?.resources?.nodes).to.have.lengthOf(2);
       const resourceIds = result.data?.resources?.nodes.map((r: any) => r.id);
@@ -159,7 +171,6 @@ describe("Resources", () => {
       await client.mutate(createMutation, {
         input: {
           id: "/api/users/*",
-          orgId: "test-org",
           name: "User API",
           description: "User management",
         },
@@ -167,8 +178,8 @@ describe("Resources", () => {
 
       // Query resource
       const query = gql`
-        query GetResource($orgId: ID!, $resourceId: ID!) {
-          resource(orgId: $orgId, resourceId: $resourceId) {
+        query GetResource($resourceId: ID!) {
+          resource(resourceId: $resourceId) {
             id
             orgId
             name
@@ -180,7 +191,6 @@ describe("Resources", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         resourceId: "/api/users/*",
       });
 
@@ -204,7 +214,6 @@ describe("Resources", () => {
       await client.mutate(createMutation, {
         input: {
           id: "/api/users/*",
-          orgId: "test-org",
           name: "User API",
         },
       });
@@ -212,15 +221,10 @@ describe("Resources", () => {
       // Update resource
       const updateMutation = gql`
         mutation UpdateResource(
-          $orgId: ID!
           $resourceId: ID!
           $input: UpdateResourceInput!
         ) {
-          updateResource(
-            orgId: $orgId
-            resourceId: $resourceId
-            input: $input
-          ) {
+          updateResource(resourceId: $resourceId, input: $input) {
             id
             name
             description
@@ -229,7 +233,6 @@ describe("Resources", () => {
       `;
 
       const result = await client.mutate(updateMutation, {
-        orgId: "test-org",
         resourceId: "/api/users/*",
         input: {
           name: "User API v2",
@@ -259,20 +262,18 @@ describe("Resources", () => {
       await client.mutate(createMutation, {
         input: {
           id: "/api/users/*",
-          orgId: "test-org",
           name: "User API",
         },
       });
 
       // Delete resource
       const deleteMutation = gql`
-        mutation DeleteResource($orgId: ID!, $resourceId: ID!) {
-          deleteResource(orgId: $orgId, resourceId: $resourceId)
+        mutation DeleteResource($resourceId: ID!) {
+          deleteResource(resourceId: $resourceId)
         }
       `;
 
       const result = await client.mutate(deleteMutation, {
-        orgId: "test-org",
         resourceId: "/api/users/*",
       });
 
@@ -280,15 +281,14 @@ describe("Resources", () => {
 
       // Verify deletion
       const query = gql`
-        query GetResource($orgId: ID!, $resourceId: ID!) {
-          resource(orgId: $orgId, resourceId: $resourceId) {
+        query GetResource($resourceId: ID!) {
+          resource(resourceId: $resourceId) {
             id
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: "test-org",
         resourceId: "/api/users/*",
       });
 

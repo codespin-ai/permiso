@@ -16,7 +16,7 @@ export async function createUser(
     const user = await ctx.db.tx(async (t) => {
       const params = {
         id: input.id,
-        org_id: input.orgId,
+        org_id: ctx.orgId,
         identity_provider: input.identityProvider,
         identity_provider_user_id: input.identityProviderUserId,
       };
@@ -29,7 +29,7 @@ export async function createUser(
       if (input.properties && input.properties.length > 0) {
         const propertyValues = input.properties.map((p) => ({
           parent_id: input.id,
-          org_id: input.orgId,
+          org_id: ctx.orgId,
           name: p.name,
           value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false,
@@ -45,7 +45,7 @@ export async function createUser(
           const roleParams = {
             user_id: input.id,
             role_id: roleId,
-            org_id: input.orgId,
+            org_id: ctx.orgId,
           };
           await t.none(sql.insert("user_role", roleParams), roleParams);
         }

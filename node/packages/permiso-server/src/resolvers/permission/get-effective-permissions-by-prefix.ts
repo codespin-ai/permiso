@@ -15,7 +15,6 @@ export const getEffectivePermissionsByPrefixResolver = {
     ) => {
       const result = await getEffectivePermissionsByPrefix(
         context,
-        args.orgId,
         args.userId,
         args.resourceIdPrefix,
         args.action,

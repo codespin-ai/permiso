@@ -10,7 +10,6 @@ const logger = createLogger("permiso-server:resources");
 
 export async function updateResource(
   ctx: DataContext,
-  orgId: string,
   resourceId: string,
   input: UpdateResourceInput,
 ): Promise<Result<Resource>> {
@@ -27,12 +26,11 @@ export async function updateResource(
 
     const whereParams = {
       resource_id: resourceId,
-      org_id: orgId,
     };
 
     const query = `
       ${sql.update("resource", updateParams)}, updated_at = NOW()
-      WHERE id = $(resource_id) AND org_id = $(org_id)
+      WHERE id = $(resource_id)
       RETURNING *
     `;
 
@@ -42,7 +40,6 @@ export async function updateResource(
   } catch (error) {
     logger.error("Failed to update resource", {
       error,
-      orgId,
       resourceId,
       input,
     });

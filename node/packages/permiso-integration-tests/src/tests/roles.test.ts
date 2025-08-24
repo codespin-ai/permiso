@@ -1,12 +1,18 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import {
+  testDb,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "../index.js";
 
 describe("Roles", () => {
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
-    // Create test organization
+    // Create test organization using ROOT client
     const mutation = gql`
       mutation CreateOrganization($input: CreateOrganizationInput!) {
         createOrganization(input: $input) {
@@ -15,12 +21,15 @@ describe("Roles", () => {
       }
     `;
 
-    await client.mutate(mutation, {
+    await rootClient.mutate(mutation, {
       input: {
         id: "test-org",
         name: "Test Organization",
       },
     });
+
+    // Switch to organization context for RLS operations
+    switchToOrgContext("test-org");
   });
 
   describe("createRole", () => {
@@ -44,7 +53,6 @@ describe("Roles", () => {
       const result = await client.mutate(mutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
           description: "Full system access",
           properties: [
@@ -76,7 +84,10 @@ describe("Roles", () => {
       });
     });
 
-    it("should fail with non-existent organization", async () => {
+    it("should fail when trying to access non-existent organization", async () => {
+      // Switch to a non-existent organization context
+      const nonExistentOrgClient = createOrgClient("non-existent-org");
+
       const mutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
           createRole(input: $input) {
@@ -86,10 +97,9 @@ describe("Roles", () => {
       `;
 
       try {
-        const result = await client.mutate(mutation, {
+        const result = await nonExistentOrgClient.mutate(mutation, {
           input: {
             id: "admin",
-            orgId: "non-existent-org",
             name: "Administrator",
           },
         });
@@ -101,7 +111,9 @@ describe("Roles", () => {
             (msg: string) =>
               msg.includes("foreign key violation") ||
               msg.includes("is not present in table") ||
-              msg.includes("constraint"),
+              msg.includes("constraint") ||
+              msg.includes("organization") ||
+              msg.includes("not found"),
           );
         } else {
           expect.fail("Should have returned an error");
@@ -114,7 +126,9 @@ describe("Roles", () => {
           (msg: string) =>
             msg.includes("foreign key violation") ||
             msg.includes("is not present in table") ||
-            msg.includes("constraint"),
+            msg.includes("constraint") ||
+            msg.includes("organization") ||
+            msg.includes("not found"),
         );
       }
     });
@@ -134,7 +148,6 @@ describe("Roles", () => {
       await client.mutate(createRoleMutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
         },
       });
@@ -142,15 +155,14 @@ describe("Roles", () => {
       await client.mutate(createRoleMutation, {
         input: {
           id: "user",
-          orgId: "test-org",
           name: "User",
         },
       });
 
       // Query roles
       const query = gql`
-        query ListRoles($orgId: ID!) {
-          roles(orgId: $orgId) {
+        query ListRoles {
+          roles {
             nodes {
               id
               orgId
@@ -161,7 +173,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.query(query, { orgId: "test-org" });
+      const result = await client.query(query, {});
 
       expect(result.data?.roles?.nodes).to.have.lengthOf(2);
       const roleIds = result.data?.roles?.nodes.map((r: any) => r.id);
@@ -183,7 +195,6 @@ describe("Roles", () => {
       await client.mutate(createMutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
           description: "Full access",
           properties: [{ name: "level", value: "high" }],
@@ -192,8 +203,8 @@ describe("Roles", () => {
 
       // Query role
       const query = gql`
-        query GetRole($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRole($roleId: ID!) {
+          role(roleId: $roleId) {
             id
             orgId
             name
@@ -210,7 +221,6 @@ describe("Roles", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         roleId: "admin",
       });
 
@@ -237,19 +247,14 @@ describe("Roles", () => {
       await client.mutate(createMutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
         },
       });
 
       // Update role
       const updateMutation = gql`
-        mutation UpdateRole(
-          $orgId: ID!
-          $roleId: ID!
-          $input: UpdateRoleInput!
-        ) {
-          updateRole(orgId: $orgId, roleId: $roleId, input: $input) {
+        mutation UpdateRole($roleId: ID!, $input: UpdateRoleInput!) {
+          updateRole(roleId: $roleId, input: $input) {
             id
             name
             description
@@ -263,7 +268,6 @@ describe("Roles", () => {
       `;
 
       const result = await client.mutate(updateMutation, {
-        orgId: "test-org",
         roleId: "admin",
         input: {
           name: "Super Administrator",
@@ -279,14 +283,12 @@ describe("Roles", () => {
       // Set role property separately
       const setPropMutation = gql`
         mutation SetRoleProperty(
-          $orgId: ID!
           $roleId: ID!
           $name: String!
           $value: JSON
           $hidden: Boolean
         ) {
           setRoleProperty(
-            orgId: $orgId
             roleId: $roleId
             name: $name
             value: $value
@@ -299,17 +301,21 @@ describe("Roles", () => {
         }
       `;
 
-      await client.mutate(setPropMutation, {
-        orgId: "test-org",
+      const setPropResult = await client.mutate(setPropMutation, {
         roleId: "admin",
         name: "level",
         value: "maximum",
       });
 
+      // Check if the mutation succeeded
+      expect(setPropResult.data?.setRoleProperty).to.exist;
+      expect(setPropResult.data?.setRoleProperty.name).to.equal("level");
+      expect(setPropResult.data?.setRoleProperty.value).to.equal("maximum");
+
       // Query role to verify property
       const query = gql`
-        query GetRole($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRole($roleId: ID!) {
+          role(roleId: $roleId) {
             properties {
               name
               value
@@ -320,7 +326,6 @@ describe("Roles", () => {
       `;
 
       const roleResult = await client.query(query, {
-        orgId: "test-org",
         roleId: "admin",
       });
       expect(roleResult.data?.role?.properties).to.have.lengthOf(1);
@@ -347,20 +352,18 @@ describe("Roles", () => {
       await client.mutate(createMutation, {
         input: {
           id: "admin",
-          orgId: "test-org",
           name: "Administrator",
         },
       });
 
       // Delete role
       const deleteMutation = gql`
-        mutation DeleteRole($orgId: ID!, $roleId: ID!) {
-          deleteRole(orgId: $orgId, roleId: $roleId)
+        mutation DeleteRole($roleId: ID!) {
+          deleteRole(roleId: $roleId)
         }
       `;
 
       const result = await client.mutate(deleteMutation, {
-        orgId: "test-org",
         roleId: "admin",
       });
 
@@ -368,15 +371,14 @@ describe("Roles", () => {
 
       // Verify deletion
       const query = gql`
-        query GetRole($orgId: ID!, $roleId: ID!) {
-          role(orgId: $orgId, roleId: $roleId) {
+        query GetRole($roleId: ID!) {
+          role(roleId: $roleId) {
             id
           }
         }
       `;
 
       const queryResult = await client.query(query, {
-        orgId: "test-org",
         roleId: "admin",
       });
 

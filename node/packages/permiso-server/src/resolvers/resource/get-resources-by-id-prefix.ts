@@ -5,14 +5,10 @@ export const resourcesByIdPrefixResolver = {
   Query: {
     resourcesByIdPrefix: async (
       _: any,
-      args: { orgId: string; idPrefix: string },
+      args: { idPrefix: string },
       context: DataContext,
     ) => {
-      const result = await getResourcesByIdPrefix(
-        context,
-        args.orgId,
-        args.idPrefix,
-      );
+      const result = await getResourcesByIdPrefix(context, args.idPrefix);
 
       if (!result.success) {
         throw result.error;

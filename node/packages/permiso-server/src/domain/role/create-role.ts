@@ -16,7 +16,7 @@ export async function createRole(
     const role = await ctx.db.tx(async (t) => {
       const params = {
         id: input.id,
-        org_id: input.orgId,
+        org_id: ctx.orgId,
         name: input.name,
         description: input.description ?? null,
       };
@@ -29,7 +29,7 @@ export async function createRole(
       if (input.properties && input.properties.length > 0) {
         const propertyValues = input.properties.map((p) => ({
           parent_id: input.id,
-          org_id: input.orgId,
+          org_id: ctx.orgId,
           name: p.name,
           value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false,

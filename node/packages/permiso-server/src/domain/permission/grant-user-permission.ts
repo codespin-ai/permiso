@@ -12,22 +12,21 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function grantUserPermission(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   resourceId: string,
   action: string,
 ): Promise<Result<UserPermissionWithOrgId>> {
   try {
     const params = {
+      org_id: ctx.orgId,
       user_id: userId,
-      org_id: orgId,
       resource_id: resourceId,
       action: action,
     };
 
     const row = await ctx.db.one<UserPermissionDbRow>(
       `${sql.insert("user_permission", params)}
-       ON CONFLICT (user_id, org_id, resource_id, action) DO UPDATE SET created_at = NOW()
+       ON CONFLICT (org_id, user_id, resource_id, action) DO UPDATE SET created_at = NOW()
        RETURNING *`,
       params,
     );
@@ -36,7 +35,6 @@ export async function grantUserPermission(
   } catch (error) {
     logger.error("Failed to grant user permission", {
       error,
-      orgId,
       userId,
       resourceId,
       action,

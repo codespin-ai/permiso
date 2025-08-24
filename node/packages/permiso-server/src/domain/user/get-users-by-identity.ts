@@ -24,8 +24,8 @@ export async function getUsersByIdentity(
     const result = await Promise.all(
       users.map(async (user) => {
         const [propertiesResult, roleIds] = await Promise.all([
-          getUserProperties(ctx, user.orgId, user.id, false),
-          getUserRoles(ctx, user.orgId, user.id),
+          getUserProperties(ctx, user.id, false),
+          getUserRoles(ctx, user.id),
         ]);
 
         if (!propertiesResult.success) {

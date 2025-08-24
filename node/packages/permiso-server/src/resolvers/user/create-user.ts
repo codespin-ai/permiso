@@ -14,11 +14,7 @@ export const createUserResolver = {
       }
 
       // Fetch with properties
-      const userResult = await getUser(
-        context,
-        args.input.orgId,
-        result.data.id,
-      );
+      const userResult = await getUser(context, result.data.id);
       if (!userResult.success) {
         throw userResult.error;
       }

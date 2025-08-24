@@ -8,15 +8,10 @@ export const deleteRolePropertyResolver = {
   Mutation: {
     deleteRoleProperty: async (
       _: any,
-      args: { orgId: string; roleId: string; name: string },
+      args: { roleId: string; name: string },
       context: DataContext,
     ) => {
-      const result = await deleteRoleProperty(
-        context,
-        args.orgId,
-        args.roleId,
-        args.name,
-      );
+      const result = await deleteRoleProperty(context, args.roleId, args.name);
       if (!result.success) {
         throw result.error;
       }

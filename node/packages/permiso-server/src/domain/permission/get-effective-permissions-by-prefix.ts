@@ -7,7 +7,6 @@ const logger = createLogger("permiso-server:permissions");
 
 export async function getEffectivePermissionsByPrefix(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   resourceIdPrefix: string,
   action?: string,
@@ -17,14 +16,13 @@ export async function getEffectivePermissionsByPrefix(
     const userPermsQuery = action
       ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id LIKE $(resourcePattern) AND action = $(action)`
+         WHERE user_id = $(userId) AND resource_id LIKE $(resourcePattern) AND action = $(action)`
       : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
          FROM user_permission 
-         WHERE user_id = $(userId) AND org_id = $(orgId) AND resource_id LIKE $(resourcePattern)`;
+         WHERE user_id = $(userId) AND resource_id LIKE $(resourcePattern)`;
 
     const userPermsParams: Record<string, any> = {
       userId,
-      orgId,
       resourcePattern: `${resourceIdPrefix}%`,
     };
     if (action) userPermsParams.action = action;
@@ -33,16 +31,15 @@ export async function getEffectivePermissionsByPrefix(
     const rolePermsQuery = action
       ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id LIKE $(resourcePattern) AND rp.action = $(action)`
+         INNER JOIN user_role ur ON rp.role_id = ur.role_id
+         WHERE ur.user_id = $(userId) AND rp.resource_id LIKE $(resourcePattern) AND rp.action = $(action)`
       : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
          FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id AND rp.org_id = ur.org_id
-         WHERE ur.user_id = $(userId) AND rp.org_id = $(orgId) AND rp.resource_id LIKE $(resourcePattern)`;
+         INNER JOIN user_role ur ON rp.role_id = ur.role_id
+         WHERE ur.user_id = $(userId) AND rp.resource_id LIKE $(resourcePattern)`;
 
     const rolePermsParams: Record<string, any> = {
       userId,
-      orgId,
       resourcePattern: `${resourceIdPrefix}%`,
     };
     if (action) rolePermsParams.action = action;
@@ -73,7 +70,6 @@ export async function getEffectivePermissionsByPrefix(
   } catch (error) {
     logger.error("Failed to get effective permissions by prefix", {
       error,
-      orgId,
       userId,
       resourceIdPrefix,
       action,

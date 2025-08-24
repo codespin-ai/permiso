@@ -15,12 +15,11 @@ import type {
  */
 export async function getRole(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
 ): Promise<Result<Role | null, Error>> {
   const query = `
-    query GetRole($orgId: ID!, $roleId: ID!) {
-      role(orgId: $orgId, roleId: $roleId) {
+    query GetRole($roleId: ID!) {
+      role(roleId: $roleId) {
         id
         orgId
         name
@@ -40,7 +39,7 @@ export async function getRole(
   const result = await graphqlRequest<{ role: Role | null }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
-    variables: { orgId, roleId },
+    variables: { roleId },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -58,7 +57,6 @@ export async function getRole(
  */
 export async function listRoles(
   config: PermisoConfig,
-  orgId: string,
   options?: {
     filter?: RoleFilter;
     pagination?: PaginationInput;
@@ -79,8 +77,8 @@ export async function listRoles(
   >
 > {
   const query = `
-    query ListRoles($orgId: ID!, $filter: RoleFilter, $pagination: PaginationInput) {
-      roles(orgId: $orgId, filter: $filter, pagination: $pagination) {
+    query ListRoles($filter: RoleFilter, $pagination: PaginationInput) {
+      roles(filter: $filter, pagination: $pagination) {
         nodes {
           id
           orgId
@@ -110,7 +108,6 @@ export async function listRoles(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {
-      orgId,
       filter: options?.filter,
       pagination: options?.pagination,
     },
@@ -131,12 +128,11 @@ export async function listRoles(
  */
 export async function getRolesByIds(
   config: PermisoConfig,
-  orgId: string,
   ids: string[],
 ): Promise<Result<Role[], Error>> {
   const query = `
-    query GetRolesByIds($orgId: ID!, $ids: [ID!]!) {
-      rolesByIds(orgId: $orgId, ids: $ids) {
+    query GetRolesByIds($ids: [ID!]!) {
+      rolesByIds(ids: $ids) {
         id
         orgId
         name
@@ -156,7 +152,7 @@ export async function getRolesByIds(
   const result = await graphqlRequest<{ rolesByIds: Role[] }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
-    variables: { orgId, ids },
+    variables: { ids },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -216,13 +212,12 @@ export async function createRole(
  */
 export async function updateRole(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
   input: UpdateRoleInput,
 ): Promise<Result<Role, Error>> {
   const mutation = `
-    mutation UpdateRole($orgId: ID!, $roleId: ID!, $input: UpdateRoleInput!) {
-      updateRole(orgId: $orgId, roleId: $roleId, input: $input) {
+    mutation UpdateRole($roleId: ID!, $input: UpdateRoleInput!) {
+      updateRole(roleId: $roleId, input: $input) {
         id
         orgId
         name
@@ -242,7 +237,7 @@ export async function updateRole(
   const result = await graphqlRequest<{ updateRole: Role }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, roleId, input },
+    variables: { roleId, input },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -260,19 +255,18 @@ export async function updateRole(
  */
 export async function deleteRole(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
-    mutation DeleteRole($orgId: ID!, $roleId: ID!) {
-      deleteRole(orgId: $orgId, roleId: $roleId)
+    mutation DeleteRole($roleId: ID!) {
+      deleteRole(roleId: $roleId)
     }
   `;
 
   const result = await graphqlRequest<{ deleteRole: boolean }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, roleId },
+    variables: { roleId },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -290,13 +284,12 @@ export async function deleteRole(
  */
 export async function getRoleProperty(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
   propertyName: string,
 ): Promise<Result<Property | null, Error>> {
   const query = `
-    query GetRoleProperty($orgId: ID!, $roleId: ID!, $propertyName: String!) {
-      roleProperty(orgId: $orgId, roleId: $roleId, propertyName: $propertyName) {
+    query GetRoleProperty($roleId: ID!, $propertyName: String!) {
+      roleProperty(roleId: $roleId, propertyName: $propertyName) {
         name
         value
         hidden
@@ -308,7 +301,7 @@ export async function getRoleProperty(
   const result = await graphqlRequest<{ roleProperty: Property | null }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
-    variables: { orgId, roleId, propertyName },
+    variables: { roleId, propertyName },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -326,7 +319,6 @@ export async function getRoleProperty(
  */
 export async function setRoleProperty(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
   name: string,
   value: unknown,
@@ -334,14 +326,12 @@ export async function setRoleProperty(
 ): Promise<Result<Property, Error>> {
   const mutation = `
     mutation SetRoleProperty(
-      $orgId: ID!,
       $roleId: ID!,
       $name: String!,
       $value: JSON,
       $hidden: Boolean
     ) {
       setRoleProperty(
-        orgId: $orgId,
         roleId: $roleId,
         name: $name,
         value: $value,
@@ -358,7 +348,7 @@ export async function setRoleProperty(
   const result = await graphqlRequest<{ setRoleProperty: Property }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, roleId, name, value, hidden },
+    variables: { roleId, name, value, hidden },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -376,20 +366,19 @@ export async function setRoleProperty(
  */
 export async function deleteRoleProperty(
   config: PermisoConfig,
-  orgId: string,
   roleId: string,
   name: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
-    mutation DeleteRoleProperty($orgId: ID!, $roleId: ID!, $name: String!) {
-      deleteRoleProperty(orgId: $orgId, roleId: $roleId, name: $name)
+    mutation DeleteRoleProperty($roleId: ID!, $name: String!) {
+      deleteRoleProperty(roleId: $roleId, name: $name)
     }
   `;
 
   const result = await graphqlRequest<{ deleteRoleProperty: boolean }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, roleId, name },
+    variables: { roleId, name },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,

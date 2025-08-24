@@ -10,7 +10,6 @@ const logger = createLogger("permiso-server:users");
 
 export async function updateUser(
   ctx: DataContext,
-  orgId: string,
   userId: string,
   input: UpdateUserInput,
 ): Promise<Result<User>> {
@@ -28,12 +27,11 @@ export async function updateUser(
     const snakeParams = typeUtils.toSnakeCase(updateParams);
     const whereParams = {
       user_id: userId,
-      org_id: orgId,
     };
 
     const query = `
       ${sql.update('"user"', snakeParams)}, updated_at = NOW()
-      WHERE id = $(user_id) AND org_id = $(org_id)
+      WHERE id = $(user_id)
       RETURNING *
     `;
 
@@ -41,7 +39,7 @@ export async function updateUser(
     const row = await ctx.db.one<UserDbRow>(query, params);
     return { success: true, data: mapUserFromDb(row) };
   } catch (error) {
-    logger.error("Failed to update user", { error, orgId, userId, input });
+    logger.error("Failed to update user", { error, userId, input });
     return { success: false, error: error as Error };
   }
 }

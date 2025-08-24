@@ -15,7 +15,6 @@ export const hasPermissionResolver = {
     ) => {
       const result = await hasPermission(
         context,
-        args.orgId,
         args.userId,
         args.resourcePath,
         args.action,
