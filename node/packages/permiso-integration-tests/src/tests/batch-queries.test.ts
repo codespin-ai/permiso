@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
 
 describe("Batch Queries", () => {
   beforeEach(async () => {
@@ -18,13 +18,13 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: { id: "org-1", name: "Organization 1" },
       });
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: { id: "org-2", name: "Organization 2" },
       });
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: { id: "org-3", name: "Organization 3" },
       });
 
@@ -38,7 +38,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, { ids: ["org-1", "org-3"] });
+      const result = await rootClient.query(query, { ids: ["org-1", "org-3"] });
 
       expect(result.data?.organizationsByIds).to.have.lengthOf(2);
       const orgIds = result.data?.organizationsByIds.map((o: any) => o.id);
@@ -55,7 +55,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         ids: ["non-existent-1", "non-existent-2"],
       });
 
@@ -72,7 +72,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: { id: "org-exists", name: "Existing Org" },
       });
 
@@ -86,7 +86,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         ids: ["org-exists", "org-not-exists"],
       });
 
@@ -97,7 +97,7 @@ describe("Batch Queries", () => {
 
   describe("usersByIds", () => {
     beforeEach(async () => {
-      // Create test organization
+      // Create test organization using ROOT client
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
           createOrganization(input: $input) {
@@ -106,9 +106,12 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(orgMutation, {
+      await rootClient.mutate(orgMutation, {
         input: { id: "test-org", name: "Test Organization" },
       });
+
+      // Switch to organization context for RLS operations
+      switchToOrgContext("test-org");
     });
 
     it("should fetch multiple users by IDs within an organization", async () => {
@@ -174,11 +177,11 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(orgMutation, {
+      await rootClient.mutate(orgMutation, {
         input: { id: "other-org", name: "Other Organization" },
       });
 
-      // Create users in different orgs
+      // Create user in current org (test-org)
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
@@ -194,6 +197,9 @@ describe("Batch Queries", () => {
           identityProviderUserId: "auth0|test",
         },
       });
+      
+      // Switch to other-org context and create user there
+      switchToOrgContext("other-org");
       await client.mutate(createMutation, {
         input: {
           id: "user-other-org",
@@ -201,6 +207,9 @@ describe("Batch Queries", () => {
           identityProviderUserId: "auth0|other",
         },
       });
+      
+      // Switch back to test-org context for the query
+      switchToOrgContext("test-org");
 
       // Query should only return user from test-org
       const query = gql`
@@ -213,7 +222,6 @@ describe("Batch Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         ids: ["user-test-org", "user-other-org"],
       });
 
@@ -225,7 +233,7 @@ describe("Batch Queries", () => {
 
   describe("rolesByIds", () => {
     beforeEach(async () => {
-      // Create test organization
+      // Create test organization using ROOT client
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
           createOrganization(input: $input) {
@@ -234,9 +242,12 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(orgMutation, {
+      await rootClient.mutate(orgMutation, {
         input: { id: "test-org", name: "Test Organization" },
       });
+
+      // Switch to organization context for RLS operations
+      switchToOrgContext("test-org");
     });
 
     it("should fetch multiple roles by IDs within an organization", async () => {
@@ -280,7 +291,6 @@ describe("Batch Queries", () => {
       `;
 
       const result = await client.query(query, {
-        orgId: "test-org",
         ids: ["admin", "viewer"],
       });
 
@@ -293,7 +303,7 @@ describe("Batch Queries", () => {
 
   describe("usersByIdentity", () => {
     beforeEach(async () => {
-      // Create test organizations
+      // Create test organizations using ROOT client
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
           createOrganization(input: $input) {
@@ -302,10 +312,10 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(orgMutation, {
+      await rootClient.mutate(orgMutation, {
         input: { id: "org-1", name: "Organization 1" },
       });
-      await client.mutate(orgMutation, {
+      await rootClient.mutate(orgMutation, {
         input: { id: "org-2", name: "Organization 2" },
       });
     });
@@ -320,6 +330,8 @@ describe("Batch Queries", () => {
         }
       `;
 
+      // Create user in org-1
+      switchToOrgContext("org-1");
       await client.mutate(createMutation, {
         input: {
           id: "user-org1",
@@ -327,6 +339,9 @@ describe("Batch Queries", () => {
           identityProviderUserId: "google|12345",
         },
       });
+      
+      // Create user in org-2
+      switchToOrgContext("org-2");
       await client.mutate(createMutation, {
         input: {
           id: "user-org2",
@@ -353,7 +368,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         identityProvider: "google",
         identityProviderUserId: "google|12345",
       });
@@ -378,7 +393,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         identityProvider: "auth0",
         identityProviderUserId: "auth0|nonexistent",
       });
@@ -427,7 +442,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await rootClient.query(query, {
         identityProvider: "google",
         identityProviderUserId: "user123",
       });

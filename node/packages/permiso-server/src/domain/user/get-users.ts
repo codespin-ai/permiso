@@ -71,19 +71,23 @@ export async function getUsers(
         FROM "user" u
       `;
 
+      let hasWhere = false;
       if (filters?.ids && filters.ids.length > 0) {
-        query += ` AND u.id = ANY($(userIds))`;
+        query += ` WHERE u.id = ANY($(userIds))`;
         params.userIds = filters.ids;
+        hasWhere = true;
       }
 
       if (filters?.identityProvider) {
-        query += ` AND u.identity_provider = $(identityProvider)`;
+        query += hasWhere ? ` AND u.identity_provider = $(identityProvider)` : ` WHERE u.identity_provider = $(identityProvider)`;
         params.identityProvider = filters.identityProvider;
+        hasWhere = true;
       }
 
       if (filters?.identityProviderUserId) {
-        query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
+        query += hasWhere ? ` AND u.identity_provider_user_id = $(identityProviderUserId)` : ` WHERE u.identity_provider_user_id = $(identityProviderUserId)`;
         params.identityProviderUserId = filters.identityProviderUserId;
+        hasWhere = true;
       }
     }
 
