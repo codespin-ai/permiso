@@ -79,13 +79,17 @@ export async function getUsers(
       }
 
       if (filters?.identityProvider) {
-        query += hasWhere ? ` AND u.identity_provider = $(identityProvider)` : ` WHERE u.identity_provider = $(identityProvider)`;
+        query += hasWhere
+          ? ` AND u.identity_provider = $(identityProvider)`
+          : ` WHERE u.identity_provider = $(identityProvider)`;
         params.identityProvider = filters.identityProvider;
         hasWhere = true;
       }
 
       if (filters?.identityProviderUserId) {
-        query += hasWhere ? ` AND u.identity_provider_user_id = $(identityProviderUserId)` : ` WHERE u.identity_provider_user_id = $(identityProviderUserId)`;
+        query += hasWhere
+          ? ` AND u.identity_provider_user_id = $(identityProviderUserId)`
+          : ` WHERE u.identity_provider_user_id = $(identityProviderUserId)`;
         params.identityProviderUserId = filters.identityProviderUserId;
         hasWhere = true;
       }

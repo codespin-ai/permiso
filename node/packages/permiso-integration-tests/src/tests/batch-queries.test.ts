@@ -197,7 +197,7 @@ describe("Batch Queries", () => {
           identityProviderUserId: "auth0|test",
         },
       });
-      
+
       // Switch to other-org context and create user there
       switchToOrgContext("other-org");
       await client.mutate(createMutation, {
@@ -207,7 +207,7 @@ describe("Batch Queries", () => {
           identityProviderUserId: "auth0|other",
         },
       });
-      
+
       // Switch back to test-org context for the query
       switchToOrgContext("test-org");
 
@@ -339,7 +339,7 @@ describe("Batch Queries", () => {
           identityProviderUserId: "google|12345",
         },
       });
-      
+
       // Create user in org-2
       switchToOrgContext("org-2");
       await client.mutate(createMutation, {

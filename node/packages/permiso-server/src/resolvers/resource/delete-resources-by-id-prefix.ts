@@ -12,10 +12,7 @@ export const deleteResourcesByIdPrefixResolver = {
         throw new Error("Invalid safety key");
       }
 
-      const result = await deleteResourcesByIdPrefix(
-        context,
-        args.idPrefix,
-      );
+      const result = await deleteResourcesByIdPrefix(context, args.idPrefix);
       if (!result.success) {
         throw result.error;
       }

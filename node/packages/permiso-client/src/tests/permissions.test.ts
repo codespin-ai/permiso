@@ -18,7 +18,7 @@ import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
 import "./setup.js";
 
 describe("Permissions API", () => {
-  const config = getTestConfig();
+  let config: ReturnType<typeof getTestConfig>;
   let testOrgId: string;
   let testUserId: string;
   let testRoleId: string;
@@ -27,11 +27,15 @@ describe("Permissions API", () => {
   beforeEach(async () => {
     // Create test organization
     testOrgId = generateTestId("org");
-    const orgResult = await createOrganization(config, {
+    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
+
+    // Update config with the test org ID for subsequent operations
+    config = { ...rootConfig, orgId: testOrgId };
 
     // Create test user
     testUserId = generateTestId("user");
@@ -118,7 +122,6 @@ describe("Permissions API", () => {
 
       // Get all permissions
       const result = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
       });
 
@@ -154,7 +157,6 @@ describe("Permissions API", () => {
 
       // Filter by resource
       const result = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });
@@ -176,7 +178,6 @@ describe("Permissions API", () => {
 
       // Revoke permission
       const revokeResult = await revokeUserPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -189,7 +190,6 @@ describe("Permissions API", () => {
 
       // Verify permission is revoked
       const permissions = await getUserPermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
         action: "delete",
@@ -234,7 +234,6 @@ describe("Permissions API", () => {
 
       // Get all permissions
       const result = await getRolePermissions(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
       });
 
@@ -257,7 +256,6 @@ describe("Permissions API", () => {
 
       // Revoke permission
       const revokeResult = await revokeRolePermission(config, {
-        orgId: testOrgId,
         roleId: testRoleId,
         resourceId: testResourceId,
         action: "admin",
@@ -281,7 +279,6 @@ describe("Permissions API", () => {
 
       // Check permission
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/test/specific",
         action: "read",
@@ -302,11 +299,10 @@ describe("Permissions API", () => {
       });
 
       // Assign role to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, testRoleId);
 
       // Check permission
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/api/test/specific",
         action: "write",
@@ -335,7 +331,6 @@ describe("Permissions API", () => {
 
       // Check permission on specific resource
       const result = await hasPermission(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: "/any/path/here",
         action: "read",
@@ -365,11 +360,10 @@ describe("Permissions API", () => {
       });
 
       // Assign role to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, testRoleId);
 
       // Get effective permissions
       const result = await getEffectivePermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });
@@ -417,7 +411,6 @@ describe("Permissions API", () => {
 
       // Get permissions by prefix
       const result = await getEffectivePermissionsByPrefix(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceIdPrefix: "/api/users/",
         action: "execute",
@@ -455,8 +448,8 @@ describe("Permissions API", () => {
       });
 
       // Assign both roles to user
-      await assignUserRole(config, testOrgId, testUserId, testRoleId);
-      await assignUserRole(config, testOrgId, testUserId, role2Id);
+      await assignUserRole(config, testUserId, testRoleId);
+      await assignUserRole(config, testUserId, role2Id);
 
       // Also grant direct permission
       await grantUserPermission(config, {
@@ -467,7 +460,6 @@ describe("Permissions API", () => {
 
       // Get effective permissions
       const result = await getEffectivePermissions(config, {
-        orgId: testOrgId,
         userId: testUserId,
         resourceId: testResourceId,
       });

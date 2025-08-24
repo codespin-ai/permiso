@@ -14,12 +14,11 @@ import type {
  */
 export async function getResource(
   config: PermisoConfig,
-  orgId: string,
   resourceId: string,
 ): Promise<Result<Resource | null, Error>> {
   const query = `
-    query GetResource($orgId: ID!, $resourceId: ID!) {
-      resource(orgId: $orgId, resourceId: $resourceId) {
+    query GetResource($resourceId: ID!) {
+      resource(resourceId: $resourceId) {
         id
         orgId
         name
@@ -33,7 +32,7 @@ export async function getResource(
   const result = await graphqlRequest<{ resource: Resource | null }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
-    variables: { orgId, resourceId },
+    variables: { resourceId },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -51,7 +50,6 @@ export async function getResource(
  */
 export async function listResources(
   config: PermisoConfig,
-  orgId: string,
   options?: {
     filter?: ResourceFilter;
     pagination?: PaginationInput;
@@ -72,8 +70,8 @@ export async function listResources(
   >
 > {
   const query = `
-    query ListResources($orgId: ID!, $filter: ResourceFilter, $pagination: PaginationInput) {
-      resources(orgId: $orgId, filter: $filter, pagination: $pagination) {
+    query ListResources($filter: ResourceFilter, $pagination: PaginationInput) {
+      resources(filter: $filter, pagination: $pagination) {
         nodes {
           id
           orgId
@@ -97,7 +95,6 @@ export async function listResources(
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {
-      orgId,
       filter: options?.filter,
       pagination: options?.pagination,
     },
@@ -118,12 +115,11 @@ export async function listResources(
  */
 export async function getResourcesByIdPrefix(
   config: PermisoConfig,
-  orgId: string,
   idPrefix: string,
 ): Promise<Result<Resource[], Error>> {
   const query = `
-    query GetResourcesByIdPrefix($orgId: ID!, $idPrefix: String!) {
-      resourcesByIdPrefix(orgId: $orgId, idPrefix: $idPrefix) {
+    query GetResourcesByIdPrefix($idPrefix: String!) {
+      resourcesByIdPrefix(idPrefix: $idPrefix) {
         id
         orgId
         name
@@ -137,7 +133,7 @@ export async function getResourcesByIdPrefix(
   const result = await graphqlRequest<{ resourcesByIdPrefix: Resource[] }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
-    variables: { orgId, idPrefix },
+    variables: { idPrefix },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -191,13 +187,12 @@ export async function createResource(
  */
 export async function updateResource(
   config: PermisoConfig,
-  orgId: string,
   resourceId: string,
   input: UpdateResourceInput,
 ): Promise<Result<Resource, Error>> {
   const mutation = `
-    mutation UpdateResource($orgId: ID!, $resourceId: ID!, $input: UpdateResourceInput!) {
-      updateResource(orgId: $orgId, resourceId: $resourceId, input: $input) {
+    mutation UpdateResource($resourceId: ID!, $input: UpdateResourceInput!) {
+      updateResource(resourceId: $resourceId, input: $input) {
         id
         orgId
         name
@@ -211,7 +206,7 @@ export async function updateResource(
   const result = await graphqlRequest<{ updateResource: Resource }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, resourceId, input },
+    variables: { resourceId, input },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,
@@ -229,19 +224,18 @@ export async function updateResource(
  */
 export async function deleteResource(
   config: PermisoConfig,
-  orgId: string,
   resourceId: string,
 ): Promise<Result<boolean, Error>> {
   const mutation = `
-    mutation DeleteResource($orgId: ID!, $resourceId: ID!) {
-      deleteResource(orgId: $orgId, resourceId: $resourceId)
+    mutation DeleteResource($resourceId: ID!) {
+      deleteResource(resourceId: $resourceId)
     }
   `;
 
   const result = await graphqlRequest<{ deleteResource: boolean }>({
     endpoint: `${config.endpoint}/graphql`,
     query: mutation,
-    variables: { orgId, resourceId },
+    variables: { resourceId },
     headers: buildHeaders(config),
     timeout: config.timeout,
     logger: config.logger,

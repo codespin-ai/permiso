@@ -9,10 +9,7 @@ export async function deleteRole(
   roleId: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(
-      `DELETE FROM role WHERE id = $(roleId)`,
-      { roleId },
-    );
+    await ctx.db.none(`DELETE FROM role WHERE id = $(roleId)`, { roleId });
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to delete role", { error, roleId });

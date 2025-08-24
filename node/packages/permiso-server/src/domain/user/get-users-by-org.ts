@@ -88,7 +88,7 @@ export async function getUsersByOrg(
       params.limit = pagination.limit;
     }
     if (pagination?.offset) {
-      query += ` OFFSET $(offset)`;  
+      query += ` OFFSET $(offset)`;
       params.offset = pagination.offset;
     }
 
@@ -98,19 +98,19 @@ export async function getUsersByOrg(
     const users: UserWithProperties[] = await Promise.all(
       rows.map(async (row) => {
         const user = mapUserFromDb(row);
-        
+
         // Fetch role IDs for this user
         const roleIds = await ctx.db.manyOrNone<{ role_id: string }>(
           `SELECT role_id FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
-          { userId: user.id, orgId }
+          { userId: user.id, orgId },
         );
-        
+
         return {
           ...user,
-          roleIds: roleIds.map(r => r.role_id),
+          roleIds: roleIds.map((r) => r.role_id),
           properties: {}, // Properties will be loaded by field resolver if needed
         };
-      })
+      }),
     );
 
     return { success: true, data: users };

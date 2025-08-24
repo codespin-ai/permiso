@@ -27,10 +27,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: DataContext,
     ) => {
-      const result = await getResource(
-        context,
-        parent.resourceId,
-      );
+      const result = await getResource(context, parent.resourceId);
       if (!result.success) {
         throw result.error;
       }
@@ -68,10 +65,7 @@ export const permissionFieldResolvers = {
       _: any,
       context: DataContext,
     ) => {
-      const result = await getResource(
-        context,
-        parent.resourceId,
-      );
+      const result = await getResource(context, parent.resourceId);
       if (!result.success) {
         throw result.error;
       }

@@ -8,11 +8,7 @@ export const updateResourceResolver = {
       args: { orgId: string; resourceId: string; input: any },
       context: DataContext,
     ) => {
-      const result = await updateResource(
-        context,
-        args.resourceId,
-        args.input,
-      );
+      const result = await updateResource(context, args.resourceId, args.input);
       if (!result.success) {
         throw result.error;
       }

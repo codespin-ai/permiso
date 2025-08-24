@@ -15,17 +15,21 @@ import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
 import "./setup.js";
 
 describe("Roles API", () => {
-  const config = getTestConfig();
+  let config: ReturnType<typeof getTestConfig>;
   let testOrgId: string;
 
   beforeEach(async () => {
     // Create a test organization for each test
     testOrgId = generateTestId("org");
-    const orgResult = await createOrganization(config, {
+    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
+
+    // Update config with the test org ID for subsequent operations
+    config = { ...rootConfig, orgId: testOrgId };
   });
 
   describe("createRole", () => {
@@ -89,7 +93,7 @@ describe("Roles API", () => {
       expect(createResult.success).to.be.true;
 
       // Get role
-      const getResult = await getRole(config, testOrgId, roleId);
+      const getResult = await getRole(config, roleId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data?.id).to.equal(roleId);
@@ -99,7 +103,7 @@ describe("Roles API", () => {
     });
 
     it("should return null for non-existent role", async () => {
-      const result = await getRole(config, testOrgId, "non-existent-role");
+      const result = await getRole(config, "non-existent-role");
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.be.null;
@@ -122,7 +126,7 @@ describe("Roles API", () => {
       }
 
       // List with pagination
-      const listResult = await listRoles(config, testOrgId, {
+      const listResult = await listRoles(config, {
         pagination: { limit: 3, offset: 0 },
       });
 
@@ -146,7 +150,7 @@ describe("Roles API", () => {
       }
 
       // List with DESC sort
-      const listResult = await listRoles(config, testOrgId, {
+      const listResult = await listRoles(config, {
         pagination: { sortDirection: "DESC" },
       });
 
@@ -176,7 +180,7 @@ describe("Roles API", () => {
       });
 
       // Filter by property
-      const result = await listRoles(config, testOrgId, {
+      const result = await listRoles(config, {
         filter: {
           properties: [{ name: "level", value: "admin" }],
         },
@@ -203,7 +207,7 @@ describe("Roles API", () => {
         expect(result.success).to.be.true;
       }
 
-      const result = await getRolesByIds(config, testOrgId, roleIds);
+      const result = await getRolesByIds(config, roleIds);
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.have.lengthOf(3);
@@ -226,7 +230,7 @@ describe("Roles API", () => {
       expect(createResult.success).to.be.true;
 
       // Update role
-      const updateResult = await updateRole(config, testOrgId, roleId, {
+      const updateResult = await updateRole(config, roleId, {
         name: "Updated Name",
         description: "Updated description",
       });
@@ -263,7 +267,6 @@ describe("Roles API", () => {
 
       const setPropResult = await setRoleProperty(
         config,
-        testOrgId,
         roleId,
         "config",
         propertyValue,
@@ -271,12 +274,7 @@ describe("Roles API", () => {
       );
       expect(setPropResult.success).to.be.true;
 
-      const getPropResult = await getRoleProperty(
-        config,
-        testOrgId,
-        roleId,
-        "config",
-      );
+      const getPropResult = await getRoleProperty(config, roleId, "config");
       expect(getPropResult.success).to.be.true;
       if (getPropResult.success) {
         expect(getPropResult.data?.value).to.deep.equal(propertyValue);
@@ -286,7 +284,6 @@ describe("Roles API", () => {
     it("should handle hidden role properties", async () => {
       const setPropResult = await setRoleProperty(
         config,
-        testOrgId,
         roleId,
         "secretConfig",
         { apiKey: "secret-123" },
@@ -300,27 +297,17 @@ describe("Roles API", () => {
 
     it("should delete role properties", async () => {
       // Set property
-      await setRoleProperty(config, testOrgId, roleId, "temp", "value", false);
+      await setRoleProperty(config, roleId, "temp", "value", false);
 
       // Delete property
-      const deleteResult = await deleteRoleProperty(
-        config,
-        testOrgId,
-        roleId,
-        "temp",
-      );
+      const deleteResult = await deleteRoleProperty(config, roleId, "temp");
       expect(deleteResult.success).to.be.true;
       if (deleteResult.success) {
         expect(deleteResult.data).to.be.true;
       }
 
       // Verify deletion
-      const getPropResult = await getRoleProperty(
-        config,
-        testOrgId,
-        roleId,
-        "temp",
-      );
+      const getPropResult = await getRoleProperty(config, roleId, "temp");
       expect(getPropResult.success).to.be.true;
       if (getPropResult.success) {
         expect(getPropResult.data).to.be.null;
@@ -340,14 +327,14 @@ describe("Roles API", () => {
       expect(createResult.success).to.be.true;
 
       // Delete role
-      const deleteResult = await deleteRole(config, testOrgId, roleId);
+      const deleteResult = await deleteRole(config, roleId);
       expect(deleteResult.success).to.be.true;
       if (deleteResult.success) {
         expect(deleteResult.data).to.be.true;
       }
 
       // Verify deletion
-      const getResult = await getRole(config, testOrgId, roleId);
+      const getResult = await getRole(config, roleId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data).to.be.null;

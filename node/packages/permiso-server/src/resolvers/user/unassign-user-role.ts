@@ -12,11 +12,7 @@ export const unassignUserRoleResolver = {
       args: { userId: string; roleId: string },
       context: DataContext,
     ) => {
-      const result = await unassignUserRole(
-        context,
-        args.userId,
-        args.roleId,
-      );
+      const result = await unassignUserRole(context, args.userId, args.roleId);
       if (!result.success) {
         throw result.error;
       }

@@ -39,7 +39,7 @@ describe("Field Resolvers and Nested Queries", () => {
         properties: [{ name: "tier", value: "startup" }],
       },
     });
-    
+
     // Switch to acme-corp context for RLS operations
     switchToOrgContext("acme-corp");
 
@@ -825,9 +825,9 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await rootClient.query(query, { 
+      const result = await rootClient.query(query, {
         orgId: "acme-corp",
-        userPagination: { limit: 5 }
+        userPagination: { limit: 5 },
       });
 
       // Verify the structure is resolved correctly

@@ -19,17 +19,21 @@ import { getTestConfig, generateTestId } from "./utils/test-helpers.js";
 import "./setup.js";
 
 describe("Users API", () => {
-  const config = getTestConfig();
+  let config: ReturnType<typeof getTestConfig>;
   let testOrgId: string;
 
   beforeEach(async () => {
     // Create a test organization for each test
     testOrgId = generateTestId("org");
-    const orgResult = await createOrganization(config, {
+    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
     });
     expect(orgResult.success).to.be.true;
+
+    // Update config with the test org ID for subsequent operations
+    config = { ...rootConfig, orgId: testOrgId };
   });
 
   describe("createUser", () => {
@@ -104,7 +108,7 @@ describe("Users API", () => {
       expect(createResult.success).to.be.true;
 
       // Get user
-      const getResult = await getUser(config, testOrgId, userId);
+      const getResult = await getUser(config, userId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data?.id).to.equal(userId);
@@ -113,7 +117,7 @@ describe("Users API", () => {
     });
 
     it("should return null for non-existent user", async () => {
-      const result = await getUser(config, testOrgId, "non-existent-user");
+      const result = await getUser(config, "non-existent-user");
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.be.null;
@@ -137,7 +141,7 @@ describe("Users API", () => {
       }
 
       // List with pagination
-      const listResult = await listUsers(config, testOrgId, {
+      const listResult = await listUsers(config, {
         pagination: { limit: 3, offset: 0 },
       });
 
@@ -164,7 +168,7 @@ describe("Users API", () => {
       });
 
       // Filter by identity provider
-      const result = await listUsers(config, testOrgId, {
+      const result = await listUsers(config, {
         filter: { identityProvider: "google" },
       });
 
@@ -190,7 +194,7 @@ describe("Users API", () => {
         expect(result.success).to.be.true;
       }
 
-      const result = await getUsersByIds(config, testOrgId, userIds);
+      const result = await getUsersByIds(config, userIds);
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.have.lengthOf(3);
@@ -205,7 +209,7 @@ describe("Users API", () => {
       const identityProvider = "okta";
       const identityProviderUserId = "okta-user-123";
 
-      // Create user in one org
+      // Create user in first org
       await createUser(config, {
         id: generateTestId("user1"),
         identityProvider,
@@ -214,26 +218,35 @@ describe("Users API", () => {
 
       // Create another org and user with same identity
       const org2Id = generateTestId("org2");
-      await createOrganization(config, {
+      const rootConfig = getTestConfig(); // Use $ROOT to create org
+      await createOrganization(rootConfig, {
         id: org2Id,
         name: "Second Org",
       });
 
-      await createUser(config, {
+      // Create config for org2 and create user there
+      const org2Config = { ...rootConfig, orgId: org2Id };
+      await createUser(org2Config, {
         id: generateTestId("user2"),
         identityProvider,
         identityProviderUserId,
       });
 
-      // Find users by identity
+      // Find users by identity (this is a ROOT operation that searches across all orgs)
       const result = await getUsersByIdentity(
-        config,
+        rootConfig, // Use ROOT config for cross-org search
         identityProvider,
         identityProviderUserId,
       );
       expect(result.success).to.be.true;
       if (result.success) {
         expect(result.data).to.have.lengthOf(2);
+
+        // Verify users are from different organizations
+        const orgIds = result.data.map((user) => user.orgId);
+        expect(orgIds).to.include(testOrgId);
+        expect(orgIds).to.include(org2Id);
+
         result.data.forEach((user) => {
           expect(user.identityProvider).to.equal(identityProvider);
           expect(user.identityProviderUserId).to.equal(identityProviderUserId);
@@ -255,7 +268,7 @@ describe("Users API", () => {
       expect(createResult.success).to.be.true;
 
       // Update user
-      const updateResult = await updateUser(config, testOrgId, userId, {
+      const updateResult = await updateUser(config, userId, {
         identityProviderUserId: "new@example.com",
       });
       expect(updateResult.success).to.be.true;
@@ -294,7 +307,6 @@ describe("Users API", () => {
 
       const setPropResult = await setUserProperty(
         config,
-        testOrgId,
         userId,
         "settings",
         propertyValue,
@@ -302,12 +314,7 @@ describe("Users API", () => {
       );
       expect(setPropResult.success).to.be.true;
 
-      const getPropResult = await getUserProperty(
-        config,
-        testOrgId,
-        userId,
-        "settings",
-      );
+      const getPropResult = await getUserProperty(config, userId, "settings");
       expect(getPropResult.success).to.be.true;
       if (getPropResult.success) {
         expect(getPropResult.data?.value).to.deep.equal(propertyValue);
@@ -316,27 +323,17 @@ describe("Users API", () => {
 
     it("should delete user properties", async () => {
       // Set property
-      await setUserProperty(config, testOrgId, userId, "temp", "value", false);
+      await setUserProperty(config, userId, "temp", "value", false);
 
       // Delete property
-      const deleteResult = await deleteUserProperty(
-        config,
-        testOrgId,
-        userId,
-        "temp",
-      );
+      const deleteResult = await deleteUserProperty(config, userId, "temp");
       expect(deleteResult.success).to.be.true;
       if (deleteResult.success) {
         expect(deleteResult.data).to.be.true;
       }
 
       // Verify deletion
-      const getPropResult = await getUserProperty(
-        config,
-        testOrgId,
-        userId,
-        "temp",
-      );
+      const getPropResult = await getUserProperty(config, userId, "temp");
       expect(getPropResult.success).to.be.true;
       if (getPropResult.success) {
         expect(getPropResult.data).to.be.null;
@@ -369,12 +366,7 @@ describe("Users API", () => {
 
     it("should assign and unassign roles", async () => {
       // Assign role
-      const assignResult = await assignUserRole(
-        config,
-        testOrgId,
-        userId,
-        roleId,
-      );
+      const assignResult = await assignUserRole(config, userId, roleId);
       expect(assignResult.success).to.be.true;
       if (assignResult.success) {
         expect(assignResult.data.roles).to.have.lengthOf(1);
@@ -382,12 +374,7 @@ describe("Users API", () => {
       }
 
       // Unassign role
-      const unassignResult = await unassignUserRole(
-        config,
-        testOrgId,
-        userId,
-        roleId,
-      );
+      const unassignResult = await unassignUserRole(config, userId, roleId);
       expect(unassignResult.success).to.be.true;
       if (unassignResult.success) {
         expect(unassignResult.data.roles).to.have.lengthOf(0);
@@ -408,14 +395,14 @@ describe("Users API", () => {
       expect(createResult.success).to.be.true;
 
       // Delete user
-      const deleteResult = await deleteUser(config, testOrgId, userId);
+      const deleteResult = await deleteUser(config, userId);
       expect(deleteResult.success).to.be.true;
       if (deleteResult.success) {
         expect(deleteResult.data).to.be.true;
       }
 
       // Verify deletion
-      const getResult = await getUser(config, testOrgId, userId);
+      const getResult = await getUser(config, userId);
       expect(getResult.success).to.be.true;
       if (getResult.success) {
         expect(getResult.data).to.be.null;

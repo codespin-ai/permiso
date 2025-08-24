@@ -11,11 +11,7 @@ export const deleteRolePropertyResolver = {
       args: { roleId: string; name: string },
       context: DataContext,
     ) => {
-      const result = await deleteRoleProperty(
-        context,
-        args.roleId,
-        args.name,
-      );
+      const result = await deleteRoleProperty(context, args.roleId, args.name);
       if (!result.success) {
         throw result.error;
       }

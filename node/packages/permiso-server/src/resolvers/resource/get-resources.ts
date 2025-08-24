@@ -13,10 +13,7 @@ export const getResourcesResolver = {
     ) => {
       let result;
       if (args.filter?.idPrefix) {
-        result = await getResourcesByIdPrefix(
-          context,
-          args.filter.idPrefix,
-        );
+        result = await getResourcesByIdPrefix(context, args.filter.idPrefix);
       } else {
         result = await getResources(context, args.pagination);
       }

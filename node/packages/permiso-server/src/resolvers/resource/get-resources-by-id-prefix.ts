@@ -8,10 +8,7 @@ export const resourcesByIdPrefixResolver = {
       args: { idPrefix: string },
       context: DataContext,
     ) => {
-      const result = await getResourcesByIdPrefix(
-        context,
-        args.idPrefix,
-      );
+      const result = await getResourcesByIdPrefix(context, args.idPrefix);
 
       if (!result.success) {
         throw result.error;

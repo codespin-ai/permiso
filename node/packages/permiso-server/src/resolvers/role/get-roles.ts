@@ -11,11 +11,7 @@ export const getRolesResolver = {
       args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
-      const result = await getRoles(
-        context,
-        args.filter,
-        args.pagination,
-      );
+      const result = await getRoles(context, args.filter, args.pagination);
       if (!result.success) {
         throw result.error;
       }

@@ -340,7 +340,7 @@ describe("Property Operations", () => {
       await rootClient.mutate(orgMutation, {
         input: { id: "test-org", name: "Test Organization" },
       });
-      
+
       // Switch to organization context for RLS operations
       switchToOrgContext("test-org");
 
@@ -366,14 +366,8 @@ describe("Property Operations", () => {
     describe("userProperty query", () => {
       it("should retrieve a single user property", async () => {
         const query = gql`
-          query GetUserProperty(
-            $userId: ID!
-            $propertyName: String!
-          ) {
-            userProperty(
-              userId: $userId
-              propertyName: $propertyName
-            ) {
+          query GetUserProperty($userId: ID!, $propertyName: String!) {
+            userProperty(userId: $userId, propertyName: $propertyName) {
               name
               value
               hidden
@@ -395,14 +389,8 @@ describe("Property Operations", () => {
 
       it("should return null for non-existent property", async () => {
         const query = gql`
-          query GetUserProperty(
-            $userId: ID!
-            $propertyName: String!
-          ) {
-            userProperty(
-              userId: $userId
-              propertyName: $propertyName
-            ) {
+          query GetUserProperty($userId: ID!, $propertyName: String!) {
+            userProperty(userId: $userId, propertyName: $propertyName) {
               name
             }
           }
@@ -421,16 +409,8 @@ describe("Property Operations", () => {
       it("should delete an existing user property", async () => {
         // First add a property
         const setPropMutation = gql`
-          mutation SetUserProperty(
-            $userId: ID!
-            $name: String!
-            $value: JSON
-          ) {
-            setUserProperty(
-              userId: $userId
-              name: $name
-              value: $value
-            ) {
+          mutation SetUserProperty($userId: ID!, $name: String!, $value: JSON) {
+            setUserProperty(userId: $userId, name: $name, value: $value) {
               name
             }
           }
@@ -444,10 +424,7 @@ describe("Property Operations", () => {
 
         // Delete the property
         const deleteMutation = gql`
-          mutation DeleteUserProperty(
-            $userId: ID!
-            $name: String!
-          ) {
+          mutation DeleteUserProperty($userId: ID!, $name: String!) {
             deleteUserProperty(userId: $userId, name: $name)
           }
         `;
@@ -461,14 +438,8 @@ describe("Property Operations", () => {
 
         // Verify it's deleted
         const query = gql`
-          query GetUserProperty(
-            $userId: ID!
-            $propertyName: String!
-          ) {
-            userProperty(
-              userId: $userId
-              propertyName: $propertyName
-            ) {
+          query GetUserProperty($userId: ID!, $propertyName: String!) {
+            userProperty(userId: $userId, propertyName: $propertyName) {
               name
             }
           }
@@ -498,7 +469,7 @@ describe("Property Operations", () => {
       await rootClient.mutate(orgMutation, {
         input: { id: "test-org", name: "Test Organization" },
       });
-      
+
       // Switch to organization context for RLS operations
       switchToOrgContext("test-org");
 
@@ -523,14 +494,8 @@ describe("Property Operations", () => {
     describe("roleProperty query", () => {
       it("should retrieve a single role property", async () => {
         const query = gql`
-          query GetRoleProperty(
-            $roleId: ID!
-            $propertyName: String!
-          ) {
-            roleProperty(
-              roleId: $roleId
-              propertyName: $propertyName
-            ) {
+          query GetRoleProperty($roleId: ID!, $propertyName: String!) {
+            roleProperty(roleId: $roleId, propertyName: $propertyName) {
               name
               value
               hidden
@@ -605,16 +570,8 @@ describe("Property Operations", () => {
       it("should delete an existing role property", async () => {
         // First add a property
         const setPropMutation = gql`
-          mutation SetRoleProperty(
-            $roleId: ID!
-            $name: String!
-            $value: JSON
-          ) {
-            setRoleProperty(
-              roleId: $roleId
-              name: $name
-              value: $value
-            ) {
+          mutation SetRoleProperty($roleId: ID!, $name: String!, $value: JSON) {
+            setRoleProperty(roleId: $roleId, name: $name, value: $value) {
               name
             }
           }
@@ -628,10 +585,7 @@ describe("Property Operations", () => {
 
         // Delete the property
         const deleteMutation = gql`
-          mutation DeleteRoleProperty(
-            $roleId: ID!
-            $name: String!
-          ) {
+          mutation DeleteRoleProperty($roleId: ID!, $name: String!) {
             deleteRoleProperty(roleId: $roleId, name: $name)
           }
         `;

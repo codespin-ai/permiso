@@ -1,6 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext, createOrgClient } from "../index.js";
+import {
+  testDb,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "../index.js";
 
 describe("Resources", () => {
   beforeEach(async () => {
@@ -57,7 +63,7 @@ describe("Resources", () => {
     it("should fail when trying to access non-existent organization", async () => {
       // Switch to a non-existent organization context
       const nonExistentOrgClient = createOrgClient("non-existent-org");
-      
+
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -218,10 +224,7 @@ describe("Resources", () => {
           $resourceId: ID!
           $input: UpdateResourceInput!
         ) {
-          updateResource(
-            resourceId: $resourceId
-            input: $input
-          ) {
+          updateResource(resourceId: $resourceId, input: $input) {
             id
             name
             description

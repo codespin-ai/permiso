@@ -222,14 +222,8 @@ describe("Permissions", () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -284,14 +278,8 @@ describe("Permissions", () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -365,14 +353,8 @@ describe("Permissions", () => {
 
       // Query effective permissions
       const query = gql`
-        query GetEffectivePermissions(
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
             source
             resourceId
@@ -437,14 +419,8 @@ describe("Permissions", () => {
 
       // Verify permission is revoked
       const query = gql`
-        query GetEffectivePermissions(
-          $userId: ID!
-          $resourceId: String!
-        ) {
-          effectivePermissions(
-            userId: $userId
-            resourceId: $resourceId
-          ) {
+        query GetEffectivePermissions($userId: ID!, $resourceId: String!) {
+          effectivePermissions(userId: $userId, resourceId: $resourceId) {
             action
           }
         }

@@ -1,6 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext, createOrgClient } from "../index.js";
+import {
+  testDb,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "../index.js";
 
 describe("Roles", () => {
   beforeEach(async () => {
@@ -81,7 +87,7 @@ describe("Roles", () => {
     it("should fail when trying to access non-existent organization", async () => {
       // Switch to a non-existent organization context
       const nonExistentOrgClient = createOrgClient("non-existent-org");
-      
+
       const mutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
           createRole(input: $input) {
@@ -247,10 +253,7 @@ describe("Roles", () => {
 
       // Update role
       const updateMutation = gql`
-        mutation UpdateRole(
-          $roleId: ID!
-          $input: UpdateRoleInput!
-        ) {
+        mutation UpdateRole($roleId: ID!, $input: UpdateRoleInput!) {
           updateRole(roleId: $roleId, input: $input) {
             id
             name
@@ -303,7 +306,7 @@ describe("Roles", () => {
         name: "level",
         value: "maximum",
       });
-      
+
       // Check if the mutation succeeded
       expect(setPropResult.data?.setRoleProperty).to.exist;
       expect(setPropResult.data?.setRoleProperty.name).to.equal("level");

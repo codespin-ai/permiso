@@ -12,11 +12,7 @@ export const updateUserResolver = {
       args: { userId: string; input: any },
       context: DataContext,
     ) => {
-      const result = await updateUser(
-        context,
-        args.userId,
-        args.input,
-      );
+      const result = await updateUser(context, args.userId, args.input);
       if (!result.success) {
         throw result.error;
       }

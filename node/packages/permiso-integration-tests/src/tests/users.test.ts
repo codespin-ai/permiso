@@ -1,6 +1,12 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext, createOrgClient } from "../index.js";
+import {
+  testDb,
+  client,
+  rootClient,
+  switchToOrgContext,
+  createOrgClient,
+} from "../index.js";
 
 describe("Users", () => {
   beforeEach(async () => {
@@ -55,7 +61,7 @@ describe("Users", () => {
           ],
         },
       });
-      
+
       const user = result.data?.createUser;
       expect(user?.id).to.equal("user-123");
       expect(user?.orgId).to.equal("test-org");
@@ -83,7 +89,7 @@ describe("Users", () => {
     it("should fail when trying to access non-existent organization", async () => {
       // Switch to a non-existent organization context
       const nonExistentOrgClient = createOrgClient("non-existent-org");
-      
+
       const mutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
@@ -272,10 +278,7 @@ describe("Users", () => {
 
       // Update user
       const updateMutation = gql`
-        mutation UpdateUser(
-          $userId: ID!
-          $input: UpdateUserInput!
-        ) {
+        mutation UpdateUser($userId: ID!, $input: UpdateUserInput!) {
           updateUser(userId: $userId, input: $input) {
             id
             identityProvider

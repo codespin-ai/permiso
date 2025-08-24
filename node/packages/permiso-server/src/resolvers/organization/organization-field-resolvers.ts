@@ -37,7 +37,11 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getUsersByOrg(context, parent.id, args.filter);
+        const countResult = await getUsersByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -83,7 +87,11 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getRolesByOrg(context, parent.id, args.filter);
+        const countResult = await getRolesByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }
@@ -130,7 +138,11 @@ export const organizationFieldResolvers = {
       // Get total count without pagination
       let totalCount = result.data.length;
       if (args.pagination) {
-        const countResult = await getResourcesByOrg(context, parent.id, args.filter);
+        const countResult = await getResourcesByOrg(
+          context,
+          parent.id,
+          args.filter,
+        );
         if (countResult.success) {
           totalCount = countResult.data.length;
         }

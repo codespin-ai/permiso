@@ -83,11 +83,7 @@ export async function getRoles(
 
     const result = await Promise.all(
       roles.map(async (role) => {
-        const propertiesResult = await getRoleProperties(
-          ctx,
-          role.id,
-          false,
-        );
+        const propertiesResult = await getRoleProperties(ctx, role.id, false);
         if (!propertiesResult.success) {
           throw propertiesResult.error;
         }

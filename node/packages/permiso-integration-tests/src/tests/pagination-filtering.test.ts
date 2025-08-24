@@ -333,7 +333,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -349,7 +349,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-eng-senior",
-              identityProvider: "google",
+            identityProvider: "google",
             identityProviderUserId: "google|1",
             properties: [
               { name: "department", value: "engineering" },
@@ -361,7 +361,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-eng-junior",
-              identityProvider: "auth0",
+            identityProvider: "auth0",
             identityProviderUserId: "auth0|2",
             properties: [
               { name: "department", value: "engineering" },
@@ -373,7 +373,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(userMutation, {
           input: {
             id: "user-sales-senior",
-              identityProvider: "google",
+            identityProvider: "google",
             identityProviderUserId: "google|3",
             properties: [
               { name: "department", value: "sales" },
@@ -476,7 +476,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -492,7 +492,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "admin-full",
-              name: "Full Admin",
+            name: "Full Admin",
             properties: [
               { name: "access_level", value: "full" },
               { name: "department", value: "all" },
@@ -503,7 +503,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "admin-limited",
-              name: "Limited Admin",
+            name: "Limited Admin",
             properties: [
               { name: "access_level", value: "limited" },
               { name: "department", value: "engineering" },
@@ -514,7 +514,7 @@ describe("Pagination and Filtering", () => {
         await client.mutate(roleMutation, {
           input: {
             id: "viewer",
-              name: "Viewer",
+            name: "Viewer",
             properties: [
               { name: "access_level", value: "read_only" },
               { name: "department", value: "all" },
@@ -561,7 +561,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -577,35 +577,35 @@ describe("Pagination and Filtering", () => {
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/users",
-              name: "Users API",
+            name: "Users API",
           },
         });
 
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/users/*",
-              name: "User API Wildcard",
+            name: "User API Wildcard",
           },
         });
 
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/posts",
-              name: "Posts API",
+            name: "Posts API",
           },
         });
 
         await client.mutate(resourceMutation, {
           input: {
             id: "/api/posts/*",
-              name: "Post API Wildcard",
+            name: "Post API Wildcard",
           },
         });
 
         await client.mutate(resourceMutation, {
           input: {
             id: "/admin/settings",
-              name: "Admin Settings",
+            name: "Admin Settings",
           },
         });
       });
@@ -817,7 +817,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -835,7 +835,7 @@ describe("Pagination and Filtering", () => {
           await client.mutate(userMutation, {
             input: {
               id: userId,
-                  identityProvider: "auth0",
+              identityProvider: "auth0",
               identityProviderUserId: userId,
             },
           });
@@ -905,7 +905,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -928,7 +928,7 @@ describe("Pagination and Filtering", () => {
           await client.mutate(roleMutation, {
             input: {
               id: roleId,
-                  name: roleId,
+              name: roleId,
             },
           });
         }
@@ -969,7 +969,7 @@ describe("Pagination and Filtering", () => {
         await rootClient.mutate(orgMutation, {
           input: { id: "test-org", name: "Test Organization" },
         });
-        
+
         // Switch to organization context for RLS operations
         switchToOrgContext("test-org");
 
@@ -992,7 +992,7 @@ describe("Pagination and Filtering", () => {
           await client.mutate(resourceMutation, {
             input: {
               id: resourceId,
-                  name: resourceId,
+              name: resourceId,
             },
           });
         }

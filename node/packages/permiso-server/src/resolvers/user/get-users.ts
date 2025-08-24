@@ -11,11 +11,7 @@ export const getUsersResolver = {
       args: { filter?: any; pagination?: any },
       context: DataContext,
     ) => {
-      const result = await getUsers(
-        context,
-        args.filter,
-        args.pagination,
-      );
+      const result = await getUsers(context, args.filter, args.pagination);
       if (!result.success) {
         throw result.error;
       }

@@ -12,11 +12,7 @@ export const updateRoleResolver = {
       args: { roleId: string; input: any },
       context: DataContext,
     ) => {
-      const result = await updateRole(
-        context,
-        args.roleId,
-        args.input,
-      );
+      const result = await updateRole(context, args.roleId, args.input);
       if (!result.success) {
         throw result.error;
       }

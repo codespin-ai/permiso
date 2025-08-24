@@ -11,11 +11,7 @@ export const deleteUserPropertyResolver = {
       args: { userId: string; name: string },
       context: DataContext,
     ) => {
-      const result = await deleteUserProperty(
-        context,
-        args.userId,
-        args.name,
-      );
+      const result = await deleteUserProperty(context, args.userId, args.name);
       if (!result.success) {
         throw result.error;
       }

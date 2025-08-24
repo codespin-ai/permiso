@@ -33,10 +33,7 @@ export const roleFieldResolvers = {
     },
 
     users: async (parent: RoleWithProperties, _: any, context: DataContext) => {
-      const userIdsResult = await getRoleUsers(
-        context,
-        parent.id,
-      );
+      const userIdsResult = await getRoleUsers(context, parent.id);
       if (!userIdsResult.success) {
         throw userIdsResult.error;
       }

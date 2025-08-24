@@ -15,7 +15,6 @@ import type {
 export async function hasPermission(
   config: PermisoConfig,
   params: {
-    orgId: string;
     userId: string;
     resourceId: string;
     action: string;
@@ -23,13 +22,11 @@ export async function hasPermission(
 ): Promise<Result<boolean, Error>> {
   const query = `
     query HasPermission(
-      $orgId: ID!,
       $userId: ID!,
       $resourceId: String!,
       $action: String!
     ) {
       hasPermission(
-        orgId: $orgId,
         userId: $userId,
         resourceId: $resourceId,
         action: $action
@@ -59,7 +56,6 @@ export async function hasPermission(
 export async function getUserPermissions(
   config: PermisoConfig,
   params: {
-    orgId: string;
     userId: string;
     resourceId?: string;
     action?: string;
@@ -67,13 +63,11 @@ export async function getUserPermissions(
 ): Promise<Result<UserPermission[], Error>> {
   const query = `
     query GetUserPermissions(
-      $orgId: ID!,
       $userId: ID!,
       $resourceId: String,
       $action: String
     ) {
       userPermissions(
-        orgId: $orgId,
         userId: $userId,
         resourceId: $resourceId,
         action: $action
@@ -118,7 +112,6 @@ export async function getUserPermissions(
 export async function getRolePermissions(
   config: PermisoConfig,
   params: {
-    orgId: string;
     roleId: string;
     resourceId?: string;
     action?: string;
@@ -126,13 +119,11 @@ export async function getRolePermissions(
 ): Promise<Result<RolePermission[], Error>> {
   const query = `
     query GetRolePermissions(
-      $orgId: ID!,
       $roleId: ID!,
       $resourceId: String,
       $action: String
     ) {
       rolePermissions(
-        orgId: $orgId,
         roleId: $roleId,
         resourceId: $resourceId,
         action: $action
@@ -177,7 +168,6 @@ export async function getRolePermissions(
 export async function getEffectivePermissions(
   config: PermisoConfig,
   params: {
-    orgId: string;
     userId: string;
     resourceId: string;
     action?: string;
@@ -185,13 +175,11 @@ export async function getEffectivePermissions(
 ): Promise<Result<EffectivePermission[], Error>> {
   const query = `
     query GetEffectivePermissions(
-      $orgId: ID!,
       $userId: ID!,
       $resourceId: String!,
       $action: String
     ) {
       effectivePermissions(
-        orgId: $orgId,
         userId: $userId,
         resourceId: $resourceId,
         action: $action
@@ -229,7 +217,6 @@ export async function getEffectivePermissions(
 export async function getEffectivePermissionsByPrefix(
   config: PermisoConfig,
   params: {
-    orgId: string;
     userId: string;
     resourceIdPrefix: string;
     action?: string;
@@ -237,13 +224,11 @@ export async function getEffectivePermissionsByPrefix(
 ): Promise<Result<EffectivePermission[], Error>> {
   const query = `
     query GetEffectivePermissionsByPrefix(
-      $orgId: ID!,
       $userId: ID!,
       $resourceIdPrefix: String!,
       $action: String
     ) {
       effectivePermissionsByPrefix(
-        orgId: $orgId,
         userId: $userId,
         resourceIdPrefix: $resourceIdPrefix,
         action: $action
@@ -325,7 +310,6 @@ export async function grantUserPermission(
 export async function revokeUserPermission(
   config: PermisoConfig,
   params: {
-    orgId: string;
     userId: string;
     resourceId: string;
     action: string;
@@ -333,13 +317,11 @@ export async function revokeUserPermission(
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation RevokeUserPermission(
-      $orgId: ID!,
       $userId: ID!,
       $resourceId: ID!,
       $action: String!
     ) {
       revokeUserPermission(
-        orgId: $orgId,
         userId: $userId,
         resourceId: $resourceId,
         action: $action
@@ -413,7 +395,6 @@ export async function grantRolePermission(
 export async function revokeRolePermission(
   config: PermisoConfig,
   params: {
-    orgId: string;
     roleId: string;
     resourceId: string;
     action: string;
@@ -421,13 +402,11 @@ export async function revokeRolePermission(
 ): Promise<Result<boolean, Error>> {
   const mutation = `
     mutation RevokeRolePermission(
-      $orgId: ID!,
       $roleId: ID!,
       $resourceId: ID!,
       $action: String!
     ) {
       revokeRolePermission(
-        orgId: $orgId,
         roleId: $roleId,
         resourceId: $resourceId,
         action: $action
