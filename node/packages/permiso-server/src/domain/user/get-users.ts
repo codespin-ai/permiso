@@ -34,7 +34,7 @@ export async function getUsers(
         WHERE u.id IN (
             SELECT parent_id 
             FROM user_property
-              AND (name, value) IN (
+            WHERE (name, value) IN (
       `;
 
       const propConditions: string[] = [];

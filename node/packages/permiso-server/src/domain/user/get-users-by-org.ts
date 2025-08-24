@@ -17,23 +17,67 @@ export async function getUsersByOrg(
   pagination?: any,
 ): Promise<Result<UserWithProperties[]>> {
   try {
-    let query = `SELECT * FROM "user" WHERE org_id = $(orgId)`;
+    let query: string;
     const params: any = { orgId };
 
-    // Apply filters if provided
-    if (filter?.ids?.length > 0) {
-      query += ` AND id = ANY($(ids))`;
-      params.ids = filter.ids;
-    }
+    if (filter?.properties && filter.properties.length > 0) {
+      // Use a subquery to find users that have ALL the requested properties
+      query = `
+        SELECT DISTINCT u.* 
+        FROM "user" u
+        WHERE u.org_id = $(orgId) AND u.id IN (
+            SELECT parent_id 
+            FROM user_property
+            WHERE (name, value) IN (
+      `;
 
-    if (filter?.identityProvider) {
-      query += ` AND identity_provider = $(identityProvider)`;
-      params.identityProvider = filter.identityProvider;
-    }
+      const propConditions: string[] = [];
+      filter.properties.forEach((prop: any, index: number) => {
+        propConditions.push(`($(propName${index}), $(propValue${index}))`);
+        params[`propName${index}`] = prop.name;
+        params[`propValue${index}`] = JSON.stringify(prop.value);
+      });
 
-    if (filter?.identityProviderUserId) {
-      query += ` AND identity_provider_user_id = $(identityProviderUserId)`;
-      params.identityProviderUserId = filter.identityProviderUserId;
+      query += propConditions.join(", ");
+      query += `)
+            GROUP BY parent_id
+            HAVING COUNT(DISTINCT name) = $(propCount)
+          )`;
+      params.propCount = filter.properties.length;
+
+      if (filter?.ids?.length > 0) {
+        query += ` AND u.id = ANY($(ids))`;
+        params.ids = filter.ids;
+      }
+
+      if (filter?.identityProvider) {
+        query += ` AND u.identity_provider = $(identityProvider)`;
+        params.identityProvider = filter.identityProvider;
+      }
+
+      if (filter?.identityProviderUserId) {
+        query += ` AND u.identity_provider_user_id = $(identityProviderUserId)`;
+        params.identityProviderUserId = filter.identityProviderUserId;
+      }
+    } else {
+      // Simple query without property filtering
+      query = `SELECT * FROM "user" WHERE org_id = $(orgId)`;
+
+      // Apply filters if provided
+      if (filter?.ids?.length > 0) {
+        query += ` AND id = ANY($(ids))`;
+        params.ids = filter.ids;
+      }
+
+      if (filter?.identityProvider) {
+        query += ` AND identity_provider = $(identityProvider)`;
+        params.identityProvider = filter.identityProvider;
+      }
+
+      if (filter?.identityProviderUserId) {
+        query += ` AND identity_provider_user_id = $(identityProviderUserId)`;
+        params.identityProviderUserId = filter.identityProviderUserId;
+      }
     }
 
     query += ` ORDER BY created_at DESC`;
@@ -50,12 +94,24 @@ export async function getUsersByOrg(
 
     const rows = await ctx.db.manyOrNone<UserDbRow>(query, params);
 
-    // Map to domain objects (simplified - no properties/roles for field resolver)
-    const users: UserWithProperties[] = rows.map((row) => ({
-      ...mapUserFromDb(row),
-      roleIds: [],
-      properties: {},
-    }));
+    // Map to domain objects and fetch role IDs for each user
+    const users: UserWithProperties[] = await Promise.all(
+      rows.map(async (row) => {
+        const user = mapUserFromDb(row);
+        
+        // Fetch role IDs for this user
+        const roleIds = await ctx.db.manyOrNone<{ role_id: string }>(
+          `SELECT role_id FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
+          { userId: user.id, orgId }
+        );
+        
+        return {
+          ...user,
+          roleIds: roleIds.map(r => r.role_id),
+          properties: {}, // Properties will be loaded by field resolver if needed
+        };
+      })
+    );
 
     return { success: true, data: users };
   } catch (error) {

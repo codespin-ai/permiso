@@ -8,20 +8,18 @@ const logger = createLogger("permiso-server:resources");
 
 export async function getResourcesByIdPrefix(
   ctx: DataContext,
-  orgId: string,
   idPrefix: string,
 ): Promise<Result<Resource[]>> {
   try {
     const rows = await ctx.db.manyOrNone<ResourceDbRow>(
-      `SELECT * FROM resource WHERE org_id = $(orgId) AND id LIKE $(pattern) ORDER BY id`,
-      { orgId, pattern: `${idPrefix}%` },
+      `SELECT * FROM resource WHERE id LIKE $(pattern) ORDER BY id`,
+      { pattern: `${idPrefix}%` },
     );
 
     return { success: true, data: rows.map(mapResourceFromDb) };
   } catch (error) {
     logger.error("Failed to get resources by ID prefix", {
       error,
-      orgId,
       idPrefix,
     });
     return { success: false, error: error as Error };

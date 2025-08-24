@@ -17,13 +17,47 @@ export async function getRolesByOrg(
   pagination?: any,
 ): Promise<Result<RoleWithProperties[]>> {
   try {
-    let query = `SELECT * FROM role WHERE org_id = $(orgId)`;
+    let query: string;
     const params: any = { orgId };
 
-    // Apply filters if provided
-    if (filter?.ids?.length > 0) {
-      query += ` AND id = ANY($(ids))`;
-      params.ids = filter.ids;
+    if (filter?.properties && filter.properties.length > 0) {
+      // Use a subquery to find roles that have ALL the requested properties
+      query = `
+        SELECT DISTINCT r.* 
+        FROM role r
+        WHERE r.org_id = $(orgId) AND r.id IN (
+            SELECT parent_id 
+            FROM role_property
+            WHERE (name, value) IN (
+      `;
+
+      const propConditions: string[] = [];
+      filter.properties.forEach((prop: any, index: number) => {
+        propConditions.push(`($(propName${index}), $(propValue${index}))`);
+        params[`propName${index}`] = prop.name;
+        params[`propValue${index}`] = JSON.stringify(prop.value);
+      });
+
+      query += propConditions.join(", ");
+      query += `)
+            GROUP BY parent_id
+            HAVING COUNT(DISTINCT name) = $(propCount)
+          )`;
+      params.propCount = filter.properties.length;
+
+      if (filter?.ids?.length > 0) {
+        query += ` AND r.id = ANY($(ids))`;
+        params.ids = filter.ids;
+      }
+    } else {
+      // Simple query without property filtering
+      query = `SELECT * FROM role WHERE org_id = $(orgId)`;
+
+      // Apply filters if provided
+      if (filter?.ids?.length > 0) {
+        query += ` AND id = ANY($(ids))`;
+        params.ids = filter.ids;
+      }
     }
 
     query += ` ORDER BY created_at DESC`;
