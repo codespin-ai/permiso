@@ -96,7 +96,7 @@ describe("Batch Queries", () => {
   });
 
   describe("usersByIds", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -113,10 +113,10 @@ describe("Batch Queries", () => {
       });
 
       // Create organization-specific client for RLS operations
-      testOrgClient = createOrgClient("test-org");
     });
 
     it("should fetch multiple users by IDs within an organization", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create test users
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -170,6 +170,7 @@ describe("Batch Queries", () => {
     });
 
     it("should not return users from different organizations", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create another organization
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -231,7 +232,7 @@ describe("Batch Queries", () => {
   });
 
   describe("rolesByIds", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -248,10 +249,10 @@ describe("Batch Queries", () => {
       });
 
       // Create organization-specific client for RLS operations
-      testOrgClient = createOrgClient("test-org");
     });
 
     it("should fetch multiple roles by IDs within an organization", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create test roles
       const createMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {

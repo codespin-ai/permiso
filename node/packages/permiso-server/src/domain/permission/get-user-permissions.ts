@@ -9,6 +9,36 @@ import { mapUserPermissionFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:permissions");
 
+function buildUserPermissionsQuery(
+  userId?: string,
+  resourceId?: string,
+  action?: string,
+): { query: string; params: Record<string, any> } {
+  const params: Record<string, any> = {};
+  const conditions: string[] = [];
+
+  if (userId) {
+    conditions.push(`user_id = $(userId)`);
+    params.userId = userId;
+  }
+
+  if (resourceId) {
+    conditions.push(`resource_id = $(resourceId)`);
+    params.resourceId = resourceId;
+  }
+
+  if (action) {
+    conditions.push(`action = $(action)`);
+    params.action = action;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+  const query = `SELECT * FROM user_permission${whereClause} ORDER BY created_at DESC`;
+
+  return { query, params };
+}
+
 export async function getUserPermissions(
   ctx: DataContext,
   userId?: string,
@@ -16,25 +46,11 @@ export async function getUserPermissions(
   action?: string,
 ): Promise<Result<UserPermissionWithOrgId[]>> {
   try {
-    let query = `SELECT * FROM user_permission WHERE 1=1`;
-    const params: Record<string, any> = {};
-
-    if (userId) {
-      query += ` AND user_id = $(userId)`;
-      params.userId = userId;
-    }
-
-    if (resourceId) {
-      query += ` AND resource_id = $(resourceId)`;
-      params.resourceId = resourceId;
-    }
-
-    if (action) {
-      query += ` AND action = $(action)`;
-      params.action = action;
-    }
-
-    query += ` ORDER BY created_at DESC`;
+    const { query, params } = buildUserPermissionsQuery(
+      userId,
+      resourceId,
+      action,
+    );
 
     const rows = await ctx.db.manyOrNone<UserPermissionDbRow>(query, params);
     return { success: true, data: rows.map(mapUserPermissionFromDb) };

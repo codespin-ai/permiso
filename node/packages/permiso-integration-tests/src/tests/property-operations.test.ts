@@ -3,7 +3,16 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Property Operations", () => {
-  let testOrgClient: ReturnType<typeof createOrgClient>;
+  let testOrgClientInstance: ReturnType<typeof createOrgClient> | undefined;
+
+  const testOrgClient = () => {
+    if (!testOrgClientInstance) {
+      throw new Error(
+        "testOrgClient not initialized. Make sure beforeEach has run.",
+      );
+    }
+    return testOrgClientInstance;
+  };
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -22,7 +31,7 @@ describe("Property Operations", () => {
     });
 
     // Create organization-specific client
-    testOrgClient = createOrgClient("test-org");
+    testOrgClientInstance = createOrgClient("test-org");
   });
 
   describe("Organization Properties", () => {
@@ -40,7 +49,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      await testOrgClient.mutate(setPropMutation, {
+      await testOrgClient().mutate(setPropMutation, {
         orgId: "test-org",
         name: "existing_prop",
         value: "initial_value",
@@ -60,7 +69,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.query(query, {
+        const result = await testOrgClient().query(query, {
           orgId: "test-org",
           propertyName: "existing_prop",
         });
@@ -86,7 +95,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.query(query, {
+        const result = await testOrgClient().query(query, {
           orgId: "test-org",
           propertyName: "non_existent",
         });
@@ -117,7 +126,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "new_prop",
           value: { complex: "object", with: ["array", "values"] },
@@ -153,7 +162,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "existing_prop",
           value: "updated_value",
@@ -178,7 +187,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await testOrgClient.query(query, {
+        const queryResult = await testOrgClient().query(query, {
           id: "test-org",
         });
         expect(queryResult.data?.organization?.properties).to.have.lengthOf(1);
@@ -203,7 +212,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "null_prop",
           value: null,
@@ -227,7 +236,7 @@ describe("Property Operations", () => {
         `;
 
         // Test number
-        let result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "number_prop",
           value: 42.5,
@@ -235,20 +244,20 @@ describe("Property Operations", () => {
         expect(result.data?.setOrganizationProperty?.value).to.equal(42.5);
 
         // Test boolean
-        result = await testOrgClient.mutate(mutation, {
+        const boolResult = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "bool_prop",
           value: true,
         });
-        expect(result.data?.setOrganizationProperty?.value).to.equal(true);
+        expect(boolResult.data?.setOrganizationProperty?.value).to.equal(true);
 
         // Test array
-        result = await testOrgClient.mutate(mutation, {
+        const arrayResult = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "array_prop",
           value: [1, "two", { three: 3 }, null],
         });
-        expect(result.data?.setOrganizationProperty?.value).to.deep.equal([
+        expect(arrayResult.data?.setOrganizationProperty?.value).to.deep.equal([
           1,
           "two",
           { three: 3 },
@@ -256,7 +265,7 @@ describe("Property Operations", () => {
         ]);
 
         // Test nested object
-        result = await testOrgClient.mutate(mutation, {
+        const nestedResult = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "nested_prop",
           value: {
@@ -268,14 +277,16 @@ describe("Property Operations", () => {
             },
           },
         });
-        expect(result.data?.setOrganizationProperty?.value).to.deep.equal({
-          level1: {
-            level2: {
-              level3: "deep",
-              array: [1, 2, 3],
+        expect(nestedResult.data?.setOrganizationProperty?.value).to.deep.equal(
+          {
+            level1: {
+              level2: {
+                level3: "deep",
+                array: [1, 2, 3],
+              },
             },
           },
-        });
+        );
       });
     });
 
@@ -294,7 +305,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await testOrgClient.mutate(setPropMutation, {
+        await testOrgClient().mutate(setPropMutation, {
           orgId: "test-org",
           name: "to_delete",
           value: "delete_me",
@@ -307,7 +318,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(deleteMutation, {
+        const result = await testOrgClient().mutate(deleteMutation, {
           orgId: "test-org",
           name: "to_delete",
         });
@@ -323,7 +334,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await testOrgClient.query(query, {
+        const queryResult = await testOrgClient().query(query, {
           orgId: "test-org",
           propertyName: "to_delete",
         });
@@ -338,7 +349,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: "non_existent",
         });
@@ -359,7 +370,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      await testOrgClient.mutate(userMutation, {
+      await testOrgClient().mutate(userMutation, {
         input: {
           id: "test-user",
           identityProvider: "auth0",
@@ -382,7 +393,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.query(query, {
+        const result = await testOrgClient().query(query, {
           userId: "test-user",
           propertyName: "existing_prop",
         });
@@ -402,7 +413,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.query(query, {
+        const result = await testOrgClient().query(query, {
           userId: "test-user",
           propertyName: "non_existent",
         });
@@ -422,7 +433,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await testOrgClient.mutate(setPropMutation, {
+        await testOrgClient().mutate(setPropMutation, {
           userId: "test-user",
           name: "to_delete",
           value: "delete_me",
@@ -435,7 +446,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(deleteMutation, {
+        const result = await testOrgClient().mutate(deleteMutation, {
           userId: "test-user",
           name: "to_delete",
         });
@@ -451,7 +462,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await testOrgClient.query(query, {
+        const queryResult = await testOrgClient().query(query, {
           userId: "test-user",
           propertyName: "to_delete",
         });
@@ -472,7 +483,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      await testOrgClient.mutate(roleMutation, {
+      await testOrgClient().mutate(roleMutation, {
         input: {
           id: "test-role",
           name: "Test Role",
@@ -494,7 +505,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.query(query, {
+        const result = await testOrgClient().query(query, {
           roleId: "test-role",
           propertyName: "existing_prop",
         });
@@ -528,7 +539,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           roleId: "test-role",
           name: "permissions_config",
           value: {
@@ -567,7 +578,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await testOrgClient.mutate(setPropMutation, {
+        await testOrgClient().mutate(setPropMutation, {
           roleId: "test-role",
           name: "to_delete",
           value: "delete_me",
@@ -580,7 +591,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await testOrgClient.mutate(deleteMutation, {
+        const result = await testOrgClient().mutate(deleteMutation, {
           roleId: "test-role",
           name: "to_delete",
         });
@@ -616,7 +627,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await testOrgClient.mutate(mutation, {
+      const result = await testOrgClient().mutate(mutation, {
         orgId: "test-org",
         name: "large_object",
         value: largeObject,
@@ -649,7 +660,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await testOrgClient.mutate(mutation, {
+      const result = await testOrgClient().mutate(mutation, {
         orgId: "test-org",
         name: "deep_object",
         value: deepObject,
@@ -685,7 +696,7 @@ describe("Property Operations", () => {
       ];
 
       for (const name of specialNames) {
-        const result = await testOrgClient.mutate(mutation, {
+        const result = await testOrgClient().mutate(mutation, {
           orgId: "test-org",
           name: name,
           value: `value for ${name}`,
@@ -713,7 +724,7 @@ describe("Property Operations", () => {
       `;
 
       // Empty string value
-      let result = await testOrgClient.mutate(mutation, {
+      const result = await testOrgClient().mutate(mutation, {
         orgId: "test-org",
         name: "empty_string",
         value: "",
@@ -721,12 +732,14 @@ describe("Property Operations", () => {
       expect(result.data?.setOrganizationProperty?.value).to.equal("");
 
       // Whitespace value
-      result = await testOrgClient.mutate(mutation, {
+      const whitespaceResult = await testOrgClient().mutate(mutation, {
         orgId: "test-org",
         name: "whitespace",
         value: "   ",
       });
-      expect(result.data?.setOrganizationProperty?.value).to.equal("   ");
+      expect(whitespaceResult.data?.setOrganizationProperty?.value).to.equal(
+        "   ",
+      );
     });
 
     it("should handle unicode and emoji in values", async () => {
@@ -743,7 +756,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await testOrgClient.mutate(mutation, {
+      const result = await testOrgClient().mutate(mutation, {
         orgId: "test-org",
         name: "unicode_prop",
         value: {

@@ -3,7 +3,7 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Resources", () => {
-  let testOrgClient: ReturnType<typeof createOrgClient>;
+  const getTestOrgClient = () => createOrgClient("test-org");
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -23,13 +23,11 @@ describe("Resources", () => {
         name: "Test Organization",
       },
     });
-
-    // Create organization-specific client
-    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createResource", () => {
     it("should create a new resource", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -108,6 +106,7 @@ describe("Resources", () => {
 
   describe("resources query", () => {
     it("should list resources in an organization", async () => {
+      const testOrgClient = getTestOrgClient();
       const createResourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -155,6 +154,7 @@ describe("Resources", () => {
 
   describe("resource query", () => {
     it("should retrieve a resource by orgId and resourceId", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -198,6 +198,7 @@ describe("Resources", () => {
 
   describe("updateResource", () => {
     it("should update resource details", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -246,6 +247,7 @@ describe("Resources", () => {
 
   describe("deleteResource", () => {
     it("should delete a resource", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create resource
       const createMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {

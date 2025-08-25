@@ -8,7 +8,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Resource Pattern Matching", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -25,7 +25,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create test user
       const userMutation = gql`
@@ -46,6 +46,7 @@ describe("Edge Cases and Error Scenarios", () => {
     });
 
     it("should handle complex resource patterns with multiple wildcards", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create resources with complex patterns
       const resourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
@@ -120,29 +121,30 @@ describe("Edge Cases and Error Scenarios", () => {
       `;
 
       // Should match /api/*/users/*
-      let result = await testOrgClient.query(query, {
+      const result = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/api/v1/users/123",
       });
 
-      let permissions = result.data?.effectivePermissions;
+      const permissions = result.data?.effectivePermissions;
       expect(permissions).to.have.length.at.least(2); // Should match both /api/*/users/* and /*
       const actions = permissions.map((p: any) => p.action);
       expect(actions).to.include.members(["read", "list"]);
 
       // Should match /*/data/*
-      result = await testOrgClient.query(query, {
+      const result2 = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/europe/data/sensitive",
       });
 
-      permissions = result.data?.effectivePermissions;
-      expect(permissions).to.have.length.at.least(2); // Should match both /*/data/* and /*
-      const actions2 = permissions.map((p: any) => p.action);
+      const permissions2 = result2.data?.effectivePermissions;
+      expect(permissions2).to.have.length.at.least(2); // Should match both /*/data/* and /*
+      const actions2 = permissions2.map((p: any) => p.action);
       expect(actions2).to.include.members(["write", "list"]);
     });
 
     it("should handle edge cases in resource IDs", async () => {
+      const testOrgClient = getTestOrgClient();
       const resourceMutation = gql`
         mutation CreateResource($input: CreateResourceInput!) {
           createResource(input: $input) {
@@ -195,7 +197,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Permission Queries", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -212,7 +214,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create test user
       const userMutation = gql`
@@ -273,6 +275,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("hasPermission query", () => {
       it("should return true when user has direct permission", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant permission
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -315,6 +318,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should return false when user lacks permission", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query HasPermission(
             $userId: ID!
@@ -339,6 +343,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should return true when user has permission through role", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant permission to role
         const grantRoleMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -397,6 +402,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("userPermissions query", () => {
       it("should list all user permissions", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -449,6 +455,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should filter user permissions by resource", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -496,6 +503,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should filter user permissions by action", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant multiple permissions
         const grantMutation = gql`
           mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -543,6 +551,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("rolePermissions query", () => {
       it("should list all role permissions", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant multiple permissions to role
         const grantMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -589,6 +598,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("effectivePermissionsByPrefix query", () => {
       beforeEach(async () => {
+        const testOrgClient = getTestOrgClient();
         // Create multiple resources
         const resourceMutation = gql`
           mutation CreateResource($input: CreateResourceInput!) {
@@ -654,6 +664,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should return permissions matching the prefix", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query GetEffectivePermissionsByPrefix(
             $userId: ID!
@@ -689,6 +700,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should filter by action when provided", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query GetEffectivePermissionsByPrefix(
             $userId: ID!
@@ -725,7 +737,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("User Role Operations", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization
@@ -741,7 +753,7 @@ describe("Edge Cases and Error Scenarios", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create test user
       const userMutation = gql`
@@ -786,6 +798,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("unassignUserRole mutation", () => {
       it("should remove a role from a user", async () => {
+        const testOrgClient = getTestOrgClient();
         // First assign roles
         const assignMutation = gql`
           mutation AssignUserRole($userId: ID!, $roleId: ID!) {
@@ -819,7 +832,7 @@ describe("Edge Cases and Error Scenarios", () => {
           }
         `;
 
-        let result = await testOrgClient.query(query, {
+        const result = await testOrgClient.query(query, {
           userId: "test-user",
         });
 
@@ -850,15 +863,16 @@ describe("Edge Cases and Error Scenarios", () => {
         );
 
         // Verify role was removed
-        result = await testOrgClient.query(query, {
+        const verifyResult = await testOrgClient.query(query, {
           userId: "test-user",
         });
 
-        expect(result.data?.user?.roles).to.have.lengthOf(1);
-        expect(result.data?.user?.roles[0].id).to.equal("editor");
+        expect(verifyResult.data?.user?.roles).to.have.lengthOf(1);
+        expect(verifyResult.data?.user?.roles[0].id).to.equal("editor");
       });
 
       it("should handle unassigning a role that user does not have", async () => {
+        const testOrgClient = getTestOrgClient();
         const unassignMutation = gql`
           mutation UnassignUserRole($userId: ID!, $roleId: ID!) {
             unassignUserRole(userId: $userId, roleId: $roleId) {
@@ -882,7 +896,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Role Permission Operations", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization
@@ -898,7 +912,7 @@ describe("Edge Cases and Error Scenarios", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create role
       const roleMutation = gql`
@@ -935,6 +949,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("revokeRolePermission mutation", () => {
       it("should revoke a permission from a role", async () => {
+        const testOrgClient = getTestOrgClient();
         // Grant permission first
         const grantMutation = gql`
           mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -964,7 +979,7 @@ describe("Edge Cases and Error Scenarios", () => {
           }
         `;
 
-        let result = await testOrgClient.query(query, {
+        const result = await testOrgClient.query(query, {
           roleId: "test-role",
         });
 
@@ -994,14 +1009,15 @@ describe("Edge Cases and Error Scenarios", () => {
         expect(revokeResult.data?.revokeRolePermission).to.be.true;
 
         // Verify permission is gone
-        result = await testOrgClient.query(query, {
+        const verifyResult2 = await testOrgClient.query(query, {
           roleId: "test-role",
         });
 
-        expect(result.data?.rolePermissions).to.deep.equal([]);
+        expect(verifyResult2.data?.rolePermissions).to.deep.equal([]);
       });
 
       it("should return false when revoking non-existent permission", async () => {
+        const testOrgClient = getTestOrgClient();
         const revokeMutation = gql`
           mutation RevokeRolePermission(
             $roleId: ID!
@@ -1028,7 +1044,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Resource Prefix Operations", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -1045,7 +1061,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create multiple resources
       const resourceMutation = gql`
@@ -1080,6 +1096,7 @@ describe("Edge Cases and Error Scenarios", () => {
 
     describe("resourcesByIdPrefix query", () => {
       it("should return resources matching exact prefix", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query GetResourcesByIdPrefix($idPrefix: String!) {
             resourcesByIdPrefix(idPrefix: $idPrefix) {
@@ -1104,6 +1121,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should handle prefix without trailing slash", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query GetResourcesByIdPrefix($idPrefix: String!) {
             resourcesByIdPrefix(idPrefix: $idPrefix) {
@@ -1122,6 +1140,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       it("should return empty array for non-matching prefix", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query GetResourcesByIdPrefix($idPrefix: String!) {
             resourcesByIdPrefix(idPrefix: $idPrefix) {
@@ -1423,7 +1442,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Empty String and Boundary Cases", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -1439,11 +1458,11 @@ describe("Edge Cases and Error Scenarios", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
+      // Organization-specific client will be created in individual tests
     });
 
     it("should handle empty string values in various fields", async () => {
+      const testOrgClient = getTestOrgClient();
       // Try to create organization with empty description
       const orgMutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
@@ -1551,7 +1570,7 @@ describe("Edge Cases and Error Scenarios", () => {
   });
 
   describe("Concurrent Operations", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -1568,7 +1587,7 @@ describe("Edge Cases and Error Scenarios", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
+      const testOrgClient = getTestOrgClient();
 
       // Create test user
       const userMutation = gql`
@@ -1605,6 +1624,7 @@ describe("Edge Cases and Error Scenarios", () => {
     });
 
     it("should handle concurrent permission grants", async () => {
+      const testOrgClient = getTestOrgClient();
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {
@@ -1657,6 +1677,7 @@ describe("Edge Cases and Error Scenarios", () => {
     });
 
     it("should handle duplicate permission grants gracefully", async () => {
+      const testOrgClient = getTestOrgClient();
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {

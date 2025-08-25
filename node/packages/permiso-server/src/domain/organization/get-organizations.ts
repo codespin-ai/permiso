@@ -14,6 +14,68 @@ import { getOrganizationProperties } from "./get-organization-properties.js";
 
 const logger = createLogger("permiso-server:organizations");
 
+function buildOrganizationQuery(
+  filters?: {
+    ids?: string[];
+    properties?: PropertyFilter[];
+  },
+  pagination?: PaginationInput,
+): { query: string; params: Record<string, any> } {
+  const params: Record<string, any> = {};
+
+  const buildPropertiesQuery = () => {
+    if (!filters?.properties || filters.properties.length === 0) return null;
+
+    const propConditions: string[] = [];
+    filters.properties.forEach((prop, index) => {
+      propConditions.push(`($(propName${index}), $(propValue${index}))`);
+      params[`propName${index}`] = prop.name;
+      params[`propValue${index}`] = JSON.stringify(prop.value);
+    });
+
+    params.propCount = filters.properties.length;
+
+    return `
+      SELECT DISTINCT o.* 
+      FROM organization o
+      WHERE o.id IN (
+        SELECT parent_id 
+        FROM organization_property
+        WHERE (name, value) IN (${propConditions.join(", ")})
+        GROUP BY parent_id
+        HAVING COUNT(DISTINCT name) = $(propCount)
+      )`;
+  };
+
+  const baseQuery =
+    buildPropertiesQuery() ||
+    `
+    SELECT DISTINCT o.* 
+    FROM organization o`;
+
+  const idCondition =
+    filters?.ids && filters.ids.length > 0
+      ? ((params.ids = filters.ids), `o.id = ANY($(ids))`)
+      : null;
+
+  const query = [
+    baseQuery,
+    buildPropertiesQuery() && idCondition
+      ? ` AND ${idCondition}`
+      : !buildPropertiesQuery() && idCondition
+        ? ` WHERE ${idCondition}`
+        : "",
+    ` ORDER BY o.id ${pagination?.sortDirection === "DESC" ? "DESC" : "ASC"}`,
+    pagination?.limit ? ` LIMIT $(limit)` : "",
+    pagination?.offset ? ` OFFSET $(offset)` : "",
+  ].join("");
+
+  if (pagination?.limit) params.limit = pagination.limit;
+  if (pagination?.offset) params.offset = pagination.offset;
+
+  return { query, params };
+}
+
 export async function getOrganizations(
   ctx: DataContext,
   filters?: {
@@ -26,63 +88,7 @@ export async function getOrganizations(
     // Use ROOT access for listing organizations
     const rootDb = ctx.db.upgradeToRoot?.("List organizations") || ctx.db;
 
-    let query: string;
-    const params: Record<string, any> = {};
-
-    if (filters?.properties && filters.properties.length > 0) {
-      // Use a subquery to find organizations that have ALL the requested properties
-      query = `
-        SELECT DISTINCT o.* 
-        FROM organization o
-        WHERE o.id IN (
-          SELECT parent_id 
-          FROM organization_property
-          WHERE (name, value) IN (
-      `;
-
-      const propConditions: string[] = [];
-      filters.properties.forEach((prop, index) => {
-        propConditions.push(`($(propName${index}), $(propValue${index}))`);
-        params[`propName${index}`] = prop.name;
-        params[`propValue${index}`] = JSON.stringify(prop.value);
-      });
-
-      query += propConditions.join(", ");
-      query += `)
-          GROUP BY parent_id
-          HAVING COUNT(DISTINCT name) = $(propCount)
-        )`;
-      params.propCount = filters.properties.length;
-
-      if (filters?.ids && filters.ids.length > 0) {
-        query += ` AND o.id = ANY($(ids))`;
-        params.ids = filters.ids;
-      }
-    } else {
-      query = `
-        SELECT DISTINCT o.* 
-        FROM organization o
-      `;
-
-      if (filters?.ids && filters.ids.length > 0) {
-        query += ` WHERE o.id = ANY($(ids))`;
-        params.ids = filters.ids;
-      }
-    }
-
-    // Apply sorting - validate and default to ASC if not specified
-    const sortDirection = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
-    query += ` ORDER BY o.id ${sortDirection}`;
-
-    if (pagination?.limit) {
-      query += ` LIMIT $(limit)`;
-      params.limit = pagination.limit;
-    }
-
-    if (pagination?.offset) {
-      query += ` OFFSET $(offset)`;
-      params.offset = pagination.offset;
-    }
+    const { query, params } = buildOrganizationQuery(filters, pagination);
 
     const rows = await rootDb.manyOrNone<OrganizationDbRow>(query, params);
     const orgs = rows.map(mapOrganizationFromDb);

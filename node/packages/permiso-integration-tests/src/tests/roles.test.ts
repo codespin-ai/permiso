@@ -3,7 +3,7 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Roles", () => {
-  let testOrgClient: ReturnType<typeof createOrgClient>;
+  const getTestOrgClient = () => createOrgClient("test-org");
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -23,13 +23,11 @@ describe("Roles", () => {
         name: "Test Organization",
       },
     });
-
-    // Create organization-specific client
-    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createRole", () => {
     it("should create a new role", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
           createRole(input: $input) {
@@ -132,6 +130,7 @@ describe("Roles", () => {
 
   describe("roles query", () => {
     it("should list roles in an organization", async () => {
+      const testOrgClient = getTestOrgClient();
       const createRoleMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
           createRole(input: $input) {
@@ -179,6 +178,7 @@ describe("Roles", () => {
 
   describe("role query", () => {
     it("should retrieve a role by orgId and roleId", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create role
       const createMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
@@ -231,6 +231,7 @@ describe("Roles", () => {
 
   describe("updateRole", () => {
     it("should update role details", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create role
       const createMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
@@ -336,6 +337,7 @@ describe("Roles", () => {
 
   describe("deleteRole", () => {
     it("should delete a role", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create role
       const createMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {

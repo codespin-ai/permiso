@@ -3,7 +3,7 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Permissions", () => {
-  let testOrgClient: ReturnType<typeof createOrgClient>;
+  const getTestOrgClient = () => createOrgClient("test-org");
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -25,7 +25,7 @@ describe("Permissions", () => {
     });
 
     // Create organization-specific client
-    testOrgClient = createOrgClient("test-org");
+    const testOrgClient = getTestOrgClient();
 
     // Create test user
     const userMutation = gql`
@@ -79,6 +79,7 @@ describe("Permissions", () => {
 
   describe("grantUserPermission", () => {
     it("should grant permission directly to a user", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {
@@ -104,6 +105,7 @@ describe("Permissions", () => {
     });
 
     it("should fail with non-existent user", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
           grantUserPermission(input: $input) {
@@ -151,6 +153,7 @@ describe("Permissions", () => {
 
   describe("grantRolePermission", () => {
     it("should grant permission to a role", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation GrantRolePermission($input: GrantRolePermissionInput!) {
           grantRolePermission(input: $input) {
@@ -178,6 +181,7 @@ describe("Permissions", () => {
 
   describe("assignUserRole", () => {
     it("should assign a role to a user", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation AssignUserRole($userId: ID!, $roleId: ID!) {
           assignUserRole(userId: $userId, roleId: $roleId) {
@@ -205,6 +209,7 @@ describe("Permissions", () => {
 
   describe("effectivePermissions", () => {
     it("should calculate effective permissions from direct user permissions", async () => {
+      const testOrgClient = getTestOrgClient();
       // Grant direct user permission
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -247,6 +252,7 @@ describe("Permissions", () => {
     });
 
     it("should calculate effective permissions from role assignments", async () => {
+      const testOrgClient = getTestOrgClient();
       // Grant permission to role
       const grantRoleMutation = gql`
         mutation GrantRolePermission($input: GrantRolePermissionInput!) {
@@ -305,6 +311,7 @@ describe("Permissions", () => {
     });
 
     it("should combine permissions from both user and role sources", async () => {
+      const testOrgClient = getTestOrgClient();
       // Grant direct user permission
       const grantUserMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {
@@ -379,6 +386,7 @@ describe("Permissions", () => {
 
   describe("revokeUserPermission", () => {
     it("should revoke a user permission", async () => {
+      const testOrgClient = getTestOrgClient();
       // Grant permission first
       const grantMutation = gql`
         mutation GrantUserPermission($input: GrantUserPermissionInput!) {

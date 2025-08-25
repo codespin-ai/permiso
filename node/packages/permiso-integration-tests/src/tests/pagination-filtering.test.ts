@@ -119,7 +119,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("users pagination", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -136,7 +136,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create multiple users
         const userMutation = gql`
@@ -167,6 +167,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should paginate users within organization", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($pagination: PaginationInput) {
             users(pagination: $pagination) {
@@ -322,7 +323,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("user filtering", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -339,7 +340,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create users with different properties
         const userMutation = gql`
@@ -388,6 +389,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter users by properties", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($filter: UserFilter) {
             users(filter: $filter) {
@@ -414,6 +416,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter users by identity provider", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($filter: UserFilter) {
             users(filter: $filter) {
@@ -440,6 +443,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter users by multiple criteria", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($filter: UserFilter) {
             users(filter: $filter) {
@@ -467,7 +471,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("role filtering", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -484,7 +488,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create roles with different properties
         const roleMutation = gql`
@@ -530,6 +534,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter roles by properties", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListRoles($filter: RoleFilter) {
             roles(filter: $filter) {
@@ -554,7 +559,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("resource filtering", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -571,7 +576,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create resources with different ID patterns
         const resourceMutation = gql`
@@ -619,6 +624,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter resources by ID prefix", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListResources($filter: ResourceFilter) {
             resources(filter: $filter) {
@@ -648,6 +654,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should filter resources by more specific prefix", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListResources($filter: ResourceFilter) {
             resources(filter: $filter) {
@@ -812,7 +819,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("users sorting", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -829,7 +836,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create users with specific IDs to test sorting
         const userMutation = gql`
@@ -853,6 +860,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should sort users by id ASC", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($pagination: PaginationInput) {
             users(pagination: $pagination) {
@@ -877,6 +885,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should sort users by id DESC", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListUsers($pagination: PaginationInput) {
             users(pagination: $pagination) {
@@ -902,7 +911,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("roles sorting", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -919,7 +928,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create roles with specific IDs to test sorting
         const roleMutation = gql`
@@ -947,6 +956,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should sort roles by id with pagination", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListRoles($pagination: PaginationInput) {
             roles(pagination: $pagination) {
@@ -968,7 +978,7 @@ describe("Pagination and Filtering", () => {
     });
 
     describe("resources sorting", () => {
-      let testOrgClient: ReturnType<typeof createOrgClient>;
+      const getTestOrgClient = () => createOrgClient("test-org");
 
       beforeEach(async () => {
         // Create test organization using ROOT client
@@ -985,7 +995,7 @@ describe("Pagination and Filtering", () => {
         });
 
         // Switch to organization context for RLS operations
-        testOrgClient = createOrgClient("test-org");
+        const testOrgClient = getTestOrgClient();
 
         // Create resources with specific IDs to test sorting
         const resourceMutation = gql`
@@ -1013,6 +1023,7 @@ describe("Pagination and Filtering", () => {
       });
 
       it("should sort resources by id ASC and DESC", async () => {
+        const testOrgClient = getTestOrgClient();
         const query = gql`
           query ListResources($pagination: PaginationInput) {
             resources(pagination: $pagination) {

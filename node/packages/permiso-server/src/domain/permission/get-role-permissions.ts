@@ -9,6 +9,36 @@ import { mapRolePermissionFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:permissions");
 
+function buildRolePermissionsQuery(
+  roleId?: string,
+  resourceId?: string,
+  action?: string,
+): { query: string; params: Record<string, any> } {
+  const params: Record<string, any> = {};
+  const conditions: string[] = [];
+
+  if (roleId) {
+    conditions.push(`role_id = $(roleId)`);
+    params.roleId = roleId;
+  }
+
+  if (resourceId) {
+    conditions.push(`resource_id = $(resourceId)`);
+    params.resourceId = resourceId;
+  }
+
+  if (action) {
+    conditions.push(`action = $(action)`);
+    params.action = action;
+  }
+
+  const whereClause =
+    conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+  const query = `SELECT * FROM role_permission${whereClause} ORDER BY created_at DESC`;
+
+  return { query, params };
+}
+
 export async function getRolePermissions(
   ctx: DataContext,
   roleId?: string,
@@ -16,25 +46,11 @@ export async function getRolePermissions(
   action?: string,
 ): Promise<Result<RolePermissionWithOrgId[]>> {
   try {
-    let query = `SELECT * FROM role_permission WHERE 1=1`;
-    const params: Record<string, any> = {};
-
-    if (roleId) {
-      query += ` AND role_id = $(roleId)`;
-      params.roleId = roleId;
-    }
-
-    if (resourceId) {
-      query += ` AND resource_id = $(resourceId)`;
-      params.resourceId = resourceId;
-    }
-
-    if (action) {
-      query += ` AND action = $(action)`;
-      params.action = action;
-    }
-
-    query += ` ORDER BY created_at DESC`;
+    const { query, params } = buildRolePermissionsQuery(
+      roleId,
+      resourceId,
+      action,
+    );
 
     const rows = await ctx.db.manyOrNone<RolePermissionDbRow>(query, params);
     return { success: true, data: rows.map(mapRolePermissionFromDb) };

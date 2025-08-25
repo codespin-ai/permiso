@@ -8,7 +8,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
   });
 
   describe("User Properties - Complex JSON", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -24,7 +24,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
 
       const createUserMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -33,6 +32,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
           }
         }
       `;
+      const testOrgClient = getTestOrgClient();
       await testOrgClient.mutate(createUserMutation, {
         input: {
           id: "test-user",
@@ -43,6 +43,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
     });
 
     it("should handle complex JSON objects in user properties", async () => {
+      const testOrgClient = getTestOrgClient();
       const setPropMutation = gql`
         mutation SetUserProperty($userId: ID!, $name: String!, $value: JSON) {
           setUserProperty(userId: $userId, name: $name, value: $value) {
@@ -80,7 +81,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
   });
 
   describe("Role Properties - Complex Arrays", () => {
-    let testOrgClient: ReturnType<typeof createOrgClient>;
+    const getTestOrgClient = () => createOrgClient("test-org");
 
     beforeEach(async () => {
       // Create test organization using ROOT client
@@ -96,7 +97,6 @@ describe("Properties - Complex JSON and Initial Values", () => {
       });
 
       // Create organization-specific client
-      testOrgClient = createOrgClient("test-org");
 
       const createRoleMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
@@ -105,6 +105,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
           }
         }
       `;
+      const testOrgClient = getTestOrgClient();
       await testOrgClient.mutate(createRoleMutation, {
         input: {
           id: "test-role",
@@ -114,6 +115,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
     });
 
     it("should handle arrays and nested structures in role properties", async () => {
+      const testOrgClient = getTestOrgClient();
       const setPropMutation = gql`
         mutation SetRoleProperty($roleId: ID!, $name: String!, $value: JSON) {
           setRoleProperty(roleId: $roleId, name: $name, value: $value) {

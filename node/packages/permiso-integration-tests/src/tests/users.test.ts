@@ -3,7 +3,7 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Users", () => {
-  let testOrgClient: ReturnType<typeof createOrgClient>;
+  const getTestOrgClient = () => createOrgClient("test-org");
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -23,13 +23,11 @@ describe("Users", () => {
         name: "Test Organization",
       },
     });
-
-    // Create organization-specific client
-    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createUser", () => {
     it("should create a new user", async () => {
+      const testOrgClient = getTestOrgClient();
       const mutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
@@ -135,6 +133,7 @@ describe("Users", () => {
 
   describe("users query", () => {
     it("should list users in an organization", async () => {
+      const testOrgClient = getTestOrgClient();
       const createUserMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
           createUser(input: $input) {
@@ -182,6 +181,7 @@ describe("Users", () => {
     });
 
     it("should return empty array for organization with no users", async () => {
+      const testOrgClient = getTestOrgClient();
       const query = gql`
         query ListUsers {
           users {
@@ -200,6 +200,7 @@ describe("Users", () => {
 
   describe("user query", () => {
     it("should retrieve a user by orgId and userId", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create user
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -255,6 +256,7 @@ describe("Users", () => {
 
   describe("updateUser", () => {
     it("should update user identity provider info", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create user
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -300,6 +302,7 @@ describe("Users", () => {
 
   describe("deleteUser", () => {
     it("should delete a user", async () => {
+      const testOrgClient = getTestOrgClient();
       // Create user
       const createMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {

@@ -3,7 +3,7 @@ import { gql } from "@apollo/client/core/index.js";
 import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Field Resolvers and Nested Queries", () => {
-  let acmeClient: ReturnType<typeof createOrgClient>;
+  const getAcmeClient = () => createOrgClient("acme-corp");
 
   beforeEach(async () => {
     await testDb.truncateAllTables();
@@ -43,7 +43,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     // Create acme-corp client for RLS operations
-    acmeClient = createOrgClient("acme-corp");
+    const acmeClient = getAcmeClient();
 
     // Create roles
     const roleMutation = gql`
@@ -337,6 +337,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve nested resources with filtering", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetOrganizationWithResources(
           $id: ID!
@@ -380,6 +381,7 @@ describe("Field Resolvers and Nested Queries", () => {
 
   describe("User Field Resolvers", () => {
     it("should resolve user organization", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetUserWithOrganization($userId: ID!) {
           user(userId: $userId) {
@@ -409,6 +411,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve user roles", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetUserWithRoles($userId: ID!) {
           user(userId: $userId) {
@@ -445,6 +448,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve user permissions", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetUserWithPermissions($userId: ID!) {
           user(userId: $userId) {
@@ -476,6 +480,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve user effective permissions with filtering", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetUserEffectivePermissions(
           $userId: ID!
@@ -537,6 +542,7 @@ describe("Field Resolvers and Nested Queries", () => {
 
   describe("Role Field Resolvers", () => {
     it("should resolve role organization", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetRoleWithOrganization($roleId: ID!) {
           role(roleId: $roleId) {
@@ -560,6 +566,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve role users", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetRoleWithUsers($roleId: ID!) {
           role(roleId: $roleId) {
@@ -587,6 +594,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve role permissions", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetRoleWithPermissions($roleId: ID!) {
           role(roleId: $roleId) {
@@ -630,6 +638,7 @@ describe("Field Resolvers and Nested Queries", () => {
 
   describe("Resource Field Resolvers", () => {
     it("should resolve resource organization", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetResourceWithOrganization($resourceId: ID!) {
           resource(resourceId: $resourceId) {
@@ -653,6 +662,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve resource permissions", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetResourceWithPermissions($resourceId: ID!) {
           resource(resourceId: $resourceId) {
@@ -707,6 +717,7 @@ describe("Field Resolvers and Nested Queries", () => {
 
   describe("Permission Field Resolvers", () => {
     it("should resolve permission organization", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetUserPermissions($userId: ID!) {
           userPermissions(userId: $userId) {
@@ -734,6 +745,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should resolve permission resource", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query GetRolePermissions($roleId: ID!) {
           rolePermissions(roleId: $roleId) {
@@ -860,6 +872,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should handle circular references in nested queries", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query CircularQuery($userId: ID!) {
           user(userId: $userId) {
@@ -975,6 +988,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should handle field aliases correctly", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         query AliasedQuery($userId: ID!) {
           primaryUser: user(userId: $userId) {
@@ -1019,6 +1033,7 @@ describe("Field Resolvers and Nested Queries", () => {
     });
 
     it("should handle fragments correctly", async () => {
+      const acmeClient = getAcmeClient();
       const query = gql`
         fragment UserBasics on User {
           id
