@@ -4,6 +4,7 @@ import { testLogger } from "@codespin/permiso-test-utils";
 export function getTestConfig(): PermisoConfig {
   return {
     endpoint: "http://localhost:5003",
+    apiKey: "test-token", // Bearer token for authentication
     // No orgId = ROOT context for cross-org operations
     timeout: 30000,
     logger: testLogger,

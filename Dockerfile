@@ -15,7 +15,7 @@ COPY node/packages/permiso-db/package*.json ./node/packages/permiso-db/
 COPY node/packages/permiso-server/package*.json ./node/packages/permiso-server/
 
 # Copy build scripts
-COPY build.sh clean.sh ./
+COPY build.sh clean.sh format-all.sh ./
 
 # Copy source code
 COPY tsconfig.base.json ./
@@ -24,7 +24,7 @@ COPY node ./node
 COPY database ./database
 
 # Install dependencies and build
-RUN chmod +x build.sh clean.sh && \
+RUN chmod +x build.sh clean.sh format-all.sh && \
     ./build.sh --install
 
 # Runtime stage - Ubuntu minimal

@@ -69,9 +69,9 @@ export class TestServer {
         UNRESTRICTED_DB_USER_PASSWORD:
           process.env.UNRESTRICTED_DB_USER_PASSWORD ||
           "changeme_admin_password",
-        // Include API key settings if present
-        PERMISO_API_KEY: process.env.PERMISO_API_KEY || "",
-        PERMISO_API_KEY_ENABLED: process.env.PERMISO_API_KEY_ENABLED || "false",
+        // Include API key settings - enabled by default for tests
+        PERMISO_API_KEY: process.env.PERMISO_API_KEY || "test-token",
+        PERMISO_API_KEY_ENABLED: process.env.PERMISO_API_KEY_ENABLED || "true",
       };
 
       // Start the server directly without shell script

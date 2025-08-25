@@ -25,7 +25,9 @@ export async function setupTests() {
   // Initialize ROOT client for organization management
   // No org ID header = unrestricted database access for ROOT operations
   rootClient = new GraphQLClient("http://localhost:5002/graphql", {
-    headers: {},
+    headers: {
+      authorization: "Bearer test-token",
+    },
     logger: testLogger,
   });
 
@@ -39,6 +41,7 @@ export async function setupTests() {
 export function createOrgClient(orgId: string): GraphQLClient {
   return new GraphQLClient("http://localhost:5002/graphql", {
     headers: {
+      authorization: "Bearer test-token",
       "x-org-id": orgId,
     },
     logger: testLogger,

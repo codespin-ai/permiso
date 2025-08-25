@@ -176,6 +176,10 @@ docker run -d --rm \
     -e PERMISO_DB_NAME=$TEST_DB_NAME \
     -e PERMISO_DB_USER=postgres \
     -e PERMISO_DB_PASSWORD=postgres \
+    -e UNRESTRICTED_DB_USER=unrestricted_db_user \
+    -e UNRESTRICTED_DB_USER_PASSWORD=changeme_admin_password \
+    -e RLS_DB_USER=rls_db_user \
+    -e RLS_DB_USER_PASSWORD=changeme_rls_password \
     -e PERMISO_AUTO_MIGRATE=true \
     $IMAGE_TO_TEST >/dev/null 2>&1
 
