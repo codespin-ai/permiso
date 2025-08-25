@@ -8,13 +8,13 @@ Permiso uses environment variables for configuration. All variables are optional
 
 ### Database Configuration
 
-| Variable              | Description       | Default     |
-| --------------------- | ----------------- | ----------- |
-| `PERMISO_DB_HOST`     | PostgreSQL host   | `localhost` |
-| `PERMISO_DB_PORT`     | PostgreSQL port   | `5432`      |
-| `PERMISO_DB_NAME`     | Database name     | `permiso`   |
-| `PERMISO_DB_USER`     | Database user     | `postgres`  |
-| `PERMISO_DB_PASSWORD` | Database password | `postgres`  |
+| Variable                 | Description                            | Default     |
+| ------------------------ | -------------------------------------- | ----------- |
+| `PERMISO_DB_HOST`        | PostgreSQL host                        | `localhost` |
+| `PERMISO_DB_PORT`        | PostgreSQL port                        | `5432`      |
+| `PERMISO_DB_NAME`        | Database name                          | `permiso`   |
+| `MIGRATION_DB_USER`      | Database superuser for migrations only | `postgres`  |
+| `MIGRATION_DB_PASSWORD`  | Password for migration user            | `postgres`  |
 
 ### Server Configuration
 
@@ -36,7 +36,6 @@ Permiso uses environment variables for configuration. All variables are optional
 
 | Variable                        | Description                             | Default                |
 | ------------------------------- | --------------------------------------- | ---------------------- |
-| `PERMISO_ROOT_ORG_ID`           | Organization ID that bypasses RLS       | `$ROOT`                |
 | `RLS_DB_USER`                   | Database user for RLS-filtered access   | `rls_db_user`          |
 | `RLS_DB_USER_PASSWORD`          | Password for RLS database user          | (required)             |
 | `UNRESTRICTED_DB_USER`          | Database user for unrestricted access   | `unrestricted_db_user` |

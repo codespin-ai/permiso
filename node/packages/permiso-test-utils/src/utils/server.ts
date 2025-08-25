@@ -60,9 +60,7 @@ export class TestServer {
         PERMISO_DB_HOST: process.env.PERMISO_DB_HOST || "localhost",
         PERMISO_DB_PORT: process.env.PERMISO_DB_PORT || "5432",
         PERMISO_DB_NAME: this.dbName, // Use test database
-        PERMISO_DB_USER: process.env.PERMISO_DB_USER || "postgres",
-        PERMISO_DB_PASSWORD: process.env.PERMISO_DB_PASSWORD || "postgres",
-        // RLS database users - required for RLS operations
+        // RLS database users - REQUIRED for all operations
         RLS_DB_USER: process.env.RLS_DB_USER || "rls_db_user",
         RLS_DB_USER_PASSWORD:
           process.env.RLS_DB_USER_PASSWORD || "changeme_rls_password",
@@ -84,7 +82,7 @@ export class TestServer {
 
       this.process = spawn("node", [serverPath], {
         env,
-        stdio: ["ignore", "pipe", "inherit"], // Show stderr output directly
+        stdio: ["ignore", "pipe", "pipe"], // Capture both stdout and stderr
         cwd: new URL("../../../permiso-server/", import.meta.url).pathname,
       });
 
@@ -92,7 +90,8 @@ export class TestServer {
 
       this.process.stdout?.on("data", (data) => {
         const output = data.toString();
-        this.logger.debug("Server output:", output.trim());
+        // Always show server output during tests for debugging
+        console.log("[SERVER]", output.trim());
 
         // Check if server is ready
         if (
@@ -104,13 +103,21 @@ export class TestServer {
         }
       });
 
+      // Capture stderr for error output
+      this.process.stderr?.on("data", (data) => {
+        const output = data.toString();
+        console.error("[SERVER ERROR]", output.trim());
+      });
+
       this.process.on("error", (error) => {
+        console.error("[SERVER PROCESS ERROR]", error);
         this.logger.error("Failed to start server:", error);
         reject(error);
       });
 
       this.process.on("exit", (code) => {
         if (!serverStarted && code !== 0) {
+          console.error(`[SERVER EXIT] Server exited with code ${code}`);
           reject(new Error(`Server exited with code ${code}`));
         }
       });

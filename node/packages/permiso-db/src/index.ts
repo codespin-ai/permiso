@@ -2,6 +2,7 @@
 import pgPromise from "pg-promise";
 import { RlsDatabaseWrapper } from "./rls-wrapper.js";
 export * as sql from "./sql.js";
+export { createLazyDb } from "./lazy-db.js";
 
 const pgp = pgPromise();
 
@@ -16,15 +17,12 @@ export interface Database {
   any: <T = any>(query: string, values?: any) => Promise<T[]>;
   result: (query: string, values?: any) => Promise<pgPromise.IResultExt>;
   tx: <T>(callback: (t: Database) => Promise<T>) => Promise<T>;
+  
+  // Optional method for upgrading to ROOT access
+  // Only available on RLS databases, not on already-unrestricted databases
+  upgradeToRoot?: (reason?: string) => Database;
 }
 
-export interface DatabaseConfig {
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  password: string;
-}
 
 // Single shared connection pool for all database connections
 // This prevents connection pool exhaustion by ensuring only one pool exists
@@ -36,6 +34,7 @@ function getConnectionKey(user: string): string {
   const database = process.env.PERMISO_DB_NAME || "permiso";
   return `${host}:${port}:${database}:${user}`;
 }
+
 
 function getOrCreateConnection(
   user: string,
@@ -58,24 +57,20 @@ function getOrCreateConnection(
       connectionTimeoutMillis: 2000,
     };
 
+    console.log(`[DB POOL] Creating new connection pool for user: ${user}, key: ${key}`);
     connectionPools.set(key, pgp(config));
+  } else {
+    console.log(`[DB POOL] Reusing existing connection pool for user: ${user}, key: ${key}`);
   }
 
   return connectionPools.get(key)!;
 }
 
-// Get the ROOT organization ID from environment or use default
-const ROOT_ORG_ID = process.env.PERMISO_ROOT_ORG_ID || "$ROOT";
 
 // Create RLS-enabled database connection
 export function createRlsDb(orgId: string): Database {
   if (!orgId) {
     throw new Error("Organization ID is required for RLS database");
-  }
-
-  // Special case: ROOT organization bypasses RLS
-  if (orgId === ROOT_ORG_ID) {
-    return createUnrestrictedDb();
   }
 
   const user = process.env.RLS_DB_USER || "rls_db_user";
@@ -103,29 +98,4 @@ export function createUnrestrictedDb(): Database {
   return getOrCreateConnection(user, password) as Database;
 }
 
-// Legacy functions for backwards compatibility
-export function getDb(): Database {
-  // DEPRECATED: getDb() uses legacy connection. Use createRlsDb() or createUnrestrictedDb() instead.
-  const user = process.env.PERMISO_DB_USER || "postgres";
-  const password = process.env.PERMISO_DB_PASSWORD || "postgres";
-  return getOrCreateConnection(user, password) as Database;
-}
-
-export function createDatabaseConnection(config: DatabaseConfig): Database {
-  // Use the shared connection pool to prevent exhaustion
-  const key = `${config.host}:${config.port}:${config.database}:${config.user}`;
-
-  if (!connectionPools.has(key)) {
-    connectionPools.set(
-      key,
-      pgp({
-        ...config,
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
-      }),
-    );
-  }
-
-  return connectionPools.get(key)! as Database;
-}
+// Legacy functions removed - use createRlsDb() or createUnrestrictedDb() instead

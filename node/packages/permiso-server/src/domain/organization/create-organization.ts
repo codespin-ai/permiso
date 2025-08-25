@@ -13,7 +13,12 @@ export async function createOrganization(
   input: CreateOrganizationInput,
 ): Promise<Result<Organization>> {
   try {
-    const org = await ctx.db.tx(async (t) => {
+    // Create ROOT context for organization creation
+    // This ensures proper transaction isolation
+    const rootDb = ctx.db.upgradeToRoot?.("Create new organization") || ctx.db;
+    const rootCtx = { ...ctx, db: rootDb };
+
+    const org = await rootDb.tx(async (t) => {
       const params = {
         id: input.id,
         name: input.name,

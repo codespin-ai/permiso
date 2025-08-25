@@ -23,6 +23,9 @@ export async function getOrganizations(
   pagination?: PaginationInput,
 ): Promise<Result<OrganizationWithProperties[]>> {
   try {
+    // Use ROOT access for listing organizations
+    const rootDb = ctx.db.upgradeToRoot?.("List organizations") || ctx.db;
+
     let query: string;
     const params: Record<string, any> = {};
 
@@ -81,12 +84,14 @@ export async function getOrganizations(
       params.offset = pagination.offset;
     }
 
-    const rows = await ctx.db.manyOrNone<OrganizationDbRow>(query, params);
+    const rows = await rootDb.manyOrNone<OrganizationDbRow>(query, params);
     const orgs = rows.map(mapOrganizationFromDb);
 
+    // Use rootDb context for getting properties
+    const rootCtx = { ...ctx, db: rootDb };
     const result = await Promise.all(
       orgs.map(async (org) => {
-        const propsResult = await getOrganizationProperties(ctx, org.id, false);
+        const propsResult = await getOrganizationProperties(rootCtx, org.id, false);
         if (!propsResult.success) {
           throw propsResult.error;
         }

@@ -14,18 +14,26 @@ export async function getUsersByIdentity(
   identityProviderUserId: string,
 ): Promise<Result<UserWithProperties[]>> {
   try {
-    const rows = await ctx.db.manyOrNone<UserDbRow>(
+    // This operation needs to search across all organizations
+    const rootDb = ctx.db.upgradeToRoot?.("Search users by identity across organizations");
+    if (!rootDb) {
+      throw new Error("Cross-organization user search requires administrative access");
+    }
+
+    const rows = await rootDb.manyOrNone<UserDbRow>(
       `SELECT * FROM "user" WHERE identity_provider = $(identityProvider) AND identity_provider_user_id = $(identityProviderUserId)`,
       { identityProvider, identityProviderUserId },
     );
 
     const users = rows.map(mapUserFromDb);
 
+    // Use rootDb context for getting properties and roles
+    const rootCtx = { ...ctx, db: rootDb };
     const result = await Promise.all(
       users.map(async (user) => {
         const [propertiesResult, roleIds] = await Promise.all([
-          getUserProperties(ctx, user.id, false),
-          getUserRoles(ctx, user.id),
+          getUserProperties(rootCtx, user.id, false),
+          getUserRoles(rootCtx, user.id),
         ]);
 
         if (!propertiesResult.success) {
