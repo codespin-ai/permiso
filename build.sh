@@ -3,9 +3,10 @@
 # build.sh – monorepo-aware build helper for Permiso
 #
 # Flags:
-#   --install   Force npm install in every package even if node_modules exists
-#   --migrate   Run DB migrations after build for all databases
-#   --seed      Run DB seeders after build for all databases
+#   --install    Force npm install in every package even if node_modules exists
+#   --migrate    Run DB migrations after build for all databases
+#   --seed       Run DB seeders after build for all databases
+#   --no-format  Skip prettier formatting (reduces output for debugging)
 # -------------------------------------------------------------------
 set -euo pipefail
 
@@ -70,7 +71,12 @@ if [[ "$*" == *--seed* ]]; then
   npm run seed:all
 fi
 
-./format-all.sh
+# Skip formatting if --no-format flag is provided
+if [[ "$*" != *--no-format* ]]; then
+  ./format-all.sh
+else
+  echo "Skipping formatting (--no-format flag provided)"
+fi
 
 echo "=== Build completed successfully ==="
 echo "To start the application, run: ./start.sh"

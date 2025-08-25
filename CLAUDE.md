@@ -68,10 +68,11 @@ When the user asks you to commit and push:
 
 ```bash
 # Build entire project (from root)
-./build.sh              # Standard build
+./build.sh              # Standard build with formatting
 ./build.sh --install    # Force npm install in all packages
 ./build.sh --migrate    # Build + run DB migrations
 ./build.sh --seed       # Build + run DB seeds
+./build.sh --no-format  # Skip prettier formatting (faster builds)
 
 # Clean build artifacts
 ./clean.sh
@@ -393,6 +394,16 @@ This approach:
 - Makes debugging easier
 - Prevents breaking other tests while fixing one
 - Saves time during development
+
+### Optimizing Build Speed During Debugging
+
+**TIP**: Use `./build.sh --no-format` during debugging sessions to skip prettier formatting. This:
+
+- Reduces build time significantly
+- Minimizes output that gets sent to the AI model (reducing token count)
+- Makes the debugging cycle faster
+
+Only use the standard `./build.sh` (with formatting) for final builds before committing.
 
 ### Important Build & Lint Workflow
 
