@@ -362,12 +362,23 @@ const params = stringUtils.toSnakeCase({
 ## Key Documentation References
 
 - **Project Overview**: See [README.md](../README.md)
-- **Architecture**: See [docs/architecture.md](docs/architecture.md) for RBAC concepts and data model
+- **Architecture**: See [docs/architecture.md](docs/architecture.md) for RLS implementation and system design
 - **API Reference**: See [docs/api.md](docs/api.md) for GraphQL schema and examples
-- **Database**: See [docs/database.md](docs/database.md) for multi-database setup
+- **Database**: See [docs/database.md](docs/database.md) for database users and multi-database setup
 - **Configuration**: See [docs/configuration.md](docs/configuration.md) for environment variables
 - **Deployment**: See [docs/deployment.md](docs/deployment.md) for Docker and production deployment
 - **Coding Standards**: See [CODING-STANDARDS.md](../CODING-STANDARDS.md) for development patterns
+
+## Documentation Guidelines
+
+### When Writing Documentation
+
+1. **Be concise and technical** - Documentation is for engineers, avoid promotional language
+2. **No superlatives** - Don't use words like "faster", "very secure", "powerful", etc.
+3. **Focus on facts** - State what the system does, not how well it does it
+4. **Use active voice** - "The system uses RLS" not "RLS is used by the system"
+5. **Include code examples** - Show, don't just tell
+6. **Keep README.md as single source of truth** - Most users only read README.md, ensure it covers essentials
 
 ## Testing Guidelines
 

@@ -14,8 +14,9 @@ export default {
     host: process.env.PERMISO_DB_HOST || "localhost",
     port: parseInt(process.env.PERMISO_DB_PORT || "5432"),
     database: process.env.PERMISO_DB_NAME || "permiso",
-    user: process.env.PERMISO_DB_USER || "postgres",
-    password: process.env.PERMISO_DB_PASSWORD || "postgres",
+    // Migrations need admin/superuser access to create users and grant permissions
+    user: process.env.MIGRATION_DB_USER || "postgres",
+    password: process.env.MIGRATION_DB_PASSWORD || "postgres",
   },
   migrations: {
     directory: join(__dirname, "migrations"),

@@ -411,6 +411,8 @@ describe("Batch Queries", () => {
         }
       `;
 
+      // Switch to org-1 context for creating users
+      switchToOrgContext("org-1");
       await client.mutate(createMutation, {
         input: {
           id: "user-google",

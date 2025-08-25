@@ -153,7 +153,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await rootClient.mutate(mutation, {
         input: {
           id: "org-with-props",
           name: "Organization with JSON props",

@@ -24,8 +24,9 @@ export function createDbConfig(dbName, overrides = {}) {
       host: process.env[`${dbNameUpper}_DB_HOST`] || "localhost",
       port: parseInt(process.env[`${dbNameUpper}_DB_PORT`] || "5432"),
       database: process.env[`${dbNameUpper}_DB_NAME`] || dbName.toLowerCase(),
-      user: process.env[`${dbNameUpper}_DB_USER`] || "postgres",
-      password: process.env[`${dbNameUpper}_DB_PASSWORD`] || "postgres",
+      // Migrations need admin/superuser access to create users and grant permissions
+      user: process.env.MIGRATION_DB_USER || "postgres",
+      password: process.env.MIGRATION_DB_PASSWORD || "postgres",
     },
     migrations: {
       ...baseConfig.migrations,

@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import type pgPromise from "pg-promise";
 import type { Database } from "./index.js";
+import { createUnrestrictedDb } from "./index.js";
+import { createLogger } from "@codespin/permiso-logger";
+
+const logger = createLogger("permiso-db:rls");
 
 /**
  * RLS Database Wrapper
@@ -11,6 +15,8 @@ import type { Database } from "./index.js";
  * It uses transactions with SET LOCAL to ensure the context is properly scoped.
  */
 export class RlsDatabaseWrapper implements Database {
+  private upgradedConnection?: Database; // Cache the upgraded connection
+
   constructor(
     private db: pgPromise.IDatabase<any>,
     private orgId: string,
@@ -18,7 +24,34 @@ export class RlsDatabaseWrapper implements Database {
     if (!orgId) {
       throw new Error("Organization ID is required for RLS database");
     }
+    logger.debug(`Created RLS wrapper for org: ${orgId}`);
   }
+
+  /**
+   * Upgrade to unrestricted ROOT access for cross-organization operations.
+   * This should only be used by organization management APIs.
+   * 
+   * @param reason Optional reason for audit logging
+   * @returns Unrestricted database connection
+   */
+  upgradeToRoot(reason?: string): Database {
+    // Return cached connection if already upgraded
+    if (this.upgradedConnection) {
+      return this.upgradedConnection;
+    }
+
+    // Log the escalation for audit (only on first upgrade)
+    logger.info("Database access upgraded to ROOT", {
+      orgId: this.orgId,
+      reason,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Create and cache the unrestricted database connection
+    this.upgradedConnection = createUnrestrictedDb();
+    return this.upgradedConnection;
+  }
+
 
   /**
    * Wraps a database operation with organization context

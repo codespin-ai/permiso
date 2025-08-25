@@ -15,7 +15,10 @@ export async function getOrganization(
   id: string,
 ): Promise<Result<OrganizationWithProperties | null>> {
   try {
-    const orgRow = await ctx.db.oneOrNone<OrganizationDbRow>(
+    // Use ROOT access for cross-organization queries
+    const rootDb = ctx.db.upgradeToRoot?.("Get organization by ID") || ctx.db;
+
+    const orgRow = await rootDb.oneOrNone<OrganizationDbRow>(
       `SELECT * FROM organization WHERE id = $(id)`,
       { id },
     );
@@ -24,7 +27,9 @@ export async function getOrganization(
       return { success: true, data: null };
     }
 
-    const propsResult = await getOrganizationProperties(ctx, id, false);
+    // Use rootDb for getting properties too
+    const rootCtx = { ...ctx, db: rootDb };
+    const propsResult = await getOrganizationProperties(rootCtx, id, false);
     if (!propsResult.success) {
       throw propsResult.error;
     }

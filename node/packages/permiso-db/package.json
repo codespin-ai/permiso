@@ -12,6 +12,7 @@
     "lint:fix": "eslint src --fix"
   },
   "dependencies": {
+    "@codespin/permiso-logger": "file:../permiso-logger",
     "pg-promise": "^11.15.0"
   },
   "devDependencies": {

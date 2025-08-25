@@ -14,6 +14,8 @@ export async function updateOrganization(
   input: UpdateOrganizationInput,
 ): Promise<Result<Organization>> {
   try {
+    // Use ROOT access for organization updates
+    const rootDb = ctx.db.upgradeToRoot?.("Update organization") || ctx.db;
     const updateParams: Record<string, any> = {};
 
     if (input.name !== undefined) {
@@ -31,7 +33,7 @@ export async function updateOrganization(
     `;
 
     const params = { ...updateParams, id };
-    const row = await ctx.db.one<OrganizationDbRow>(query, params);
+    const row = await rootDb.one<OrganizationDbRow>(query, params);
     return { success: true, data: mapOrganizationFromDb(row) };
   } catch (error) {
     logger.error("Failed to update organization", { error, id, input });

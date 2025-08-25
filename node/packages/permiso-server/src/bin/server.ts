@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@as-integrations/express5";
-import {
-  createRlsDb,
-  createUnrestrictedDb,
-  createDatabaseConnection,
-} from "@codespin/permiso-db";
+import { createLazyDb } from "@codespin/permiso-db";
 import { createLogger } from "@codespin/permiso-logger";
 import express, { Request, Response } from "express";
 import cors from "cors";
@@ -16,20 +12,10 @@ import { getApiKeyConfig, validateApiKey } from "../auth/api-key.js";
 
 const logger = createLogger("GraphQLServer");
 
-// Get the ROOT organization ID from environment or use default
-const ROOT_ORG_ID = process.env.PERMISO_ROOT_ORG_ID || "$ROOT";
 
 async function startServer() {
-  // Initialize health check database (uses legacy connection for system operations)
-  const dbConfig = {
-    host: process.env.PERMISO_DB_HOST || "localhost",
-    port: parseInt(process.env.PERMISO_DB_PORT || "5432"),
-    database: process.env.PERMISO_DB_NAME || "permiso",
-    user: process.env.PERMISO_DB_USER || "postgres",
-    password: process.env.PERMISO_DB_PASSWORD || "postgres",
-  };
-
-  const healthCheckDb = createDatabaseConnection(dbConfig);
+  // Initialize health check database
+  const healthCheckDb = createLazyDb();
 
   // Get API key configuration
   const apiKeyConfig = getApiKeyConfig();
@@ -94,55 +80,12 @@ async function startServer() {
           });
         }
 
-        // Extract organization ID from header
+        // Extract organization ID from header (optional)
         const orgId = req.headers["x-org-id"] as string | undefined;
-        if (!orgId) {
-          throw new GraphQLError("Missing x-org-id header", {
-            extensions: {
-              code: "BAD_USER_INPUT",
-              http: { status: 400 },
-            },
-          });
-        }
-
-        // Create RLS-aware database connection
-        // Special case: ROOT organization gets unrestricted access
-        let db;
-        try {
-          if (orgId === ROOT_ORG_ID) {
-            // For ROOT requests, try unrestricted first, fall back to legacy for dev/test
-            try {
-              db = createUnrestrictedDb();
-            } catch (rlsError: any) {
-              // If RLS is not configured, fall back to legacy for ROOT requests only
-              if (rlsError.message?.includes("UNRESTRICTED_DB_USER_PASSWORD")) {
-                logger.warn(
-                  `RLS not configured, using legacy database connection for ${ROOT_ORG_ID}`,
-                );
-                db = createDatabaseConnection({
-                  host: process.env.PERMISO_DB_HOST || "localhost",
-                  port: parseInt(process.env.PERMISO_DB_PORT || "5432"),
-                  database: process.env.PERMISO_DB_NAME || "permiso",
-                  user: process.env.PERMISO_DB_USER || "postgres",
-                  password: process.env.PERMISO_DB_PASSWORD || "postgres",
-                });
-              } else {
-                throw rlsError;
-              }
-            }
-          } else {
-            // Non-ROOT requests always use RLS (no fallback for security)
-            db = createRlsDb(orgId);
-          }
-        } catch (error) {
-          logger.error("Failed to create database connection:", error);
-          throw new GraphQLError("Database connection failed", {
-            extensions: {
-              code: "INTERNAL_SERVER_ERROR",
-              http: { status: 500 },
-            },
-          });
-        }
+        
+        // Create lazy database connection
+        // It will only connect when actually used
+        const db = createLazyDb(orgId);
 
         return {
           db,

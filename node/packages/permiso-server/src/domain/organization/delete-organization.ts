@@ -9,7 +9,10 @@ export async function deleteOrganization(
   id: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(`DELETE FROM organization WHERE id = $(id)`, { id });
+    // Use ROOT access for organization deletion
+    const rootDb = ctx.db.upgradeToRoot?.("Delete organization") || ctx.db;
+
+    await rootDb.none(`DELETE FROM organization WHERE id = $(id)`, { id });
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to delete organization", { error, id });

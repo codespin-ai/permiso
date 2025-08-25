@@ -25,7 +25,7 @@ describe("Users API", () => {
   beforeEach(async () => {
     // Create a test organization for each test
     testOrgId = generateTestId("org");
-    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const rootConfig = getTestConfig(); // ROOT context to create org
     const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",
@@ -218,7 +218,7 @@ describe("Users API", () => {
 
       // Create another org and user with same identity
       const org2Id = generateTestId("org2");
-      const rootConfig = getTestConfig(); // Use $ROOT to create org
+      const rootConfig = getTestConfig(); // ROOT context to create org
       await createOrganization(rootConfig, {
         id: org2Id,
         name: "Second Org",

@@ -25,13 +25,13 @@ describe("API Key Authentication", () => {
     authClient = new GraphQLClient("http://localhost:5003/graphql", {
       headers: {
         "x-api-key": "test-secret-key-123",
-        "x-org-id": "$ROOT",
+        // No x-org-id header = ROOT context
       },
     });
 
     unauthClient = new GraphQLClient("http://localhost:5003/graphql", {
       headers: {
-        "x-org-id": "$ROOT",
+        // No x-org-id header = ROOT context
       },
     });
   });

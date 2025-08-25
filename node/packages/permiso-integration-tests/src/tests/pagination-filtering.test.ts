@@ -204,7 +204,7 @@ describe("Pagination and Filtering", () => {
           }
         `;
 
-        await client.mutate(mutation, {
+        await rootClient.mutate(mutation, {
           input: {
             id: "org-free-small",
             name: "Free Small Org",
@@ -216,7 +216,7 @@ describe("Pagination and Filtering", () => {
           },
         });
 
-        await client.mutate(mutation, {
+        await rootClient.mutate(mutation, {
           input: {
             id: "org-free-large",
             name: "Free Large Org",
@@ -228,7 +228,7 @@ describe("Pagination and Filtering", () => {
           },
         });
 
-        await client.mutate(mutation, {
+        await rootClient.mutate(mutation, {
           input: {
             id: "org-premium-small",
             name: "Premium Small Org",
