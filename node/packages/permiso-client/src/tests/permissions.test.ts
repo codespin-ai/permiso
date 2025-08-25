@@ -27,7 +27,7 @@ describe("Permissions API", () => {
   beforeEach(async () => {
     // Create test organization
     testOrgId = generateTestId("org");
-    const rootConfig = getTestConfig(); // Use $ROOT to create org
+    const rootConfig = getTestConfig(); // ROOT context to create org
     const orgResult = await createOrganization(rootConfig, {
       id: testOrgId,
       name: "Test Organization",

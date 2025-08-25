@@ -1,248 +1,196 @@
 # Permiso
 
-A comprehensive Role-Based Access Control (RBAC) system with GraphQL API, built with TypeScript.
+Multi-tenant RBAC system with Row Level Security (RLS) and GraphQL API.
 
-## Features
+## Architecture
 
-- 🏢 **Multi-tenant Organizations** - Isolated authorization contexts
-- 👥 **Users & Roles** - Flexible user management with role assignments
-- 🔐 **Fine-grained Permissions** - Resource-based access control with path-like IDs
-- 🏷️ **Properties & Filtering** - Custom metadata with query capabilities
-- 🚀 **GraphQL API** - Modern, type-safe API with full CRUD operations
-- 📦 **TypeScript Client** - Official client library with type-safe functions, no GraphQL knowledge required
-- 📊 **Effective Permissions** - Combined user and role permission calculation
-- 🐳 **Docker Ready** - Official Docker images for easy deployment
+Permiso implements multi-tenant isolation using PostgreSQL Row Level Security. Each organization's data is isolated at the database level, with two database users:
+- `rls_db_user`: For organization-scoped operations (automatically filtered by RLS policies)
+- `unrestricted_db_user`: For cross-organization operations (organization management, cross-org queries)
 
 ## Quick Start
 
-### Option 1: Docker (Recommended)
-
-The fastest way to get started is using our official Docker image:
-
+### Docker
 ```bash
-# Pull and run with auto-migration
 docker run -p 5001:5001 \
   -e PERMISO_DB_HOST=host.docker.internal \
-  -e PERMISO_DB_USER=postgres \
-  -e PERMISO_DB_PASSWORD=postgres \
   -e PERMISO_DB_NAME=permiso \
+  -e RLS_DB_USER=rls_db_user \
+  -e RLS_DB_USER_PASSWORD=your_rls_password \
+  -e UNRESTRICTED_DB_USER=unrestricted_db_user \
+  -e UNRESTRICTED_DB_USER_PASSWORD=your_admin_password \
   -e PERMISO_AUTO_MIGRATE=true \
   ghcr.io/codespin-ai/permiso:latest
 ```
 
-The GraphQL API will be available at `http://localhost:5001/graphql`.
-
-See [Deployment Guide](docs/deployment.md) for production configuration and Docker Compose examples.
-
-### Option 2: Local Installation
-
-#### Prerequisites
-
-- Node.js 22+
-- PostgreSQL 12+
-- npm or yarn
-
-#### Installation
-
+### Local Development
 ```bash
-# Clone the repository
+# Clone and build
 git clone https://github.com/codespin-ai/permiso.git
 cd permiso
-
-# Install dependencies
-npm install
-
-# Build all packages
 ./build.sh
-```
 
-### Database Setup
+# Start PostgreSQL (from devenv directory)
+cd devenv && ./run.sh up && cd ..
 
-To run the development environment, use the following script from the `devenv` directory:
-
-```bash
-./run.sh up
-```
-
-This will start a PostgreSQL container.
-
-You can then set the following environment variables to connect to the database:
-
-```bash
-# Set environment variables
+# Configure database users
+export RLS_DB_USER=rls_db_user
+export RLS_DB_USER_PASSWORD=changeme_rls
+export UNRESTRICTED_DB_USER=unrestricted_db_user  
+export UNRESTRICTED_DB_USER_PASSWORD=changeme_admin
 export PERMISO_DB_HOST=localhost
-export PERMISO_DB_PORT=5432
 export PERMISO_DB_NAME=permiso
-export PERMISO_DB_USER=postgres
-export PERMISO_DB_PASSWORD=your_password
 
 # Run migrations
 cd node/packages/permiso-server
-npm run migrate:latest
-```
+npm run migrate:permiso:latest
 
-### Starting the Server
-
-```bash
-# Start the GraphQL server
-./start.sh
-
-# The server will be available at http://localhost:5001/graphql
+# Start server
+cd ../../.. && ./start.sh
 ```
 
 ## Core Concepts
 
-- **Organizations**: Top-level tenant isolation
-- **Users & Roles**: Flexible user management with role assignments
-- **Resources & Permissions**: Fine-grained access control with path-like resource IDs
-- **Properties**: Custom metadata with JSON support
+### Data Model
+- **Organizations**: Top-level tenants (no RLS, globally accessible)
+- **Users**: Identity provider integration (RLS-protected)
+- **Roles**: Named permission sets (RLS-protected)
+- **Resources**: Path-like identifiers supporting wildcards (RLS-protected)
+- **Permissions**: User/role to resource+action mappings (RLS-protected)
+- **Properties**: JSON metadata on all entities
 
-See [Architecture Documentation](docs/architecture.md) for detailed information.
+### API Context
+- **With `x-org-id` header**: Operations scoped to that organization (RLS enforced)
+- **Without `x-org-id` header**: ROOT context for cross-org operations
 
-## API Access
+## API Usage
 
-### TypeScript Client (Recommended)
-
-For TypeScript/JavaScript applications, use our official client library for the best developer experience:
-
-```bash
-npm install @codespin/permiso-client
-```
-
-**Note**: The client library is published to npm and can be used without building Permiso from source. You just need a running Permiso server (either via Docker or local installation).
-
+### TypeScript Client
 ```typescript
-import {
-  createOrganization,
-  createUser,
-  hasPermission,
-} from "@codespin/permiso-client";
+import { createUser, grantUserPermission } from "@codespin/permiso-client";
 
-const config = {
+const config = { 
   endpoint: "http://localhost:5001",
-  apiKey: "your-api-key", // optional
+  orgId: "acme-corp"  // Optional - omit for ROOT operations
 };
 
-// Create an organization
-const org = await createOrganization(config, {
-  id: "acme-corp",
-  name: "ACME Corporation",
-});
-
-// Check permissions
-const canRead = await hasPermission(config, {
-  orgId: "acme-corp",
-  userId: "john-doe",
-  resourceId: "/api/users/*",
-  action: "read",
+await createUser(config, {
+  id: "user-123",
+  identityProvider: "auth0",
+  identityProviderUserId: "auth0|123"
 });
 ```
 
-See the [TypeScript Client Documentation](node/packages/permiso-client/README.md) for complete usage guide, examples, and API reference.
-
-### GraphQL API
-
-You can also use the GraphQL API directly. For complete API documentation, see [API Documentation](docs/api.md).
-
-```bash
-# Create an organization
-curl -X POST http://localhost:5001/graphql \
-  -H "Content-Type: application/json" \
-  -d "{"query": "mutation { createOrganization(input: { id: \"acme-corp\", name: \"ACME Corporation\" }) { id name } }"}"
+### GraphQL
+```graphql
+mutation {
+  createUser(input: {
+    id: "user-123"
+    identityProvider: "auth0"
+    identityProviderUserId: "auth0|123"
+  }) {
+    id
+    orgId
+  }
+}
 ```
 
 ## Development
 
+### Commands
 ```bash
-# Build all packages
-./build.sh
-
-# Run linting
-./lint-all.sh
-
-# Run tests
-npm test                                    # Run all tests (integration + client)
-
-# Run specific test suites
-npm run test:grep -- "Organizations"        # Search both integration and client tests
-npm run test:integration:grep -- "Users"    # Only integration tests
-npm run test:client:grep -- "Permissions"   # Only client tests
-
-# Clean build artifacts
-./clean.sh
+./build.sh                  # Build all packages
+./lint-all.sh              # Run ESLint
+./format-all.sh            # Format with Prettier
+npm test                   # Run all tests
+npm run test:grep -- "pattern"  # Search tests
 ```
+
+### Project Structure
+```
+/node/packages/
+  permiso-core/           # Shared types and utilities
+  permiso-db/             # Database layer with RLS wrapper
+  permiso-server/         # GraphQL server
+  permiso-client/         # TypeScript client library
+  permiso-integration-tests/  # Integration tests
+```
+
+### Key Files
+- `database/permiso/migrations/` - Database schema and RLS policies
+- `node/packages/permiso-server/src/schema.graphql` - GraphQL schema
+- `node/packages/permiso-server/src/domain/` - Business logic
+- `node/packages/permiso-db/src/rls-wrapper.ts` - RLS enforcement
 
 ## Configuration
 
-See [Configuration Documentation](docs/configuration.md) for all environment variables and configuration options.
+### Required Environment Variables
+```bash
+# Database connection
+PERMISO_DB_HOST=localhost
+PERMISO_DB_PORT=5432  
+PERMISO_DB_NAME=permiso
 
-## Deployment
+# Database users (required)
+RLS_DB_USER=rls_db_user
+RLS_DB_USER_PASSWORD=password
+UNRESTRICTED_DB_USER=unrestricted_db_user
+UNRESTRICTED_DB_USER_PASSWORD=password
 
-See [Deployment Guide](docs/deployment.md) for detailed instructions on:
+# Server
+PERMISO_SERVER_PORT=5001
 
-- Docker deployment
-- Docker Compose setup
-- Kubernetes deployment
-- Traditional server deployment
-- Production best practices
+# Optional API key authentication
+PERMISO_API_KEY=your-secret-key
+```
+
+## Database Setup
+
+### Creating Required Users
+```sql
+-- Create RLS user for org-scoped operations
+CREATE USER rls_db_user WITH PASSWORD 'changeme_rls';
+GRANT CONNECT ON DATABASE permiso TO rls_db_user;
+GRANT USAGE ON SCHEMA public TO rls_db_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO rls_db_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO rls_db_user;
+
+-- Create unrestricted user for admin operations  
+CREATE USER unrestricted_db_user WITH PASSWORD 'changeme_admin';
+GRANT CONNECT ON DATABASE permiso TO unrestricted_db_user;
+GRANT ALL PRIVILEGES ON DATABASE permiso TO unrestricted_db_user;
+
+-- Bypass RLS for unrestricted user
+ALTER USER unrestricted_db_user BYPASSRLS;
+```
+
+### Multi-Database Support
+Permiso can manage permissions for multiple databases. See [database.md](docs/database.md) for configuration.
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Search specific tests  
+npm run test:grep -- "Organizations"
+npm run test:integration:grep -- "Users"
+npm run test:client:grep -- "Permissions"
+
+# Docker testing
+./docker-test.sh
+```
 
 ## Documentation
 
-- [API Documentation](docs/api.md) - Complete GraphQL API reference with examples
-- [Architecture Overview](docs/architecture.md) - System design and architecture details
-- [Database Configuration](docs/database.md) - Multi-database setup and configuration
-- [Coding Standards](CODING-STANDARDS.md) - Development patterns and conventions
-
-## API Authentication
-
-Permiso supports optional API key authentication to secure your GraphQL endpoint. When enabled, all requests must include a valid API key in the `x-api-key` header.
-
-### Enabling API Key Authentication
-
-```bash
-# Set the API key (this automatically enables authentication)
-export PERMISO_API_KEY=your-secret-api-key
-
-# Or explicitly enable with a separate flag
-export PERMISO_API_KEY_ENABLED=true
-export PERMISO_API_KEY=your-secret-api-key
-
-# Start the server
-./start.sh
-```
-
-### Making Authenticated Requests
-
-Include the API key in the `x-api-key` header:
-
-```bash
-# Using curl
-curl -X POST http://localhost:5001/graphql \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: your-secret-api-key" \
-  -d "{"query": "{ organizations { id name } }"}"
-
-# Using Apollo Client
-const client = new ApolloClient({
-  uri: "http://localhost:5001/graphql",
-  headers: {
-    "x-api-key": "your-secret-api-key"
-  }
-});
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m "Add some amazing feature"`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [API Reference](docs/api.md) - GraphQL schema and examples
+- [Architecture](docs/architecture.md) - System design details
+- [Database](docs/database.md) - Multi-database configuration
+- [Configuration](docs/configuration.md) - All environment variables
+- [Deployment](docs/deployment.md) - Production deployment guide
+- [Coding Standards](CODING-STANDARDS.md) - Development conventions
 
 ## License
 
-MIT © Codespin
-
-## Acknowledgments
-
-Inspired by [Tankman](https://github.com/lesser-app/tankman)
+MIT
