@@ -70,6 +70,7 @@ if [[ "$*" == *--seed* ]]; then
   npm run seed:all
 fi
 
+./format-all.sh
 
 echo "=== Build completed successfully ==="
 echo "To start the application, run: ./start.sh"
