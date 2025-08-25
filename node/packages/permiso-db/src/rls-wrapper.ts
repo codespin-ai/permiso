@@ -2,6 +2,9 @@
 import type pgPromise from "pg-promise";
 import type { Database } from "./index.js";
 import { createUnrestrictedDb } from "./index.js";
+import { createLogger } from "@codespin/permiso-logger";
+
+const logger = createLogger("permiso-db:rls");
 
 /**
  * RLS Database Wrapper
@@ -21,7 +24,7 @@ export class RlsDatabaseWrapper implements Database {
     if (!orgId) {
       throw new Error("Organization ID is required for RLS database");
     }
-    console.log(`[RLS WRAPPER] Created new RLS wrapper for org: ${orgId}`);
+    logger.debug(`Created RLS wrapper for org: ${orgId}`);
   }
 
   /**
@@ -38,7 +41,7 @@ export class RlsDatabaseWrapper implements Database {
     }
 
     // Log the escalation for audit (only on first upgrade)
-    console.log("[AUDIT] Database access upgraded to ROOT", {
+    logger.info("Database access upgraded to ROOT", {
       orgId: this.orgId,
       reason,
       timestamp: new Date().toISOString(),

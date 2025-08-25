@@ -57,10 +57,9 @@ function getOrCreateConnection(
       connectionTimeoutMillis: 2000,
     };
 
-    console.log(`[DB POOL] Creating new connection pool for user: ${user}, key: ${key}`);
     connectionPools.set(key, pgp(config));
   } else {
-    console.log(`[DB POOL] Reusing existing connection pool for user: ${user}, key: ${key}`);
+    // Connection pool already exists, will be reused
   }
 
   return connectionPools.get(key)!;

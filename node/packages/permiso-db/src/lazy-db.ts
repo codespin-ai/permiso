@@ -2,6 +2,9 @@
 import type pgPromise from "pg-promise";
 import type { Database } from "./index.js";
 import { createRlsDb, createUnrestrictedDb } from "./index.js";
+import { createLogger } from "@codespin/permiso-logger";
+
+const logger = createLogger("permiso-db:lazy");
 
 /**
  * Lazy Database Wrapper
@@ -25,7 +28,7 @@ export class LazyDatabase implements Database {
 
   private ensureInitialized(): Database {
     if (!this.isInitialized) {
-      console.log(`[LAZY DB] Initializing database for org: ${this.orgId || 'ROOT'}`);
+      logger.debug(`Initializing database for org: ${this.orgId || 'ROOT'}`);
       
       if (this.orgId) {
         // Create RLS database for organization-scoped operations
@@ -83,7 +86,7 @@ export class LazyDatabase implements Database {
    * This ensures transaction boundaries are maintained.
    */
   upgradeToRoot?(reason?: string): Database {
-    console.log(`[LAZY DB] Creating ROOT context`, {
+    logger.debug(`Creating ROOT context`, {
       fromOrg: this.orgId,
       reason,
       timestamp: new Date().toISOString(),

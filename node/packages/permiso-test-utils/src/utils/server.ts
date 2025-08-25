@@ -90,8 +90,8 @@ export class TestServer {
 
       this.process.stdout?.on("data", (data) => {
         const output = data.toString();
-        // Always show server output during tests for debugging
-        console.log("[SERVER]", output.trim());
+        // Pass server output to test logger for debugging
+        this.logger.debug("[SERVER]", output.trim());
 
         // Check if server is ready
         if (
@@ -106,18 +106,17 @@ export class TestServer {
       // Capture stderr for error output
       this.process.stderr?.on("data", (data) => {
         const output = data.toString();
-        console.error("[SERVER ERROR]", output.trim());
+        this.logger.error("[SERVER ERROR]", output.trim());
       });
 
       this.process.on("error", (error) => {
-        console.error("[SERVER PROCESS ERROR]", error);
-        this.logger.error("Failed to start server:", error);
+        this.logger.error("[SERVER PROCESS ERROR]", error);
         reject(error);
       });
 
       this.process.on("exit", (code) => {
         if (!serverStarted && code !== 0) {
-          console.error(`[SERVER EXIT] Server exited with code ${code}`);
+          this.logger.error(`[SERVER EXIT] Server exited with code ${code}`);
           reject(new Error(`Server exited with code ${code}`));
         }
       });
