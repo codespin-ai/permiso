@@ -1,14 +1,10 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import {
-  testDb,
-  client,
-  rootClient,
-  switchToOrgContext,
-  createOrgClient,
-} from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Roles", () => {
+  let testOrgClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
@@ -28,8 +24,8 @@ describe("Roles", () => {
       },
     });
 
-    // Switch to organization context for RLS operations
-    switchToOrgContext("test-org");
+    // Create organization-specific client
+    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createRole", () => {
@@ -50,7 +46,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           id: "admin",
           name: "Administrator",
@@ -145,14 +141,14 @@ describe("Roles", () => {
       `;
 
       // Create multiple roles
-      await client.mutate(createRoleMutation, {
+      await testOrgClient.mutate(createRoleMutation, {
         input: {
           id: "admin",
           name: "Administrator",
         },
       });
 
-      await client.mutate(createRoleMutation, {
+      await testOrgClient.mutate(createRoleMutation, {
         input: {
           id: "user",
           name: "User",
@@ -173,7 +169,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.query(query, {});
+      const result = await testOrgClient.query(query, {});
 
       expect(result.data?.roles?.nodes).to.have.lengthOf(2);
       const roleIds = result.data?.roles?.nodes.map((r: any) => r.id);
@@ -192,7 +188,7 @@ describe("Roles", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "admin",
           name: "Administrator",
@@ -220,7 +216,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         roleId: "admin",
       });
 
@@ -244,7 +240,7 @@ describe("Roles", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "admin",
           name: "Administrator",
@@ -267,7 +263,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.mutate(updateMutation, {
+      const result = await testOrgClient.mutate(updateMutation, {
         roleId: "admin",
         input: {
           name: "Super Administrator",
@@ -301,7 +297,7 @@ describe("Roles", () => {
         }
       `;
 
-      const setPropResult = await client.mutate(setPropMutation, {
+      const setPropResult = await testOrgClient.mutate(setPropMutation, {
         roleId: "admin",
         name: "level",
         value: "maximum",
@@ -325,7 +321,7 @@ describe("Roles", () => {
         }
       `;
 
-      const roleResult = await client.query(query, {
+      const roleResult = await testOrgClient.query(query, {
         roleId: "admin",
       });
       expect(roleResult.data?.role?.properties).to.have.lengthOf(1);
@@ -349,7 +345,7 @@ describe("Roles", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "admin",
           name: "Administrator",
@@ -363,7 +359,7 @@ describe("Roles", () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, {
+      const result = await testOrgClient.mutate(deleteMutation, {
         roleId: "admin",
       });
 
@@ -378,7 +374,7 @@ describe("Roles", () => {
         }
       `;
 
-      const queryResult = await client.query(query, {
+      const queryResult = await testOrgClient.query(query, {
         roleId: "admin",
       });
 

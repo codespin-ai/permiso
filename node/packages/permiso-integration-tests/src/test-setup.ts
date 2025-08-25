@@ -8,7 +8,6 @@ import { GraphQLClient } from "./utils/graphql-client.js";
 export let testDb: TestDatabase;
 export let server: TestServer;
 export let rootClient: GraphQLClient; // For organization management (ROOT operations)
-export let client: GraphQLClient; // For backward compatibility - will point to orgClient
 
 export async function setupTests() {
   // Setup database
@@ -30,10 +29,6 @@ export async function setupTests() {
     logger: testLogger,
   });
 
-  // For backward compatibility, client initially points to rootClient
-  // Individual tests will switch to organization-specific context
-  client = rootClient;
-
   testLogger.info("Test environment ready");
 }
 
@@ -50,22 +45,11 @@ export function createOrgClient(orgId: string): GraphQLClient {
   });
 }
 
-/**
- * Switch the default client to a specific organization context
- * Useful for tests that need to operate within a single organization
- */
-export function switchToOrgContext(orgId: string) {
-  client = createOrgClient(orgId);
-}
-
 export async function teardownTests() {
   try {
     // Stop GraphQL clients
     if (rootClient) {
       await rootClient.stop();
-    }
-    if (client && client !== rootClient) {
-      await client.stop();
     }
 
     // Stop server

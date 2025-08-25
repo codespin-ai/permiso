@@ -1,29 +1,49 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Property Operations", () => {
+  let testOrgClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
+
+    // Create test organization using ROOT client
+    const orgMutation = gql`
+      mutation CreateOrganization($input: CreateOrganizationInput!) {
+        createOrganization(input: $input) {
+          id
+        }
+      }
+    `;
+
+    await rootClient.mutate(orgMutation, {
+      input: { id: "test-org", name: "Test Organization" },
+    });
+
+    // Create organization-specific client
+    testOrgClient = createOrgClient("test-org");
   });
 
   describe("Organization Properties", () => {
     beforeEach(async () => {
-      // Create test organization
-      const mutation = gql`
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
+      // Add a property to the test organization
+      const setPropMutation = gql`
+        mutation SetOrganizationProperty(
+          $orgId: ID!
+          $name: String!
+          $value: JSON
+        ) {
+          setOrganizationProperty(orgId: $orgId, name: $name, value: $value) {
+            name
           }
         }
       `;
 
-      await client.mutate(mutation, {
-        input: {
-          id: "test-org",
-          name: "Test Organization",
-          properties: [{ name: "existing_prop", value: "initial_value" }],
-        },
+      await testOrgClient.mutate(setPropMutation, {
+        orgId: "test-org",
+        name: "existing_prop",
+        value: "initial_value",
       });
     });
 
@@ -40,7 +60,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await testOrgClient.query(query, {
           orgId: "test-org",
           propertyName: "existing_prop",
         });
@@ -66,7 +86,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await testOrgClient.query(query, {
           orgId: "test-org",
           propertyName: "non_existent",
         });
@@ -97,7 +117,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "new_prop",
           value: { complex: "object", with: ["array", "values"] },
@@ -133,7 +153,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "existing_prop",
           value: "updated_value",
@@ -158,7 +178,9 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await client.query(query, { id: "test-org" });
+        const queryResult = await testOrgClient.query(query, {
+          id: "test-org",
+        });
         expect(queryResult.data?.organization?.properties).to.have.lengthOf(1);
         expect(queryResult.data?.organization?.properties[0]).to.deep.include({
           name: "existing_prop",
@@ -181,7 +203,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "null_prop",
           value: null,
@@ -205,7 +227,7 @@ describe("Property Operations", () => {
         `;
 
         // Test number
-        let result = await client.mutate(mutation, {
+        let result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "number_prop",
           value: 42.5,
@@ -213,7 +235,7 @@ describe("Property Operations", () => {
         expect(result.data?.setOrganizationProperty?.value).to.equal(42.5);
 
         // Test boolean
-        result = await client.mutate(mutation, {
+        result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "bool_prop",
           value: true,
@@ -221,7 +243,7 @@ describe("Property Operations", () => {
         expect(result.data?.setOrganizationProperty?.value).to.equal(true);
 
         // Test array
-        result = await client.mutate(mutation, {
+        result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "array_prop",
           value: [1, "two", { three: 3 }, null],
@@ -234,7 +256,7 @@ describe("Property Operations", () => {
         ]);
 
         // Test nested object
-        result = await client.mutate(mutation, {
+        result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "nested_prop",
           value: {
@@ -272,7 +294,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await client.mutate(setPropMutation, {
+        await testOrgClient.mutate(setPropMutation, {
           orgId: "test-org",
           name: "to_delete",
           value: "delete_me",
@@ -285,7 +307,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(deleteMutation, {
+        const result = await testOrgClient.mutate(deleteMutation, {
           orgId: "test-org",
           name: "to_delete",
         });
@@ -301,7 +323,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await client.query(query, {
+        const queryResult = await testOrgClient.query(query, {
           orgId: "test-org",
           propertyName: "to_delete",
         });
@@ -316,7 +338,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: "non_existent",
         });
@@ -328,22 +350,6 @@ describe("Property Operations", () => {
 
   describe("User Properties", () => {
     beforeEach(async () => {
-      // Create test organization using ROOT client
-      const orgMutation = gql`
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
-          }
-        }
-      `;
-
-      await rootClient.mutate(orgMutation, {
-        input: { id: "test-org", name: "Test Organization" },
-      });
-
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
-
       // Create test user
       const userMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -353,7 +359,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      await client.mutate(userMutation, {
+      await testOrgClient.mutate(userMutation, {
         input: {
           id: "test-user",
           identityProvider: "auth0",
@@ -376,7 +382,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await testOrgClient.query(query, {
           userId: "test-user",
           propertyName: "existing_prop",
         });
@@ -396,7 +402,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await testOrgClient.query(query, {
           userId: "test-user",
           propertyName: "non_existent",
         });
@@ -416,7 +422,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await client.mutate(setPropMutation, {
+        await testOrgClient.mutate(setPropMutation, {
           userId: "test-user",
           name: "to_delete",
           value: "delete_me",
@@ -429,7 +435,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(deleteMutation, {
+        const result = await testOrgClient.mutate(deleteMutation, {
           userId: "test-user",
           name: "to_delete",
         });
@@ -445,7 +451,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const queryResult = await client.query(query, {
+        const queryResult = await testOrgClient.query(query, {
           userId: "test-user",
           propertyName: "to_delete",
         });
@@ -457,22 +463,6 @@ describe("Property Operations", () => {
 
   describe("Role Properties", () => {
     beforeEach(async () => {
-      // Create test organization using ROOT client
-      const orgMutation = gql`
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
-          }
-        }
-      `;
-
-      await rootClient.mutate(orgMutation, {
-        input: { id: "test-org", name: "Test Organization" },
-      });
-
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
-
       // Create test role
       const roleMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
@@ -482,7 +472,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      await client.mutate(roleMutation, {
+      await testOrgClient.mutate(roleMutation, {
         input: {
           id: "test-role",
           name: "Test Role",
@@ -504,7 +494,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.query(query, {
+        const result = await testOrgClient.query(query, {
           roleId: "test-role",
           propertyName: "existing_prop",
         });
@@ -538,7 +528,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           roleId: "test-role",
           name: "permissions_config",
           value: {
@@ -577,7 +567,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        await client.mutate(setPropMutation, {
+        await testOrgClient.mutate(setPropMutation, {
           roleId: "test-role",
           name: "to_delete",
           value: "delete_me",
@@ -590,7 +580,7 @@ describe("Property Operations", () => {
           }
         `;
 
-        const result = await client.mutate(deleteMutation, {
+        const result = await testOrgClient.mutate(deleteMutation, {
           roleId: "test-role",
           name: "to_delete",
         });
@@ -601,21 +591,6 @@ describe("Property Operations", () => {
   });
 
   describe("Property Edge Cases", () => {
-    beforeEach(async () => {
-      // Create test organization
-      const orgMutation = gql`
-        mutation CreateOrganization($input: CreateOrganizationInput!) {
-          createOrganization(input: $input) {
-            id
-          }
-        }
-      `;
-
-      await client.mutate(orgMutation, {
-        input: { id: "test-org", name: "Test Organization" },
-      });
-    });
-
     it("should handle very large JSON objects", async () => {
       const largeObject: any = {};
       for (let i = 0; i < 100; i++) {
@@ -641,7 +616,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         orgId: "test-org",
         name: "large_object",
         value: largeObject,
@@ -674,7 +649,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         orgId: "test-org",
         name: "deep_object",
         value: deepObject,
@@ -710,7 +685,7 @@ describe("Property Operations", () => {
       ];
 
       for (const name of specialNames) {
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           orgId: "test-org",
           name: name,
           value: `value for ${name}`,
@@ -738,7 +713,7 @@ describe("Property Operations", () => {
       `;
 
       // Empty string value
-      let result = await client.mutate(mutation, {
+      let result = await testOrgClient.mutate(mutation, {
         orgId: "test-org",
         name: "empty_string",
         value: "",
@@ -746,7 +721,7 @@ describe("Property Operations", () => {
       expect(result.data?.setOrganizationProperty?.value).to.equal("");
 
       // Whitespace value
-      result = await client.mutate(mutation, {
+      result = await testOrgClient.mutate(mutation, {
         orgId: "test-org",
         name: "whitespace",
         value: "   ",
@@ -768,7 +743,7 @@ describe("Property Operations", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         orgId: "test-org",
         name: "unicode_prop",
         value: {

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client } from "../index.js";
+import { testDb, rootClient } from "../index.js";
 
 describe("Organizations", () => {
   beforeEach(async () => {
@@ -23,7 +23,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await rootClient.mutate(mutation, {
         input: {
           id: "org-123",
           name: "Test Organization",
@@ -65,7 +65,7 @@ describe("Organizations", () => {
       `;
 
       // Create first organization
-      const firstResult = await client.mutate(mutation, {
+      const firstResult = await rootClient.mutate(mutation, {
         input: {
           id: "org-dup-test",
           name: "First Organization",
@@ -76,7 +76,7 @@ describe("Organizations", () => {
 
       // Try to create duplicate
       try {
-        const result = await client.mutate(mutation, {
+        const result = await rootClient.mutate(mutation, {
           input: {
             id: "org-dup-test",
             name: "Duplicate Organization",
@@ -132,7 +132,7 @@ describe("Organizations", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: {
           id: "org-query-test",
           name: "Test Organization",
@@ -157,7 +157,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.query(query, { id: "org-query-test" });
+      const result = await rootClient.query(query, { id: "org-query-test" });
 
       expect(result.data?.organization?.id).to.equal("org-query-test");
       expect(result.data?.organization?.name).to.equal("Test Organization");
@@ -181,7 +181,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.query(query, { id: "non-existent" });
+      const result = await rootClient.query(query, { id: "non-existent" });
 
       expect(result.data?.organization).to.be.null;
     });
@@ -198,14 +198,14 @@ describe("Organizations", () => {
         }
       `;
 
-      await client.mutate(mutation, {
+      await rootClient.mutate(mutation, {
         input: {
           id: "org-1",
           name: "Organization 1",
         },
       });
 
-      await client.mutate(mutation, {
+      await rootClient.mutate(mutation, {
         input: {
           id: "org-2",
           name: "Organization 2",
@@ -224,7 +224,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.query(query);
+      const result = await rootClient.query(query);
 
       expect(result.data?.organizations?.nodes).to.have.lengthOf(2);
       const orgIds = result.data?.organizations?.nodes.map((o: any) => o.id);
@@ -243,7 +243,7 @@ describe("Organizations", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: {
           id: "org-update-test",
           name: "Original Name",
@@ -263,7 +263,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.mutate(updateMutation, {
+      const result = await rootClient.mutate(updateMutation, {
         id: "org-update-test",
         input: {
           name: "Updated Name",
@@ -285,7 +285,7 @@ describe("Organizations", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await rootClient.mutate(createMutation, {
         input: {
           id: "org-delete-test",
           name: "To Be Deleted",
@@ -299,7 +299,7 @@ describe("Organizations", () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, {
+      const result = await rootClient.mutate(deleteMutation, {
         id: "org-delete-test",
       });
 
@@ -314,7 +314,9 @@ describe("Organizations", () => {
         }
       `;
 
-      const queryResult = await client.query(query, { id: "org-delete-test" });
+      const queryResult = await rootClient.query(query, {
+        id: "org-delete-test",
+      });
 
       expect(queryResult.data?.organization).to.be.null;
     });

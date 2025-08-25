@@ -1,8 +1,10 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Permissions", () => {
+  let testOrgClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
@@ -22,8 +24,8 @@ describe("Permissions", () => {
       },
     });
 
-    // Switch to organization context for RLS operations
-    switchToOrgContext("test-org");
+    // Create organization-specific client
+    testOrgClient = createOrgClient("test-org");
 
     // Create test user
     const userMutation = gql`
@@ -34,7 +36,7 @@ describe("Permissions", () => {
       }
     `;
 
-    await client.mutate(userMutation, {
+    await testOrgClient.mutate(userMutation, {
       input: {
         id: "test-user",
         identityProvider: "auth0",
@@ -51,7 +53,7 @@ describe("Permissions", () => {
       }
     `;
 
-    await client.mutate(roleMutation, {
+    await testOrgClient.mutate(roleMutation, {
       input: {
         id: "admin",
         name: "Administrator",
@@ -67,7 +69,7 @@ describe("Permissions", () => {
       }
     `;
 
-    await client.mutate(resourceMutation, {
+    await testOrgClient.mutate(resourceMutation, {
       input: {
         id: "/api/users/*",
         name: "User API",
@@ -87,7 +89,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           userId: "test-user",
           resourceId: "/api/users/*",
@@ -111,7 +113,7 @@ describe("Permissions", () => {
       `;
 
       try {
-        const result = await client.mutate(mutation, {
+        const result = await testOrgClient.mutate(mutation, {
           input: {
             userId: "non-existent",
             resourceId: "/api/users/*",
@@ -159,7 +161,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           roleId: "admin",
           resourceId: "/api/users/*",
@@ -188,7 +190,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         userId: "test-user",
         roleId: "admin",
       });
@@ -212,7 +214,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(grantMutation, {
+      await testOrgClient.mutate(grantMutation, {
         input: {
           userId: "test-user",
           resourceId: "/api/users/*",
@@ -231,7 +233,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -254,7 +256,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(grantRoleMutation, {
+      await testOrgClient.mutate(grantRoleMutation, {
         input: {
           roleId: "admin",
           resourceId: "/api/users/*",
@@ -271,7 +273,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(assignMutation, {
+      await testOrgClient.mutate(assignMutation, {
         userId: "test-user",
         roleId: "admin",
       });
@@ -288,7 +290,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -312,7 +314,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(grantUserMutation, {
+      await testOrgClient.mutate(grantUserMutation, {
         input: {
           userId: "test-user",
           resourceId: "/api/users/*",
@@ -329,7 +331,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(grantRoleMutation, {
+      await testOrgClient.mutate(grantRoleMutation, {
         input: {
           roleId: "admin",
           resourceId: "/api/users/*",
@@ -346,7 +348,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(assignMutation, {
+      await testOrgClient.mutate(assignMutation, {
         userId: "test-user",
         roleId: "admin",
       });
@@ -362,7 +364,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/api/users/123",
       });
@@ -386,7 +388,7 @@ describe("Permissions", () => {
         }
       `;
 
-      await client.mutate(grantMutation, {
+      await testOrgClient.mutate(grantMutation, {
         input: {
           userId: "test-user",
           resourceId: "/api/users/*",
@@ -409,7 +411,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const result = await client.mutate(revokeMutation, {
+      const result = await testOrgClient.mutate(revokeMutation, {
         userId: "test-user",
         resourceId: "/api/users/*",
         action: "read",
@@ -426,7 +428,7 @@ describe("Permissions", () => {
         }
       `;
 
-      const queryResult = await client.query(query, {
+      const queryResult = await testOrgClient.query(query, {
         userId: "test-user",
         resourceId: "/api/users/123",
       });

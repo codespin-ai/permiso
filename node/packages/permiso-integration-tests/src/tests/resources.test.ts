@@ -1,14 +1,10 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import {
-  testDb,
-  client,
-  rootClient,
-  switchToOrgContext,
-  createOrgClient,
-} from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Resources", () => {
+  let testOrgClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
@@ -28,8 +24,8 @@ describe("Resources", () => {
       },
     });
 
-    // Switch to organization context for RLS operations
-    switchToOrgContext("test-org");
+    // Create organization-specific client
+    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createResource", () => {
@@ -45,7 +41,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           id: "/api/users/*",
           name: "User API",
@@ -121,14 +117,14 @@ describe("Resources", () => {
       `;
 
       // Create multiple resources
-      await client.mutate(createResourceMutation, {
+      await testOrgClient.mutate(createResourceMutation, {
         input: {
           id: "/api/users/*",
           name: "User API",
         },
       });
 
-      await client.mutate(createResourceMutation, {
+      await testOrgClient.mutate(createResourceMutation, {
         input: {
           id: "/api/roles/*",
           name: "Role API",
@@ -149,7 +145,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.query(query, {});
+      const result = await testOrgClient.query(query, {});
 
       expect(result.data?.resources?.nodes).to.have.lengthOf(2);
       const resourceIds = result.data?.resources?.nodes.map((r: any) => r.id);
@@ -168,7 +164,7 @@ describe("Resources", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "/api/users/*",
           name: "User API",
@@ -190,7 +186,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         resourceId: "/api/users/*",
       });
 
@@ -211,7 +207,7 @@ describe("Resources", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "/api/users/*",
           name: "User API",
@@ -232,7 +228,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.mutate(updateMutation, {
+      const result = await testOrgClient.mutate(updateMutation, {
         resourceId: "/api/users/*",
         input: {
           name: "User API v2",
@@ -259,7 +255,7 @@ describe("Resources", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "/api/users/*",
           name: "User API",
@@ -273,7 +269,7 @@ describe("Resources", () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, {
+      const result = await testOrgClient.mutate(deleteMutation, {
         resourceId: "/api/users/*",
       });
 
@@ -288,7 +284,7 @@ describe("Resources", () => {
         }
       `;
 
-      const queryResult = await client.query(query, {
+      const queryResult = await testOrgClient.query(query, {
         resourceId: "/api/users/*",
       });
 

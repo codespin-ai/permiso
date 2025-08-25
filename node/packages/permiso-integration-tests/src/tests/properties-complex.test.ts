@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Properties - Complex JSON and Initial Values", () => {
   beforeEach(async () => {
@@ -8,6 +8,8 @@ describe("Properties - Complex JSON and Initial Values", () => {
   });
 
   describe("User Properties - Complex JSON", () => {
+    let testOrgClient: ReturnType<typeof createOrgClient>;
+
     beforeEach(async () => {
       // Create test organization using ROOT client
       const createOrgMutation = gql`
@@ -21,8 +23,8 @@ describe("Properties - Complex JSON and Initial Values", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
+      // Create organization-specific client
+      testOrgClient = createOrgClient("test-org");
 
       const createUserMutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -31,7 +33,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
           }
         }
       `;
-      await client.mutate(createUserMutation, {
+      await testOrgClient.mutate(createUserMutation, {
         input: {
           id: "test-user",
           identityProvider: "test",
@@ -67,7 +69,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
         },
       };
 
-      const result = await client.mutate(setPropMutation, {
+      const result = await testOrgClient.mutate(setPropMutation, {
         userId: "test-user",
         name: "settings",
         value: complexValue,
@@ -78,6 +80,8 @@ describe("Properties - Complex JSON and Initial Values", () => {
   });
 
   describe("Role Properties - Complex Arrays", () => {
+    let testOrgClient: ReturnType<typeof createOrgClient>;
+
     beforeEach(async () => {
       // Create test organization using ROOT client
       const createOrgMutation = gql`
@@ -91,8 +95,8 @@ describe("Properties - Complex JSON and Initial Values", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
+      // Create organization-specific client
+      testOrgClient = createOrgClient("test-org");
 
       const createRoleMutation = gql`
         mutation CreateRole($input: CreateRoleInput!) {
@@ -101,7 +105,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
           }
         }
       `;
-      await client.mutate(createRoleMutation, {
+      await testOrgClient.mutate(createRoleMutation, {
         input: {
           id: "test-role",
           name: "Test Role",
@@ -126,7 +130,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
         { resource: "/api/admin/*", actions: ["*"] },
       ];
 
-      const result = await client.mutate(setPropMutation, {
+      const result = await testOrgClient.mutate(setPropMutation, {
         roleId: "test-role",
         name: "customPermissions",
         value: permissionsValue,
@@ -199,8 +203,8 @@ describe("Properties - Complex JSON and Initial Values", () => {
         },
       );
 
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
+      // Create organization-specific client
+      const testOrgClient = createOrgClient("test-org");
 
       const mutation = gql`
         mutation CreateUser($input: CreateUserInput!) {
@@ -214,7 +218,7 @@ describe("Properties - Complex JSON and Initial Values", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           id: "user-with-props",
           identityProvider: "test",

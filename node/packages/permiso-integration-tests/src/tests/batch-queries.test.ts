@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Batch Queries", () => {
   beforeEach(async () => {
@@ -96,6 +96,8 @@ describe("Batch Queries", () => {
   });
 
   describe("usersByIds", () => {
+    let testOrgClient: ReturnType<typeof createOrgClient>;
+
     beforeEach(async () => {
       // Create test organization using ROOT client
       const orgMutation = gql`
@@ -110,8 +112,8 @@ describe("Batch Queries", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
+      // Create organization-specific client for RLS operations
+      testOrgClient = createOrgClient("test-org");
     });
 
     it("should fetch multiple users by IDs within an organization", async () => {
@@ -124,21 +126,21 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-1",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|1",
         },
       });
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-2",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|2",
         },
       });
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-3",
           identityProvider: "auth0",
@@ -157,7 +159,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         ids: ["user-1", "user-3"],
       });
 
@@ -190,7 +192,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-test-org",
           identityProvider: "auth0",
@@ -198,18 +200,15 @@ describe("Batch Queries", () => {
         },
       });
 
-      // Switch to other-org context and create user there
-      switchToOrgContext("other-org");
-      await client.mutate(createMutation, {
+      // Create user in other-org context
+      const otherOrgClient = createOrgClient("other-org");
+      await otherOrgClient.mutate(createMutation, {
         input: {
           id: "user-other-org",
           identityProvider: "auth0",
           identityProviderUserId: "auth0|other",
         },
       });
-
-      // Switch back to test-org context for the query
-      switchToOrgContext("test-org");
 
       // Query should only return user from test-org
       const query = gql`
@@ -221,7 +220,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         ids: ["user-test-org", "user-other-org"],
       });
 
@@ -232,6 +231,8 @@ describe("Batch Queries", () => {
   });
 
   describe("rolesByIds", () => {
+    let testOrgClient: ReturnType<typeof createOrgClient>;
+
     beforeEach(async () => {
       // Create test organization using ROOT client
       const orgMutation = gql`
@@ -246,8 +247,8 @@ describe("Batch Queries", () => {
         input: { id: "test-org", name: "Test Organization" },
       });
 
-      // Switch to organization context for RLS operations
-      switchToOrgContext("test-org");
+      // Create organization-specific client for RLS operations
+      testOrgClient = createOrgClient("test-org");
     });
 
     it("should fetch multiple roles by IDs within an organization", async () => {
@@ -260,19 +261,19 @@ describe("Batch Queries", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "admin",
           name: "Administrator",
         },
       });
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "editor",
           name: "Editor",
         },
       });
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "viewer",
           name: "Viewer",
@@ -290,7 +291,7 @@ describe("Batch Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         ids: ["admin", "viewer"],
       });
 
@@ -331,8 +332,8 @@ describe("Batch Queries", () => {
       `;
 
       // Create user in org-1
-      switchToOrgContext("org-1");
-      await client.mutate(createMutation, {
+      const org1Client = createOrgClient("org-1");
+      await org1Client.mutate(createMutation, {
         input: {
           id: "user-org1",
           identityProvider: "google",
@@ -341,8 +342,8 @@ describe("Batch Queries", () => {
       });
 
       // Create user in org-2
-      switchToOrgContext("org-2");
-      await client.mutate(createMutation, {
+      const org2Client = createOrgClient("org-2");
+      await org2Client.mutate(createMutation, {
         input: {
           id: "user-org2",
           identityProvider: "google",
@@ -411,16 +412,16 @@ describe("Batch Queries", () => {
         }
       `;
 
-      // Switch to org-1 context for creating users
-      switchToOrgContext("org-1");
-      await client.mutate(createMutation, {
+      // Create users in org-1
+      const org1Client = createOrgClient("org-1");
+      await org1Client.mutate(createMutation, {
         input: {
           id: "user-google",
           identityProvider: "google",
           identityProviderUserId: "user123",
         },
       });
-      await client.mutate(createMutation, {
+      await org1Client.mutate(createMutation, {
         input: {
           id: "user-auth0",
           identityProvider: "auth0",

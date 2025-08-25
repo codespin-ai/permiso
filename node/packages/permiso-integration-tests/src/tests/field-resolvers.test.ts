@@ -1,8 +1,10 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import { testDb, client, rootClient, switchToOrgContext } from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Field Resolvers and Nested Queries", () => {
+  let acmeClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
@@ -40,8 +42,8 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    // Switch to acme-corp context for RLS operations
-    switchToOrgContext("acme-corp");
+    // Create acme-corp client for RLS operations
+    acmeClient = createOrgClient("acme-corp");
 
     // Create roles
     const roleMutation = gql`
@@ -52,7 +54,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(roleMutation, {
+    await acmeClient.mutate(roleMutation, {
       input: {
         id: "admin",
         name: "Administrator",
@@ -61,7 +63,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(roleMutation, {
+    await acmeClient.mutate(roleMutation, {
       input: {
         id: "editor",
         name: "Editor",
@@ -69,7 +71,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(roleMutation, {
+    await acmeClient.mutate(roleMutation, {
       input: {
         id: "viewer",
         name: "Viewer",
@@ -86,7 +88,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(userMutation, {
+    await acmeClient.mutate(userMutation, {
       input: {
         id: "john-doe",
         identityProvider: "google",
@@ -100,7 +102,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(userMutation, {
+    await acmeClient.mutate(userMutation, {
       input: {
         id: "jane-smith",
         identityProvider: "auth0",
@@ -110,7 +112,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(userMutation, {
+    await acmeClient.mutate(userMutation, {
       input: {
         id: "bob-wilson",
         identityProvider: "google",
@@ -128,7 +130,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(resourceMutation, {
+    await acmeClient.mutate(resourceMutation, {
       input: {
         id: "/api/users",
         name: "Users API",
@@ -136,21 +138,21 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(resourceMutation, {
+    await acmeClient.mutate(resourceMutation, {
       input: {
         id: "/api/users/*",
         name: "User Details API",
       },
     });
 
-    await client.mutate(resourceMutation, {
+    await acmeClient.mutate(resourceMutation, {
       input: {
         id: "/api/posts/*",
         name: "Posts API",
       },
     });
 
-    await client.mutate(resourceMutation, {
+    await acmeClient.mutate(resourceMutation, {
       input: {
         id: "/admin/*",
         name: "Admin Panel",
@@ -166,7 +168,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(grantUserMutation, {
+    await acmeClient.mutate(grantUserMutation, {
       input: {
         userId: "john-doe",
         resourceId: "/admin/*",
@@ -174,7 +176,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(grantUserMutation, {
+    await acmeClient.mutate(grantUserMutation, {
       input: {
         userId: "jane-smith",
         resourceId: "/api/users",
@@ -190,7 +192,7 @@ describe("Field Resolvers and Nested Queries", () => {
       }
     `;
 
-    await client.mutate(grantRoleMutation, {
+    await acmeClient.mutate(grantRoleMutation, {
       input: {
         roleId: "admin",
         resourceId: "/api/users/*",
@@ -198,7 +200,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(grantRoleMutation, {
+    await acmeClient.mutate(grantRoleMutation, {
       input: {
         roleId: "admin",
         resourceId: "/api/users/*",
@@ -206,7 +208,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(grantRoleMutation, {
+    await acmeClient.mutate(grantRoleMutation, {
       input: {
         roleId: "editor",
         resourceId: "/api/posts/*",
@@ -214,7 +216,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(grantRoleMutation, {
+    await acmeClient.mutate(grantRoleMutation, {
       input: {
         roleId: "viewer",
         resourceId: "/api/users/*",
@@ -222,7 +224,7 @@ describe("Field Resolvers and Nested Queries", () => {
       },
     });
 
-    await client.mutate(grantRoleMutation, {
+    await acmeClient.mutate(grantRoleMutation, {
       input: {
         roleId: "viewer",
         resourceId: "/api/posts/*",
@@ -356,7 +358,7 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       // Test with ID prefix filter
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         id: "acme-corp",
         resourceFilter: {
           idPrefix: "/api/",
@@ -395,7 +397,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -424,7 +426,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -461,7 +463,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -493,7 +495,7 @@ describe("Field Resolvers and Nested Queries", () => {
       `;
 
       // Test without filters - should get all effective permissions
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -501,7 +503,7 @@ describe("Field Resolvers and Nested Queries", () => {
       expect(result.data?.user?.effectivePermissions.length).to.be.at.least(4);
 
       // Test with resource filter
-      const filteredResult = await client.query(query, {
+      const filteredResult = await acmeClient.query(query, {
         userId: "john-doe",
         resourceId: "/api/users/123",
       });
@@ -520,7 +522,7 @@ describe("Field Resolvers and Nested Queries", () => {
       });
 
       // Test with action filter
-      const actionFilteredResult = await client.query(query, {
+      const actionFilteredResult = await acmeClient.query(query, {
         userId: "john-doe",
         action: "write",
       });
@@ -547,7 +549,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         roleId: "admin",
       });
 
@@ -575,7 +577,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         roleId: "editor",
       });
 
@@ -602,7 +604,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         roleId: "viewer",
       });
 
@@ -640,7 +642,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         resourceId: "/api/users/*",
       });
 
@@ -678,7 +680,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         resourceId: "/api/users/*",
       });
 
@@ -718,7 +720,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -746,7 +748,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         roleId: "admin",
       });
 
@@ -888,7 +890,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -995,7 +997,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await acmeClient.query(query, {
         userId: "john-doe",
       });
 
@@ -1054,7 +1056,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await client.query(query, {});
+      const result = await acmeClient.query(query, {});
 
       // Verify fragments expanded correctly
       expect(result.data?.users?.nodes).to.have.length.at.least(1);

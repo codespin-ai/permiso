@@ -1,14 +1,10 @@
 import { expect } from "chai";
 import { gql } from "@apollo/client/core/index.js";
-import {
-  testDb,
-  client,
-  rootClient,
-  switchToOrgContext,
-  createOrgClient,
-} from "../index.js";
+import { testDb, rootClient, createOrgClient } from "../index.js";
 
 describe("Users", () => {
+  let testOrgClient: ReturnType<typeof createOrgClient>;
+
   beforeEach(async () => {
     await testDb.truncateAllTables();
 
@@ -28,8 +24,8 @@ describe("Users", () => {
       },
     });
 
-    // Switch to organization context for RLS operations
-    switchToOrgContext("test-org");
+    // Create organization-specific client
+    testOrgClient = createOrgClient("test-org");
   });
 
   describe("createUser", () => {
@@ -50,7 +46,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.mutate(mutation, {
+      const result = await testOrgClient.mutate(mutation, {
         input: {
           id: "user-123",
           identityProvider: "auth0",
@@ -148,7 +144,7 @@ describe("Users", () => {
       `;
 
       // Create multiple users
-      await client.mutate(createUserMutation, {
+      await testOrgClient.mutate(createUserMutation, {
         input: {
           id: "user-1",
           identityProvider: "auth0",
@@ -156,7 +152,7 @@ describe("Users", () => {
         },
       });
 
-      await client.mutate(createUserMutation, {
+      await testOrgClient.mutate(createUserMutation, {
         input: {
           id: "user-2",
           identityProvider: "google",
@@ -178,7 +174,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.query(query, {});
+      const result = await testOrgClient.query(query, {});
 
       expect(result.data?.users?.nodes).to.have.lengthOf(2);
       const userIds = result.data?.users?.nodes.map((u: any) => u.id);
@@ -196,7 +192,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.query(query, {});
+      const result = await testOrgClient.query(query, {});
 
       expect(result.data?.users?.nodes).to.deep.equal([]);
     });
@@ -213,7 +209,7 @@ describe("Users", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-123",
           identityProvider: "auth0",
@@ -241,7 +237,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.query(query, {
+      const result = await testOrgClient.query(query, {
         userId: "user-123",
       });
 
@@ -268,7 +264,7 @@ describe("Users", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-123",
           identityProvider: "auth0",
@@ -287,7 +283,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.mutate(updateMutation, {
+      const result = await testOrgClient.mutate(updateMutation, {
         userId: "user-123",
         input: {
           identityProvider: "google",
@@ -313,7 +309,7 @@ describe("Users", () => {
         }
       `;
 
-      await client.mutate(createMutation, {
+      await testOrgClient.mutate(createMutation, {
         input: {
           id: "user-123",
           identityProvider: "auth0",
@@ -328,7 +324,7 @@ describe("Users", () => {
         }
       `;
 
-      const result = await client.mutate(deleteMutation, {
+      const result = await testOrgClient.mutate(deleteMutation, {
         userId: "user-123",
       });
 
@@ -343,7 +339,7 @@ describe("Users", () => {
         }
       `;
 
-      const queryResult = await client.query(query, {
+      const queryResult = await testOrgClient.query(query, {
         userId: "user-123",
       });
 
