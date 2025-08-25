@@ -111,7 +111,7 @@ mutation {
 ```bash
 ./build.sh                  # Build all packages
 ./lint-all.sh              # Run ESLint
-./format-all.sh            # Format with Prettier
+./format-all.sh            # Format with Prettier, called automatically during build
 npm test                   # Run all tests
 npm run test:grep -- "pattern"  # Search tests
 ```
