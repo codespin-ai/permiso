@@ -153,8 +153,8 @@ UNRESTRICTED_DB_USER_PASSWORD=password
 # Server
 PERMISO_SERVER_PORT=5001
 
-# Optional API key authentication
-PERMISO_API_KEY=your-secret-key
+# Optional Bearer authentication
+PERMISO_API_KEY=your-secret-token
 ```
 
 ## Database Setup

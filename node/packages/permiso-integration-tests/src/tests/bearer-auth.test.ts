@@ -4,7 +4,7 @@ import { testDb } from "../index.js";
 import { GraphQLClient } from "../utils/graphql-client.js";
 import { TestServer } from "@codespin/permiso-test-utils";
 
-describe("API Key Authentication", () => {
+describe("Bearer Authentication", () => {
   let authServer: TestServer;
   let authClient: GraphQLClient;
   let unauthClient: GraphQLClient;
@@ -21,10 +21,10 @@ describe("API Key Authentication", () => {
 
     await authServer.start();
 
-    // Create clients with and without API key
+    // Create clients with and without Bearer token
     authClient = new GraphQLClient("http://localhost:5003/graphql", {
       headers: {
-        "x-api-key": "test-secret-key-123",
+        authorization: "Bearer test-secret-key-123",
         // No x-org-id header = ROOT context
       },
     });
@@ -52,8 +52,8 @@ describe("API Key Authentication", () => {
     await testDb.truncateAllTables();
   });
 
-  describe("with API key enabled", () => {
-    it("should allow requests with valid API key", async () => {
+  describe("with Bearer authentication enabled", () => {
+    it("should allow requests with valid Bearer token", async () => {
       const query = gql`
         query {
           organizations {
@@ -71,7 +71,7 @@ describe("API Key Authentication", () => {
       expect(result.data.organizations.nodes).to.be.an("array");
     });
 
-    it("should reject requests without API key", async () => {
+    it("should reject requests without Bearer token", async () => {
       const query = gql`
         query {
           organizations {
@@ -92,7 +92,7 @@ describe("API Key Authentication", () => {
         expect(error.networkError).to.exist;
         expect(error.networkError.statusCode).to.equal(401);
         expect(error.networkError.result.errors[0].message).to.equal(
-          "API key required but not provided",
+          "Bearer token required but not provided",
         );
         expect(error.networkError.result.errors[0].extensions.code).to.equal(
           "UNAUTHENTICATED",
@@ -100,10 +100,10 @@ describe("API Key Authentication", () => {
       }
     });
 
-    it("should reject requests with invalid API key", async () => {
+    it("should reject requests with invalid Bearer token", async () => {
       const invalidClient = new GraphQLClient("http://localhost:5003/graphql", {
         headers: {
-          "x-api-key": "wrong-key",
+          authorization: "Bearer wrong-key",
         },
       });
 
@@ -127,7 +127,7 @@ describe("API Key Authentication", () => {
         expect(error.networkError).to.exist;
         expect(error.networkError.statusCode).to.equal(401);
         expect(error.networkError.result.errors[0].message).to.equal(
-          "Invalid API key",
+          "Invalid Bearer token",
         );
         expect(error.networkError.result.errors[0].extensions.code).to.equal(
           "UNAUTHENTICATED",
@@ -137,7 +137,7 @@ describe("API Key Authentication", () => {
       }
     });
 
-    it("should allow mutations with valid API key", async () => {
+    it("should allow mutations with valid Bearer token", async () => {
       const mutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
           createOrganization(input: $input) {
@@ -161,7 +161,7 @@ describe("API Key Authentication", () => {
       );
     });
 
-    it("should reject mutations without API key", async () => {
+    it("should reject mutations without Bearer token", async () => {
       const mutation = gql`
         mutation CreateOrganization($input: CreateOrganizationInput!) {
           createOrganization(input: $input) {
@@ -184,7 +184,7 @@ describe("API Key Authentication", () => {
         expect(error.networkError).to.exist;
         expect(error.networkError.statusCode).to.equal(401);
         expect(error.networkError.result.errors[0].message).to.equal(
-          "API key required but not provided",
+          "Bearer token required but not provided",
         );
         expect(error.networkError.result.errors[0].extensions.code).to.equal(
           "UNAUTHENTICATED",

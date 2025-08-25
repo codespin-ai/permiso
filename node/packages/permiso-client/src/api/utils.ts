@@ -11,7 +11,7 @@ export function buildHeaders(config: PermisoConfig): Record<string, string> {
   }
 
   if (config.apiKey) {
-    headers["x-api-key"] = config.apiKey;
+    headers["authorization"] = `Bearer ${config.apiKey}`;
   }
 
   return headers;

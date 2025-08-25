@@ -8,7 +8,7 @@ import cors from "cors";
 import { GraphQLError } from "graphql";
 import { getTypeDefs } from "../index.js";
 import { resolvers } from "../resolvers/index.js";
-import { getApiKeyConfig, validateApiKey } from "../auth/api-key.js";
+import { getBearerAuthConfig, validateBearerToken } from "../auth/bearer.js";
 
 const logger = createLogger("GraphQLServer");
 
@@ -16,10 +16,10 @@ async function startServer() {
   // Initialize health check database
   const healthCheckDb = createLazyDb();
 
-  // Get API key configuration
-  const apiKeyConfig = getApiKeyConfig();
-  if (apiKeyConfig.enabled) {
-    logger.info("API key authentication is enabled");
+  // Get Bearer authentication configuration
+  const bearerConfig = getBearerAuthConfig();
+  if (bearerConfig.enabled) {
+    logger.info("Bearer authentication is enabled");
   }
 
   // Create Express app
@@ -64,11 +64,9 @@ async function startServer() {
     express.json(),
     expressMiddleware(server, {
       context: async ({ req }: { req: Request }) => {
-        // Validate API key if enabled
-        const apiKey = req.headers[apiKeyConfig.headerName] as
-          | string
-          | undefined;
-        const validationResult = validateApiKey(apiKey, apiKeyConfig);
+        // Validate Bearer token if enabled
+        const authHeader = req.headers.authorization as string | undefined;
+        const validationResult = validateBearerToken(authHeader, bearerConfig);
 
         if (!validationResult.success) {
           throw new GraphQLError(validationResult.error.message, {

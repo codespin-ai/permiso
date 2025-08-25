@@ -9,7 +9,7 @@ http://localhost:5001/graphql
 ## Headers
 
 - `x-org-id`: Organization ID (required for org-scoped operations)
-- `x-api-key`: API key (if authentication enabled)
+- `Authorization`: Bearer token (if authentication enabled) - Format: `Bearer <token>`
 
 ## TypeScript Client
 
