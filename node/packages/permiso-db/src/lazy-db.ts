@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type pgPromise from "pg-promise";
 import type { Database } from "./index.js";
 import { createRlsDb, createUnrestrictedDb } from "./index.js";
@@ -8,11 +7,11 @@ const logger = createLogger("permiso-db:lazy");
 
 /**
  * Lazy Database Wrapper
- * 
+ *
  * This wrapper delays actual database connection creation until first use.
  * It can create either an RLS-enabled connection (with org context) or
  * an unrestricted connection based on whether an orgId is provided.
- * 
+ *
  * Benefits:
  * - No unnecessary connection creation
  * - Proper transaction isolation
@@ -22,14 +21,12 @@ export class LazyDatabase implements Database {
   private actualDb?: Database;
   private isInitialized = false;
 
-  constructor(
-    private orgId?: string,
-  ) {}
+  constructor(private orgId?: string) {}
 
   private ensureInitialized(): Database {
     if (!this.isInitialized) {
-      logger.debug(`Initializing database for org: ${this.orgId || 'ROOT'}`);
-      
+      logger.debug(`Initializing database for org: ${this.orgId || "ROOT"}`);
+
       if (this.orgId) {
         // Create RLS database for organization-scoped operations
         this.actualDb = createRlsDb(this.orgId);
@@ -37,10 +34,10 @@ export class LazyDatabase implements Database {
         // Create unrestricted database for ROOT operations
         this.actualDb = createUnrestrictedDb();
       }
-      
+
       this.isInitialized = true;
     }
-    
+
     return this.actualDb!;
   }
 
@@ -91,12 +88,12 @@ export class LazyDatabase implements Database {
       reason,
       timestamp: new Date().toISOString(),
     });
-    
+
     // If already ROOT (no orgId), return self
     if (!this.orgId) {
       return this;
     }
-    
+
     // Create a new lazy database for ROOT operations
     // This ensures we don't mutate the existing context
     return new LazyDatabase();

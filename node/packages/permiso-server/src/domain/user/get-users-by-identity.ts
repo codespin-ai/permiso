@@ -15,9 +15,13 @@ export async function getUsersByIdentity(
 ): Promise<Result<UserWithProperties[]>> {
   try {
     // This operation needs to search across all organizations
-    const rootDb = ctx.db.upgradeToRoot?.("Search users by identity across organizations");
+    const rootDb = ctx.db.upgradeToRoot?.(
+      "Search users by identity across organizations",
+    );
     if (!rootDb) {
-      throw new Error("Cross-organization user search requires administrative access");
+      throw new Error(
+        "Cross-organization user search requires administrative access",
+      );
     }
 
     const rows = await rootDb.manyOrNone<UserDbRow>(

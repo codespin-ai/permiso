@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import type pgPromise from "pg-promise";
 import type { Database } from "./index.js";
 import { createUnrestrictedDb } from "./index.js";
@@ -30,7 +29,7 @@ export class RlsDatabaseWrapper implements Database {
   /**
    * Upgrade to unrestricted ROOT access for cross-organization operations.
    * This should only be used by organization management APIs.
-   * 
+   *
    * @param reason Optional reason for audit logging
    * @returns Unrestricted database connection
    */
@@ -51,7 +50,6 @@ export class RlsDatabaseWrapper implements Database {
     this.upgradedConnection = createUnrestrictedDb();
     return this.upgradedConnection;
   }
-
 
   /**
    * Wraps a database operation with organization context

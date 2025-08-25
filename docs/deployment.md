@@ -19,7 +19,7 @@ docker run -p 5001:5001 \
 ### Docker Compose
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -51,6 +51,7 @@ volumes:
 ```
 
 Create `init.sql`:
+
 ```sql
 CREATE USER rls_db_user WITH PASSWORD 'changeme_rls';
 CREATE USER unrestricted_db_user WITH PASSWORD 'changeme_admin';
@@ -76,23 +77,23 @@ spec:
         app: permiso
     spec:
       containers:
-      - name: permiso
-        image: ghcr.io/codespin-ai/permiso:latest
-        ports:
-        - containerPort: 5001
-        env:
-        - name: PERMISO_DB_HOST
-          value: postgres-service
-        - name: RLS_DB_USER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: permiso-secrets
-              key: rls-password
-        - name: UNRESTRICTED_DB_USER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: permiso-secrets
-              key: admin-password
+        - name: permiso
+          image: ghcr.io/codespin-ai/permiso:latest
+          ports:
+            - containerPort: 5001
+          env:
+            - name: PERMISO_DB_HOST
+              value: postgres-service
+            - name: RLS_DB_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: permiso-secrets
+                  key: rls-password
+            - name: UNRESTRICTED_DB_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: permiso-secrets
+                  key: admin-password
 ---
 apiVersion: v1
 kind: Service
@@ -102,8 +103,8 @@ spec:
   selector:
     app: permiso
   ports:
-  - port: 80
-    targetPort: 5001
+    - port: 80
+      targetPort: 5001
   type: LoadBalancer
 ```
 

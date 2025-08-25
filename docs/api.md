@@ -20,15 +20,15 @@ npm install @codespin/permiso-client
 ```typescript
 import { createUser, hasPermission } from "@codespin/permiso-client";
 
-const config = { 
+const config = {
   endpoint: "http://localhost:5001",
-  orgId: "acme-corp"
+  orgId: "acme-corp",
 };
 
 await createUser(config, {
   id: "user-123",
   identityProvider: "auth0",
-  identityProviderUserId: "auth0|123"
+  identityProviderUserId: "auth0|123",
 });
 ```
 
@@ -39,16 +39,25 @@ await createUser(config, {
 ```graphql
 # Create
 mutation {
-  createOrganization(input: {
-    id: "acme-corp"
-    name: "ACME Corporation"
-  }) { id name }
+  createOrganization(input: { id: "acme-corp", name: "ACME Corporation" }) {
+    id
+    name
+  }
 }
 
 # Query
 query {
-  organization(id: "acme-corp") { id name }
-  organizations { nodes { id name } totalCount }
+  organization(id: "acme-corp") {
+    id
+    name
+  }
+  organizations {
+    nodes {
+      id
+      name
+    }
+    totalCount
+  }
 }
 ```
 
@@ -57,17 +66,30 @@ query {
 ```graphql
 # Create
 mutation {
-  createUser(input: {
-    id: "user-123"
-    identityProvider: "auth0"
-    identityProviderUserId: "auth0|123"
-  }) { id orgId }
+  createUser(
+    input: {
+      id: "user-123"
+      identityProvider: "auth0"
+      identityProviderUserId: "auth0|123"
+    }
+  ) {
+    id
+    orgId
+  }
 }
 
 # Query
 query {
-  user(userId: "user-123") { id identityProvider }
-  users { nodes { id } totalCount }
+  user(userId: "user-123") {
+    id
+    identityProvider
+  }
+  users {
+    nodes {
+      id
+    }
+    totalCount
+  }
 }
 ```
 
@@ -76,20 +98,24 @@ query {
 ```graphql
 # Grant to user
 mutation {
-  grantUserPermission(input: {
-    userId: "user-123"
-    resourceId: "/api/users/*"
-    action: "read"
-  }) { userId resourceId action }
+  grantUserPermission(
+    input: { userId: "user-123", resourceId: "/api/users/*", action: "read" }
+  ) {
+    userId
+    resourceId
+    action
+  }
 }
 
 # Grant to role
 mutation {
-  grantRolePermission(input: {
-    roleId: "admin"
-    resourceId: "/api/*"
-    action: "write"
-  }) { roleId resourceId action }
+  grantRolePermission(
+    input: { roleId: "admin", resourceId: "/api/*", action: "write" }
+  ) {
+    roleId
+    resourceId
+    action
+  }
 }
 
 # Check permission
@@ -143,7 +169,9 @@ query {
     pagination: { limit: 10, offset: 20 }
     sort: { field: id, order: DESC }
   ) {
-    nodes { id }
+    nodes {
+      id
+    }
     totalCount
   }
 }
@@ -164,12 +192,14 @@ Errors follow GraphQL standard:
 
 ```json
 {
-  "errors": [{
-    "message": "User not found",
-    "extensions": {
-      "code": "NOT_FOUND"
+  "errors": [
+    {
+      "message": "User not found",
+      "extensions": {
+        "code": "NOT_FOUND"
+      }
     }
-  }]
+  ]
 }
 ```
 

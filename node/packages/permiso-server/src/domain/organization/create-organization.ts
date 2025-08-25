@@ -16,7 +16,6 @@ export async function createOrganization(
     // Create ROOT context for organization creation
     // This ensures proper transaction isolation
     const rootDb = ctx.db.upgradeToRoot?.("Create new organization") || ctx.db;
-    const rootCtx = { ...ctx, db: rootDb };
 
     const org = await rootDb.tx(async (t) => {
       const params = {

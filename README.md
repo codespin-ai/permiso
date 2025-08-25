@@ -5,12 +5,14 @@ Multi-tenant RBAC system with Row Level Security (RLS) and GraphQL API.
 ## Architecture
 
 Permiso implements multi-tenant isolation using PostgreSQL Row Level Security. Each organization's data is isolated at the database level, with two database users:
+
 - `rls_db_user`: For organization-scoped operations (automatically filtered by RLS policies)
 - `unrestricted_db_user`: For cross-organization operations (organization management, cross-org queries)
 
 ## Quick Start
 
 ### Docker
+
 ```bash
 docker run -p 5001:5001 \
   -e PERMISO_DB_HOST=host.docker.internal \
@@ -24,6 +26,7 @@ docker run -p 5001:5001 \
 ```
 
 ### Local Development
+
 ```bash
 # Clone and build
 git clone https://github.com/codespin-ai/permiso.git
@@ -36,7 +39,7 @@ cd devenv && ./run.sh up && cd ..
 # Configure database users
 export RLS_DB_USER=rls_db_user
 export RLS_DB_USER_PASSWORD=changeme_rls
-export UNRESTRICTED_DB_USER=unrestricted_db_user  
+export UNRESTRICTED_DB_USER=unrestricted_db_user
 export UNRESTRICTED_DB_USER_PASSWORD=changeme_admin
 export PERMISO_DB_HOST=localhost
 export PERMISO_DB_NAME=permiso
@@ -52,6 +55,7 @@ cd ../../.. && ./start.sh
 ## Core Concepts
 
 ### Data Model
+
 - **Organizations**: Top-level tenants (no RLS, globally accessible)
 - **Users**: Identity provider integration (RLS-protected)
 - **Roles**: Named permission sets (RLS-protected)
@@ -60,35 +64,40 @@ cd ../../.. && ./start.sh
 - **Properties**: JSON metadata on all entities
 
 ### API Context
+
 - **With `x-org-id` header**: Operations scoped to that organization (RLS enforced)
 - **Without `x-org-id` header**: ROOT context for cross-org operations
 
 ## API Usage
 
 ### TypeScript Client
+
 ```typescript
 import { createUser, grantUserPermission } from "@codespin/permiso-client";
 
-const config = { 
+const config = {
   endpoint: "http://localhost:5001",
-  orgId: "acme-corp"  // Optional - omit for ROOT operations
+  orgId: "acme-corp", // Optional - omit for ROOT operations
 };
 
 await createUser(config, {
   id: "user-123",
   identityProvider: "auth0",
-  identityProviderUserId: "auth0|123"
+  identityProviderUserId: "auth0|123",
 });
 ```
 
 ### GraphQL
+
 ```graphql
 mutation {
-  createUser(input: {
-    id: "user-123"
-    identityProvider: "auth0"
-    identityProviderUserId: "auth0|123"
-  }) {
+  createUser(
+    input: {
+      id: "user-123"
+      identityProvider: "auth0"
+      identityProviderUserId: "auth0|123"
+    }
+  ) {
     id
     orgId
   }
@@ -98,6 +107,7 @@ mutation {
 ## Development
 
 ### Commands
+
 ```bash
 ./build.sh                  # Build all packages
 ./lint-all.sh              # Run ESLint
@@ -107,6 +117,7 @@ npm run test:grep -- "pattern"  # Search tests
 ```
 
 ### Project Structure
+
 ```
 /node/packages/
   permiso-core/           # Shared types and utilities
@@ -117,6 +128,7 @@ npm run test:grep -- "pattern"  # Search tests
 ```
 
 ### Key Files
+
 - `database/permiso/migrations/` - Database schema and RLS policies
 - `node/packages/permiso-server/src/schema.graphql` - GraphQL schema
 - `node/packages/permiso-server/src/domain/` - Business logic
@@ -125,10 +137,11 @@ npm run test:grep -- "pattern"  # Search tests
 ## Configuration
 
 ### Required Environment Variables
+
 ```bash
 # Database connection
 PERMISO_DB_HOST=localhost
-PERMISO_DB_PORT=5432  
+PERMISO_DB_PORT=5432
 PERMISO_DB_NAME=permiso
 
 # Database users (required)
@@ -147,6 +160,7 @@ PERMISO_API_KEY=your-secret-key
 ## Database Setup
 
 ### Creating Required Users
+
 ```sql
 -- Create RLS user for org-scoped operations
 CREATE USER rls_db_user WITH PASSWORD 'changeme_rls';
@@ -155,7 +169,7 @@ GRANT USAGE ON SCHEMA public TO rls_db_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO rls_db_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO rls_db_user;
 
--- Create unrestricted user for admin operations  
+-- Create unrestricted user for admin operations
 CREATE USER unrestricted_db_user WITH PASSWORD 'changeme_admin';
 GRANT CONNECT ON DATABASE permiso TO unrestricted_db_user;
 GRANT ALL PRIVILEGES ON DATABASE permiso TO unrestricted_db_user;
@@ -165,6 +179,7 @@ ALTER USER unrestricted_db_user BYPASSRLS;
 ```
 
 ### Multi-Database Support
+
 Permiso can manage permissions for multiple databases. See [database.md](docs/database.md) for configuration.
 
 ## Testing
@@ -173,7 +188,7 @@ Permiso can manage permissions for multiple databases. See [database.md](docs/da
 # Run all tests
 npm test
 
-# Search specific tests  
+# Search specific tests
 npm run test:grep -- "Organizations"
 npm run test:integration:grep -- "Users"
 npm run test:client:grep -- "Permissions"

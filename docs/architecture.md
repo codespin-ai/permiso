@@ -28,11 +28,13 @@ Permiso uses PostgreSQL Row Level Security (RLS) for multi-tenant isolation.
 ## Database Users
 
 ### RLS User (`rls_db_user`)
+
 - Used when `x-org-id` header is present
 - All queries automatically filtered by `org_id` via RLS policies
 - Cannot access data from other organizations
 
 ### Unrestricted User (`unrestricted_db_user`)
+
 - Used for ROOT operations (no `x-org-id` header)
 - Used for organization management
 - Can query across all organizations
@@ -49,6 +51,7 @@ CREATE POLICY tenant_isolation ON table_name
 ```
 
 The RLS wrapper sets the context before each query:
+
 ```sql
 SET LOCAL app.current_org_id = 'org-123';
 ```
@@ -63,6 +66,7 @@ const rootDb = ctx.db.upgradeToRoot?.("reason") || ctx.db;
 ```
 
 This pattern is used for:
+
 - Organization CRUD operations
 - Cross-organization queries (e.g., `getUsersByIdentity`)
 - Field resolvers that fetch parent organizations
@@ -116,6 +120,7 @@ user_role
 ### Property Tables
 
 Each entity has a corresponding property table for JSON metadata:
+
 - `organization_property`
 - `user_property`
 - `role_property`
@@ -132,10 +137,10 @@ const connectionPools = new Map<string, Database>();
 // Lazy initialization prevents wasteful connections
 export class LazyDatabase {
   private actualDb?: Database;
-  
+
   ensureInitialized() {
     if (!this.actualDb) {
-      this.actualDb = this.orgId 
+      this.actualDb = this.orgId
         ? createRlsDb(this.orgId)
         : createUnrestrictedDb();
     }
@@ -165,6 +170,7 @@ await createOrganization(rootDb, ...);  // ROOT transaction
 ## Code Organization
 
 ### Package Structure
+
 - `permiso-core`: Shared types and utilities
 - `permiso-db`: Database layer with RLS wrapper
 - `permiso-server`: GraphQL server and domain logic
@@ -173,6 +179,7 @@ await createOrganization(rootDb, ...);  // ROOT transaction
 - `permiso-test-utils`: Testing utilities
 
 ### Design Patterns
+
 - **No classes**: Only pure functions with explicit dependencies
 - **Result types**: Error handling without exceptions
 - **DbRow pattern**: Separate database types from domain types

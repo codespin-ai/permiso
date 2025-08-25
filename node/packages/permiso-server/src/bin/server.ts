@@ -12,7 +12,6 @@ import { getApiKeyConfig, validateApiKey } from "../auth/api-key.js";
 
 const logger = createLogger("GraphQLServer");
 
-
 async function startServer() {
   // Initialize health check database
   const healthCheckDb = createLazyDb();
@@ -82,7 +81,7 @@ async function startServer() {
 
         // Extract organization ID from header (optional)
         const orgId = req.headers["x-org-id"] as string | undefined;
-        
+
         // Create lazy database connection
         // It will only connect when actually used
         const db = createLazyDb(orgId);

@@ -91,7 +91,11 @@ export async function getOrganizations(
     const rootCtx = { ...ctx, db: rootDb };
     const result = await Promise.all(
       orgs.map(async (org) => {
-        const propsResult = await getOrganizationProperties(rootCtx, org.id, false);
+        const propsResult = await getOrganizationProperties(
+          rootCtx,
+          org.id,
+          false,
+        );
         if (!propsResult.success) {
           throw propsResult.error;
         }

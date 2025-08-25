@@ -39,6 +39,7 @@ UNRESTRICTED_DB_USER_PASSWORD=your_admin_password
 Permiso can manage permissions for multiple databases.
 
 ### Structure
+
 ```
 database/
 ├── permiso/           # Main Permiso database
@@ -52,6 +53,7 @@ database/
 ```
 
 ### Commands
+
 ```bash
 # Permiso database
 npm run migrate:permiso:latest

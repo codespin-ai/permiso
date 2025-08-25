@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import pgPromise from "pg-promise";
 import { RlsDatabaseWrapper } from "./rls-wrapper.js";
 export * as sql from "./sql.js";
@@ -17,12 +16,11 @@ export interface Database {
   any: <T = any>(query: string, values?: any) => Promise<T[]>;
   result: (query: string, values?: any) => Promise<pgPromise.IResultExt>;
   tx: <T>(callback: (t: Database) => Promise<T>) => Promise<T>;
-  
+
   // Optional method for upgrading to ROOT access
   // Only available on RLS databases, not on already-unrestricted databases
   upgradeToRoot?: (reason?: string) => Database;
 }
-
 
 // Single shared connection pool for all database connections
 // This prevents connection pool exhaustion by ensuring only one pool exists
@@ -34,7 +32,6 @@ function getConnectionKey(user: string): string {
   const database = process.env.PERMISO_DB_NAME || "permiso";
   return `${host}:${port}:${database}:${user}`;
 }
-
 
 function getOrCreateConnection(
   user: string,
@@ -64,7 +61,6 @@ function getOrCreateConnection(
 
   return connectionPools.get(key)!;
 }
-
 
 // Create RLS-enabled database connection
 export function createRlsDb(orgId: string): Database {

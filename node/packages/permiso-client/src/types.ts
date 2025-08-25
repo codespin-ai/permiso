@@ -11,8 +11,8 @@ export type Logger = {
 export type PermisoConfig = {
   /** The GraphQL endpoint URL */
   endpoint: string;
-  /** Organization ID for multi-tenant isolation */
-  orgId: string;
+  /** Organization ID for multi-tenant isolation (optional for ROOT context) */
+  orgId?: string;
   /** Optional API key for authentication */
   apiKey?: string;
   /** Request timeout in milliseconds */
