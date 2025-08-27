@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const getEffectivePermissionsByPrefixResolver = {
   Query: {
     effectivePermissionsByPrefix: async (
-      _: any,
+      _: unknown,
       args: {
         orgId: string;
         userId: string;

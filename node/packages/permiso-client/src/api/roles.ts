@@ -104,7 +104,18 @@ export async function listRoles(
     }
   `;
 
-  const result = await graphqlRequest<{ roles: any }>({
+  const result = await graphqlRequest<{
+    roles: {
+      nodes: Role[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    };
+  }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {

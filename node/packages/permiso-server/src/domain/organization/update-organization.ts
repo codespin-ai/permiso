@@ -16,7 +16,7 @@ export async function updateOrganization(
   try {
     // Use ROOT access for organization updates
     const rootDb = ctx.db.upgradeToRoot?.("Update organization") || ctx.db;
-    const updateParams: Record<string, any> = {};
+    const updateParams: Record<string, unknown> = {};
 
     if (input.name !== undefined) {
       updateParams.name = input.name;

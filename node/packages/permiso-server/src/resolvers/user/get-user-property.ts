@@ -7,7 +7,7 @@ export { getUserProperty };
 export const getUserPropertyResolver = {
   Query: {
     userProperty: async (
-      _: any,
+      _: unknown,
       args: { userId: string; propertyName: string },
       context: DataContext,
     ) => {

@@ -6,7 +6,11 @@ export { getUser };
 
 export const getUserResolver = {
   Query: {
-    user: async (_: any, args: { userId: string }, context: DataContext) => {
+    user: async (
+      _: unknown,
+      args: { userId: string },
+      context: DataContext,
+    ) => {
       const result = await getUser(context, args.userId);
       if (!result.success) {
         throw result.error;

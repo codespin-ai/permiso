@@ -1,4 +1,4 @@
-import { GraphQLScalarType, Kind } from "graphql";
+import { GraphQLScalarType, Kind, ValueNode, ObjectValueNode } from "graphql";
 
 export const JSONScalar = new GraphQLScalarType({
   name: "JSON",
@@ -41,7 +41,7 @@ export const JSONScalar = new GraphQLScalarType({
   },
 });
 
-function parseLiteral(ast: any): any {
+function parseLiteral(ast: ValueNode): unknown {
   switch (ast.kind) {
     case Kind.STRING:
       return ast.value;
@@ -52,8 +52,8 @@ function parseLiteral(ast: any): any {
     case Kind.FLOAT:
       return parseFloat(ast.value);
     case Kind.OBJECT: {
-      const value = Object.create(null);
-      ast.fields.forEach((field: any) => {
+      const value = Object.create(null) as Record<string, unknown>;
+      (ast as ObjectValueNode).fields.forEach((field) => {
         value[field.name.value] = parseLiteral(field.value);
       });
       return value;

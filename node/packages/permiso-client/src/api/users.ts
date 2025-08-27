@@ -116,7 +116,18 @@ export async function listUsers(
     }
   `;
 
-  const result = await graphqlRequest<{ users: any }>({
+  const result = await graphqlRequest<{
+    users: {
+      nodes: User[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    };
+  }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {

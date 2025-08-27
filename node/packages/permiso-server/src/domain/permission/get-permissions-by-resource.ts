@@ -9,7 +9,19 @@ const logger = createLogger("permiso-server:permissions");
 export async function getPermissionsByResource(
   ctx: DataContext,
   resourceId: string,
-): Promise<Result<Array<any>>> {
+): Promise<
+  Result<
+    Array<{
+      __typename: "UserPermission" | "RolePermission";
+      userId?: string;
+      roleId?: string;
+      resourceId: string;
+      action: string;
+      createdAt: Date;
+      orgId: string;
+    }>
+  >
+> {
   try {
     // Get user permissions for this resource
     const userPermsResult = await getUserPermissions(

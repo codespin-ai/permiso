@@ -40,14 +40,28 @@ export async function getEffectivePermissions(
       ]);
 
       const effectivePerms: EffectivePermission[] = [
-        ...userPerms.map((p: any) => ({
+        ...(
+          userPerms as Array<{
+            resource_id: string;
+            action: string;
+            source_id: string;
+            created_at: Date;
+          }>
+        ).map((p) => ({
           resourceId: p.resource_id,
           action: p.action,
           source: "user" as const,
           sourceId: p.source_id,
           createdAt: p.created_at,
         })),
-        ...rolePerms.map((p: any) => ({
+        ...(
+          rolePerms as Array<{
+            resource_id: string;
+            action: string;
+            source_id: string;
+            created_at: Date;
+          }>
+        ).map((p) => ({
           resourceId: p.resource_id,
           action: p.action,
           source: "role" as const,
@@ -72,7 +86,7 @@ export async function getEffectivePermissions(
          WHERE user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(resource_id, '*', '') || '%'`;
 
-    const userPermsParams: Record<string, any> = { userId, resourceId };
+    const userPermsParams: Record<string, unknown> = { userId, resourceId };
     if (action) userPermsParams.action = action;
 
     // Get permissions from user's roles - find permissions where the requested resourceId starts with the permission's resource_id
@@ -89,7 +103,7 @@ export async function getEffectivePermissions(
          WHERE ur.user_id = $(userId) 
          AND $(resourceId) LIKE REPLACE(rp.resource_id, '*', '') || '%'`;
 
-    const rolePermsParams: Record<string, any> = { userId, resourceId };
+    const rolePermsParams: Record<string, unknown> = { userId, resourceId };
     if (action) rolePermsParams.action = action;
 
     const [userPerms, rolePerms] = await Promise.all([
@@ -98,14 +112,28 @@ export async function getEffectivePermissions(
     ]);
 
     const effectivePerms: EffectivePermission[] = [
-      ...userPerms.map((p: any) => ({
+      ...(
+        userPerms as Array<{
+          resource_id: string;
+          action: string;
+          source_id: string;
+          created_at: Date;
+        }>
+      ).map((p) => ({
         resourceId: p.resource_id,
         action: p.action,
         source: "user" as const,
         sourceId: p.source_id,
         createdAt: p.created_at,
       })),
-      ...rolePerms.map((p: any) => ({
+      ...(
+        rolePerms as Array<{
+          resource_id: string;
+          action: string;
+          source_id: string;
+          created_at: Date;
+        }>
+      ).map((p) => ({
         resourceId: p.resource_id,
         action: p.action,
         source: "role" as const,

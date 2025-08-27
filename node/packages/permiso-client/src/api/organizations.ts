@@ -102,7 +102,18 @@ export async function listOrganizations(
     }
   `;
 
-  const result = await graphqlRequest<{ organizations: any }>({
+  const result = await graphqlRequest<{
+    organizations: {
+      nodes: Organization[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    };
+  }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {

@@ -7,7 +7,7 @@ export { getRoleProperty };
 export const getRolePropertyResolver = {
   Query: {
     roleProperty: async (
-      _: any,
+      _: unknown,
       args: { roleId: string; propertyName: string },
       context: DataContext,
     ) => {

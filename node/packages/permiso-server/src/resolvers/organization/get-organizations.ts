@@ -4,8 +4,15 @@ import { DataContext } from "../../domain/data-context.js";
 export const getOrganizationsResolver = {
   Query: {
     organizations: async (
-      _: any,
-      args: { filter?: any; pagination?: any },
+      _: unknown,
+      args: {
+        filter?: { properties?: Array<{ name: string; value: unknown }> };
+        pagination?: {
+          limit?: number;
+          offset?: number;
+          sortDirection?: "ASC" | "DESC";
+        };
+      },
       context: DataContext,
     ) => {
       const result = await getOrganizations(
@@ -49,7 +56,7 @@ export const getOrganizationsResolver = {
     },
 
     organizationsByIds: async (
-      _: any,
+      _: unknown,
       args: { ids: string[] },
       context: DataContext,
     ) => {

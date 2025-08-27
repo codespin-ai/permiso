@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const resourcesByIdPrefixResolver = {
   Query: {
     resourcesByIdPrefix: async (
-      _: any,
+      _: unknown,
       args: { idPrefix: string },
       context: DataContext,
     ) => {

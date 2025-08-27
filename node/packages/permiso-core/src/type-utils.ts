@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Type utilities for string case conversion
 type CamelCase<S extends string> =
   S extends `${infer P1}_${infer P2}${infer P3}`
@@ -9,7 +10,7 @@ type SnakeCase<S extends string> = S extends `${infer T}${infer U}`
   : S;
 
 // Type for converting object keys to camelCase
-type CamelCaseKeys<T> = T extends readonly any[]
+type CamelCaseKeys<T> = T extends readonly unknown[]
   ? T
   : T extends object
     ? {
@@ -18,7 +19,7 @@ type CamelCaseKeys<T> = T extends readonly any[]
     : T;
 
 // Type for converting object keys to snake_case
-type SnakeCaseKeys<T> = T extends readonly any[]
+type SnakeCaseKeys<T> = T extends readonly unknown[]
   ? T
   : T extends object
     ? {
@@ -40,11 +41,11 @@ function stringToSnakeCase(str: string): string {
 }
 
 // Main function to convert object keys to camelCase
-export function toCamelCase<T extends Record<string, any>>(
+export function toCamelCase<T extends Record<string, unknown>>(
   obj: T,
 ): CamelCaseKeys<T> {
   if (Array.isArray(obj)) {
-    return obj as any;
+    return obj as unknown as CamelCaseKeys<T>;
   }
 
   if (obj === null || typeof obj !== "object") {
@@ -61,22 +62,22 @@ export function toCamelCase<T extends Record<string, any>>(
     }
   }
 
-  return result;
+  return result as CamelCaseKeys<T>;
 }
 
 // Main function to convert object keys to snake_case
-export function toSnakeCase<T extends Record<string, any>>(
+export function toSnakeCase<T extends Record<string, unknown>>(
   obj: T,
 ): SnakeCaseKeys<T> {
   if (Array.isArray(obj)) {
-    return obj as any;
+    return obj as unknown as SnakeCaseKeys<T>;
   }
 
   if (obj === null || typeof obj !== "object") {
-    return obj as any;
+    return obj as SnakeCaseKeys<T>;
   }
 
-  const result: any = {};
+  const result: Record<string, unknown> = {};
 
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -86,5 +87,5 @@ export function toSnakeCase<T extends Record<string, any>>(
     }
   }
 
-  return result;
+  return result as SnakeCaseKeys<T>;
 }

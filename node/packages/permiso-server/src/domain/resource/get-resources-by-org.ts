@@ -13,12 +13,12 @@ const logger = createLogger("permiso-server:resources");
 export async function getResourcesByOrg(
   ctx: DataContext,
   orgId: string,
-  filter?: any,
-  pagination?: any,
+  filter?: { idPrefix?: string },
+  pagination?: { limit?: number; offset?: number },
 ): Promise<Result<Resource[]>> {
   try {
     let query = `SELECT * FROM resource WHERE org_id = $(orgId)`;
-    const params: any = { orgId };
+    const params: Record<string, unknown> = { orgId };
 
     // Apply id prefix filter if provided
     if (filter?.idPrefix) {

@@ -17,7 +17,7 @@ export class RlsDatabaseWrapper implements Database {
   private upgradedConnection?: Database; // Cache the upgraded connection
 
   constructor(
-    private db: pgPromise.IDatabase<any>,
+    private db: pgPromise.IDatabase<unknown>,
     private orgId: string,
   ) {
     if (!orgId) {
@@ -56,7 +56,7 @@ export class RlsDatabaseWrapper implements Database {
    * Uses SET LOCAL within a transaction to ensure proper scoping
    */
   private async withOrgContext<T>(
-    operation: (db: pgPromise.IDatabase<any>) => Promise<T>,
+    operation: (db: pgPromise.ITask<unknown>) => Promise<T>,
   ): Promise<T> {
     // For single queries, use a savepoint to minimize overhead
     return this.db.tx("rls-context", async (t) => {
@@ -65,37 +65,40 @@ export class RlsDatabaseWrapper implements Database {
     });
   }
 
-  async query<T = any>(query: string, values?: any): Promise<T[]> {
+  async query<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.withOrgContext((db) => db.query<T>(query, values)) as Promise<
       T[]
     >;
   }
 
-  async one<T = any>(query: string, values?: any): Promise<T> {
+  async one<T = unknown>(query: string, values?: unknown): Promise<T> {
     return this.withOrgContext((db) => db.one<T>(query, values));
   }
 
-  async oneOrNone<T = any>(query: string, values?: any): Promise<T | null> {
+  async oneOrNone<T = unknown>(
+    query: string,
+    values?: unknown,
+  ): Promise<T | null> {
     return this.withOrgContext((db) => db.oneOrNone<T>(query, values));
   }
 
-  async none(query: string, values?: any): Promise<null> {
+  async none(query: string, values?: unknown): Promise<null> {
     return this.withOrgContext((db) => db.none(query, values));
   }
 
-  async many<T = any>(query: string, values?: any): Promise<T[]> {
+  async many<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.withOrgContext((db) => db.many<T>(query, values));
   }
 
-  async manyOrNone<T = any>(query: string, values?: any): Promise<T[]> {
+  async manyOrNone<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.withOrgContext((db) => db.manyOrNone<T>(query, values));
   }
 
-  async any<T = any>(query: string, values?: any): Promise<T[]> {
+  async any<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.withOrgContext((db) => db.any<T>(query, values));
   }
 
-  async result(query: string, values?: any): Promise<pgPromise.IResultExt> {
+  async result(query: string, values?: unknown): Promise<pgPromise.IResultExt> {
     return this.withOrgContext((db) => db.result(query, values));
   }
 
@@ -123,39 +126,42 @@ export class RlsDatabaseWrapper implements Database {
  */
 class TransactionWrapper implements Database {
   constructor(
-    private t: pgPromise.ITask<any>,
+    private t: pgPromise.ITask<unknown>,
     private orgId: string,
   ) {}
 
-  async query<T = any>(query: string, values?: any): Promise<T[]> {
+  async query<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.t.query<T>(query, values) as Promise<T[]>;
   }
 
-  async one<T = any>(query: string, values?: any): Promise<T> {
+  async one<T = unknown>(query: string, values?: unknown): Promise<T> {
     return this.t.one<T>(query, values);
   }
 
-  async oneOrNone<T = any>(query: string, values?: any): Promise<T | null> {
+  async oneOrNone<T = unknown>(
+    query: string,
+    values?: unknown,
+  ): Promise<T | null> {
     return this.t.oneOrNone<T>(query, values);
   }
 
-  async none(query: string, values?: any): Promise<null> {
+  async none(query: string, values?: unknown): Promise<null> {
     return this.t.none(query, values);
   }
 
-  async many<T = any>(query: string, values?: any): Promise<T[]> {
+  async many<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.t.many<T>(query, values);
   }
 
-  async manyOrNone<T = any>(query: string, values?: any): Promise<T[]> {
+  async manyOrNone<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.t.manyOrNone<T>(query, values);
   }
 
-  async any<T = any>(query: string, values?: any): Promise<T[]> {
+  async any<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.t.any<T>(query, values);
   }
 
-  async result(query: string, values?: any): Promise<pgPromise.IResultExt> {
+  async result(query: string, values?: unknown): Promise<pgPromise.IResultExt> {
     return this.t.result(query, values);
   }
 

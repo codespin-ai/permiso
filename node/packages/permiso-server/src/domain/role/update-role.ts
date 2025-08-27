@@ -14,7 +14,7 @@ export async function updateRole(
   input: UpdateRoleInput,
 ): Promise<Result<Role>> {
   try {
-    const updateParams: Record<string, any> = {};
+    const updateParams: Record<string, unknown> = {};
 
     if (input.name !== undefined) {
       updateParams.name = input.name;

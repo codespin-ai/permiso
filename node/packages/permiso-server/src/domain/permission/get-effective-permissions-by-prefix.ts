@@ -21,7 +21,7 @@ export async function getEffectivePermissionsByPrefix(
          FROM user_permission 
          WHERE user_id = $(userId) AND resource_id LIKE $(resourcePattern)`;
 
-    const userPermsParams: Record<string, any> = {
+    const userPermsParams: Record<string, unknown> = {
       userId,
       resourcePattern: `${resourceIdPrefix}%`,
     };
@@ -38,7 +38,7 @@ export async function getEffectivePermissionsByPrefix(
          INNER JOIN user_role ur ON rp.role_id = ur.role_id
          WHERE ur.user_id = $(userId) AND rp.resource_id LIKE $(resourcePattern)`;
 
-    const rolePermsParams: Record<string, any> = {
+    const rolePermsParams: Record<string, unknown> = {
       userId,
       resourcePattern: `${resourceIdPrefix}%`,
     };
@@ -50,14 +50,28 @@ export async function getEffectivePermissionsByPrefix(
     ]);
 
     const effectivePerms: EffectivePermission[] = [
-      ...userPerms.map((p: any) => ({
+      ...(
+        userPerms as Array<{
+          resource_id: string;
+          action: string;
+          source_id: string;
+          created_at: Date;
+        }>
+      ).map((p) => ({
         resourceId: p.resource_id,
         action: p.action,
         source: "user" as const,
         sourceId: p.source_id,
         createdAt: p.created_at,
       })),
-      ...rolePerms.map((p: any) => ({
+      ...(
+        rolePerms as Array<{
+          resource_id: string;
+          action: string;
+          source_id: string;
+          created_at: Date;
+        }>
+      ).map((p) => ({
         resourceId: p.resource_id,
         action: p.action,
         source: "role" as const,

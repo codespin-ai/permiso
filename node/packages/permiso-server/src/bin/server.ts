@@ -28,7 +28,8 @@ async function startServer() {
   // Create GraphQL server
   const server = new ApolloServer({
     typeDefs: getTypeDefs(),
-    resolvers,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolvers: resolvers as any,
   });
 
   // Health check endpoint (no auth required) - before GraphQL setup

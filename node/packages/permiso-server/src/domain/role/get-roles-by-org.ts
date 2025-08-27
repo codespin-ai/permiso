@@ -13,12 +13,15 @@ const logger = createLogger("permiso-server:roles");
 export async function getRolesByOrg(
   ctx: DataContext,
   orgId: string,
-  filter?: any,
-  pagination?: any,
+  filter?: {
+    properties?: Array<{ name: string; value: unknown }>;
+    ids?: string[];
+  },
+  pagination?: { limit?: number; offset?: number },
 ): Promise<Result<RoleWithProperties[]>> {
   try {
     let query: string;
-    const params: any = { orgId };
+    const params: Record<string, unknown> = { orgId };
 
     if (filter?.properties && filter.properties.length > 0) {
       // Use a subquery to find roles that have ALL the requested properties
@@ -32,7 +35,7 @@ export async function getRolesByOrg(
       `;
 
       const propConditions: string[] = [];
-      filter.properties.forEach((prop: any, index: number) => {
+      filter.properties.forEach((prop, index) => {
         propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
         params[`propValue${index}`] = JSON.stringify(prop.value);
@@ -45,7 +48,7 @@ export async function getRolesByOrg(
           )`;
       params.propCount = filter.properties.length;
 
-      if (filter?.ids?.length > 0) {
+      if (filter?.ids && filter.ids.length > 0) {
         query += ` AND r.id = ANY($(ids))`;
         params.ids = filter.ids;
       }
@@ -54,7 +57,7 @@ export async function getRolesByOrg(
       query = `SELECT * FROM role WHERE org_id = $(orgId)`;
 
       // Apply filters if provided
-      if (filter?.ids?.length > 0) {
+      if (filter?.ids && filter.ids.length > 0) {
         query += ` AND id = ANY($(ids))`;
         params.ids = filter.ids;
       }

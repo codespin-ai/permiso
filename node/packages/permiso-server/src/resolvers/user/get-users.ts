@@ -7,8 +7,15 @@ export { getUsers };
 export const getUsersResolver = {
   Query: {
     users: async (
-      _: any,
-      args: { filter?: any; pagination?: any },
+      _: unknown,
+      args: {
+        filter?: { properties?: Array<{ name: string; value: unknown }> };
+        pagination?: {
+          limit?: number;
+          offset?: number;
+          sortDirection?: "ASC" | "DESC";
+        };
+      },
       context: DataContext,
     ) => {
       const result = await getUsers(context, args.filter, args.pagination);
@@ -48,7 +55,7 @@ export const getUsersResolver = {
     },
 
     usersByIds: async (
-      _: any,
+      _: unknown,
       args: { ids: string[] },
       context: DataContext,
     ) => {

@@ -13,8 +13,8 @@ function buildRolePermissionsQuery(
   roleId?: string,
   resourceId?: string,
   action?: string,
-): { query: string; params: Record<string, any> } {
-  const params: Record<string, any> = {};
+): { query: string; params: Record<string, unknown> } {
+  const params: Record<string, unknown> = {};
   const conditions: string[] = [];
 
   if (roleId) {

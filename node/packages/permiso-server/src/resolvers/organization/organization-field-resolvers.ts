@@ -9,7 +9,7 @@ export const organizationFieldResolvers = {
   Organization: {
     properties: async (
       parent: OrganizationWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getOrganizationProperties(context, parent.id);
@@ -21,7 +21,15 @@ export const organizationFieldResolvers = {
 
     users: async (
       parent: OrganizationWithProperties,
-      args: { filter?: any; pagination?: any },
+      args: {
+        filter?: {
+          properties?: Array<{ name: string; value: unknown }>;
+          ids?: string[];
+          identityProvider?: string;
+          identityProviderUserId?: string;
+        };
+        pagination?: { limit?: number; offset?: number };
+      },
       context: DataContext,
     ) => {
       const result = await getUsersByOrg(
@@ -71,7 +79,13 @@ export const organizationFieldResolvers = {
 
     roles: async (
       parent: OrganizationWithProperties,
-      args: { filter?: any; pagination?: any },
+      args: {
+        filter?: {
+          properties?: Array<{ name: string; value: unknown }>;
+          ids?: string[];
+        };
+        pagination?: { limit?: number; offset?: number };
+      },
       context: DataContext,
     ) => {
       const result = await getRolesByOrg(
@@ -121,7 +135,10 @@ export const organizationFieldResolvers = {
 
     resources: async (
       parent: OrganizationWithProperties,
-      args: { filter?: any; pagination?: any },
+      args: {
+        filter?: { idPrefix?: string };
+        pagination?: { limit?: number; offset?: number };
+      },
       context: DataContext,
     ) => {
       const result = await getResourcesByOrg(
