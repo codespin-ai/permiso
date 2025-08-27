@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const getUserPermissionsResolver = {
   Query: {
     userPermissions: async (
-      _: any,
+      _: unknown,
       args: {
         orgId: string;
         userId?: string;

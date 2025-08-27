@@ -21,7 +21,7 @@ export async function getRoles(
 ): Promise<Result<RoleWithProperties[]>> {
   try {
     let query: string;
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
 
     if (filters?.properties && filters.properties.length > 0) {
       // Use a subquery to find roles that have ALL the requested properties

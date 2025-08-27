@@ -62,23 +62,27 @@ import {
   permissionFieldResolvers,
 } from "./permission/index.js";
 
-function mergeResolvers(...resolvers: any[]) {
-  const merged: any = {
+function mergeResolvers(...resolvers: unknown[]) {
+  const merged: Record<string, unknown> = {
     Query: {},
     Mutation: {},
   };
 
   for (const resolver of resolvers) {
-    if (resolver.Query) {
-      Object.assign(merged.Query, resolver.Query);
+    const resolverObj = resolver as Record<string, unknown>;
+    if (resolverObj.Query) {
+      Object.assign(merged.Query as Record<string, unknown>, resolverObj.Query);
     }
-    if (resolver.Mutation) {
-      Object.assign(merged.Mutation, resolver.Mutation);
+    if (resolverObj.Mutation) {
+      Object.assign(
+        merged.Mutation as Record<string, unknown>,
+        resolverObj.Mutation,
+      );
     }
     // Copy field resolvers (like User, Organization, etc.)
-    for (const key of Object.keys(resolver)) {
+    for (const key of Object.keys(resolverObj)) {
       if (key !== "Query" && key !== "Mutation") {
-        merged[key] = resolver[key];
+        merged[key] = resolverObj[key];
       }
     }
   }

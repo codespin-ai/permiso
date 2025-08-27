@@ -7,14 +7,17 @@ const pgp = pgPromise();
 
 // Export the Database interface - this is what all consumers use
 export interface Database {
-  query: <T = any>(query: string, values?: any) => Promise<T[]>;
-  one: <T = any>(query: string, values?: any) => Promise<T>;
-  oneOrNone: <T = any>(query: string, values?: any) => Promise<T | null>;
-  none: (query: string, values?: any) => Promise<null>;
-  many: <T = any>(query: string, values?: any) => Promise<T[]>;
-  manyOrNone: <T = any>(query: string, values?: any) => Promise<T[]>;
-  any: <T = any>(query: string, values?: any) => Promise<T[]>;
-  result: (query: string, values?: any) => Promise<pgPromise.IResultExt>;
+  query: <T = unknown>(query: string, values?: unknown) => Promise<T[]>;
+  one: <T = unknown>(query: string, values?: unknown) => Promise<T>;
+  oneOrNone: <T = unknown>(
+    query: string,
+    values?: unknown,
+  ) => Promise<T | null>;
+  none: (query: string, values?: unknown) => Promise<null>;
+  many: <T = unknown>(query: string, values?: unknown) => Promise<T[]>;
+  manyOrNone: <T = unknown>(query: string, values?: unknown) => Promise<T[]>;
+  any: <T = unknown>(query: string, values?: unknown) => Promise<T[]>;
+  result: (query: string, values?: unknown) => Promise<pgPromise.IResultExt>;
   tx: <T>(callback: (t: Database) => Promise<T>) => Promise<T>;
 
   // Optional method for upgrading to ROOT access
@@ -24,7 +27,7 @@ export interface Database {
 
 // Single shared connection pool for all database connections
 // This prevents connection pool exhaustion by ensuring only one pool exists
-const connectionPools = new Map<string, pgPromise.IDatabase<any>>();
+const connectionPools = new Map<string, pgPromise.IDatabase<unknown>>();
 
 function getConnectionKey(user: string): string {
   const host = process.env.PERMISO_DB_HOST || "localhost";
@@ -36,7 +39,7 @@ function getConnectionKey(user: string): string {
 function getOrCreateConnection(
   user: string,
   password: string,
-): pgPromise.IDatabase<any> {
+): pgPromise.IDatabase<unknown> {
   const key = getConnectionKey(user);
 
   if (!connectionPools.has(key)) {

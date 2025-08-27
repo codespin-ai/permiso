@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const getResourceResolver = {
   Query: {
     resource: async (
-      _: any,
+      _: unknown,
       args: { orgId: string; resourceId: string },
       context: DataContext,
     ) => {

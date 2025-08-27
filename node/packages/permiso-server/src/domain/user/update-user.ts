@@ -14,7 +14,7 @@ export async function updateUser(
   input: UpdateUserInput,
 ): Promise<Result<User>> {
   try {
-    const updateParams: Record<string, any> = {};
+    const updateParams: Record<string, unknown> = {};
 
     if (input.identityProvider !== undefined) {
       updateParams.identityProvider = input.identityProvider;

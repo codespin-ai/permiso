@@ -10,7 +10,7 @@ export const roleFieldResolvers = {
   Role: {
     organization: async (
       parent: RoleWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getOrganization(context, parent.orgId);
@@ -22,7 +22,7 @@ export const roleFieldResolvers = {
 
     properties: async (
       parent: RoleWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getRoleProperties(context, parent.id);
@@ -32,7 +32,11 @@ export const roleFieldResolvers = {
       return result.data;
     },
 
-    users: async (parent: RoleWithProperties, _: any, context: DataContext) => {
+    users: async (
+      parent: RoleWithProperties,
+      _: unknown,
+      context: DataContext,
+    ) => {
       const userIdsResult = await getRoleUsers(context, parent.id);
       if (!userIdsResult.success) {
         throw userIdsResult.error;

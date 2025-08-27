@@ -7,7 +7,7 @@ export { deleteRole };
 export const deleteRoleResolver = {
   Mutation: {
     deleteRole: async (
-      _: any,
+      _: unknown,
       args: { roleId: string; safetyKey?: string },
       context: DataContext & { safetyKey?: string },
     ) => {

@@ -7,7 +7,7 @@ export { deleteUser };
 export const deleteUserResolver = {
   Mutation: {
     deleteUser: async (
-      _: any,
+      _: unknown,
       args: { userId: string; safetyKey?: string },
       context: DataContext & { safetyKey?: string },
     ) => {

@@ -7,7 +7,7 @@ export { setRoleProperty };
 export const setRolePropertyResolver = {
   Mutation: {
     setRoleProperty: async (
-      _: any,
+      _: unknown,
       args: {
         roleId: string;
         name: string;

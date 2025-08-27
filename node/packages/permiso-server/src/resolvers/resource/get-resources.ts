@@ -7,8 +7,16 @@ import { DataContext } from "../../domain/data-context.js";
 export const getResourcesResolver = {
   Query: {
     resources: async (
-      _: any,
-      args: { orgId: string; filter?: any; pagination?: any },
+      _: unknown,
+      args: {
+        orgId: string;
+        filter?: { idPrefix?: string };
+        pagination?: {
+          limit?: number;
+          offset?: number;
+          sortDirection?: "ASC" | "DESC";
+        };
+      },
       context: DataContext,
     ) => {
       let result;

@@ -20,8 +20,8 @@ function buildUserQuery(
     identityProviderUserId?: string;
   },
   pagination?: PaginationInput,
-): { query: string; params: Record<string, any> } {
-  const params: Record<string, any> = {};
+): { query: string; params: Record<string, unknown> } {
+  const params: Record<string, unknown> = {};
 
   const buildPropertiesQuery = () => {
     if (!filters?.properties || filters.properties.length === 0) return null;

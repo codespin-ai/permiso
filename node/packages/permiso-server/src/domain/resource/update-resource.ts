@@ -14,7 +14,7 @@ export async function updateResource(
   input: UpdateResourceInput,
 ): Promise<Result<Resource>> {
   try {
-    const updateParams: Record<string, any> = {};
+    const updateParams: Record<string, unknown> = {};
 
     if (input.name !== undefined) {
       updateParams.name = input.name;

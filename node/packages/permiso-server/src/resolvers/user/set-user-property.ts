@@ -7,7 +7,7 @@ export { setUserProperty };
 export const setUserPropertyResolver = {
   Mutation: {
     setUserProperty: async (
-      _: any,
+      _: unknown,
       args: {
         userId: string;
         name: string;

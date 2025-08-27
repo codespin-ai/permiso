@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const deleteOrganizationResolver = {
   Mutation: {
     deleteOrganization: async (
-      _: any,
+      _: unknown,
       args: { id: string; safetyKey?: string },
       context: DataContext,
     ) => {

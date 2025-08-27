@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const revokeUserPermissionResolver = {
   Mutation: {
     revokeUserPermission: async (
-      _: any,
+      _: unknown,
       args: {
         orgId: string;
         userId: string;

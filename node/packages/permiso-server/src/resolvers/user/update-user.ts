@@ -1,6 +1,7 @@
 import { updateUser } from "../../domain/user/update-user.js";
 import { getUser } from "./get-user.js";
 import { DataContext } from "../../domain/data-context.js";
+import type { UpdateUserInput } from "../../generated/graphql.js";
 
 // Re-export domain function
 export { updateUser };
@@ -8,8 +9,8 @@ export { updateUser };
 export const updateUserResolver = {
   Mutation: {
     updateUser: async (
-      _: any,
-      args: { userId: string; input: any },
+      _: unknown,
+      args: { userId: string; input: UpdateUserInput },
       context: DataContext,
     ) => {
       const result = await updateUser(context, args.userId, args.input);

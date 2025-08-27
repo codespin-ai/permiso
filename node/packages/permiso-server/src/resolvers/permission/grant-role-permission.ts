@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const grantRolePermissionResolver = {
   Mutation: {
     grantRolePermission: async (
-      _: any,
+      _: unknown,
       args: {
         input: {
           orgId: string;

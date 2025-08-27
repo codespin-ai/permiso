@@ -8,7 +8,7 @@ export { unassignUserRole };
 export const unassignUserRoleResolver = {
   Mutation: {
     unassignUserRole: async (
-      _: any,
+      _: unknown,
       args: { userId: string; roleId: string },
       context: DataContext,
     ) => {

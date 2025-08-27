@@ -13,12 +13,17 @@ const logger = createLogger("permiso-server:users");
 export async function getUsersByOrg(
   ctx: DataContext,
   orgId: string,
-  filter?: any,
-  pagination?: any,
+  filter?: {
+    properties?: Array<{ name: string; value: unknown }>;
+    ids?: string[];
+    identityProvider?: string;
+    identityProviderUserId?: string;
+  },
+  pagination?: { limit?: number; offset?: number },
 ): Promise<Result<UserWithProperties[]>> {
   try {
     let query: string;
-    const params: any = { orgId };
+    const params: Record<string, unknown> = { orgId };
 
     if (filter?.properties && filter.properties.length > 0) {
       // Use a subquery to find users that have ALL the requested properties
@@ -32,7 +37,7 @@ export async function getUsersByOrg(
       `;
 
       const propConditions: string[] = [];
-      filter.properties.forEach((prop: any, index: number) => {
+      filter.properties.forEach((prop, index) => {
         propConditions.push(`($(propName${index}), $(propValue${index}))`);
         params[`propName${index}`] = prop.name;
         params[`propValue${index}`] = JSON.stringify(prop.value);
@@ -45,7 +50,7 @@ export async function getUsersByOrg(
           )`;
       params.propCount = filter.properties.length;
 
-      if (filter?.ids?.length > 0) {
+      if (filter?.ids && filter.ids.length > 0) {
         query += ` AND u.id = ANY($(ids))`;
         params.ids = filter.ids;
       }
@@ -64,7 +69,7 @@ export async function getUsersByOrg(
       query = `SELECT * FROM "user" WHERE org_id = $(orgId)`;
 
       // Apply filters if provided
-      if (filter?.ids?.length > 0) {
+      if (filter?.ids && filter.ids.length > 0) {
         query += ` AND id = ANY($(ids))`;
         params.ids = filter.ids;
       }

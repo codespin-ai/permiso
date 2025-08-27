@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const getOrganizationResolver = {
   Query: {
     organization: async (
-      _: any,
+      _: unknown,
       args: { id: string },
       context: DataContext,
     ) => {

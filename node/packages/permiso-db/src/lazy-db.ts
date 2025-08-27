@@ -41,35 +41,38 @@ export class LazyDatabase implements Database {
     return this.actualDb!;
   }
 
-  async query<T = any>(query: string, values?: any): Promise<T[]> {
+  async query<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.ensureInitialized().query<T>(query, values);
   }
 
-  async one<T = any>(query: string, values?: any): Promise<T> {
+  async one<T = unknown>(query: string, values?: unknown): Promise<T> {
     return this.ensureInitialized().one<T>(query, values);
   }
 
-  async oneOrNone<T = any>(query: string, values?: any): Promise<T | null> {
+  async oneOrNone<T = unknown>(
+    query: string,
+    values?: unknown,
+  ): Promise<T | null> {
     return this.ensureInitialized().oneOrNone<T>(query, values);
   }
 
-  async none(query: string, values?: any): Promise<null> {
+  async none(query: string, values?: unknown): Promise<null> {
     return this.ensureInitialized().none(query, values);
   }
 
-  async many<T = any>(query: string, values?: any): Promise<T[]> {
+  async many<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.ensureInitialized().many<T>(query, values);
   }
 
-  async manyOrNone<T = any>(query: string, values?: any): Promise<T[]> {
+  async manyOrNone<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.ensureInitialized().manyOrNone<T>(query, values);
   }
 
-  async any<T = any>(query: string, values?: any): Promise<T[]> {
+  async any<T = unknown>(query: string, values?: unknown): Promise<T[]> {
     return this.ensureInitialized().any<T>(query, values);
   }
 
-  async result(query: string, values?: any): Promise<pgPromise.IResultExt> {
+  async result(query: string, values?: unknown): Promise<pgPromise.IResultExt> {
     return this.ensureInitialized().result(query, values);
   }
 

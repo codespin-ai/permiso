@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const getOrganizationPropertyResolver = {
   Query: {
     organizationProperty: async (
-      _: any,
+      _: unknown,
       args: { orgId: string; propertyName: string },
       context: DataContext,
     ) => {

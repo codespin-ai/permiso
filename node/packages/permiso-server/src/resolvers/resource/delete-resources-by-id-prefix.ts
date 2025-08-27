@@ -4,7 +4,7 @@ import { DataContext } from "../../domain/data-context.js";
 export const deleteResourcesByIdPrefixResolver = {
   Mutation: {
     deleteResourcesByIdPrefix: async (
-      _: any,
+      _: unknown,
       args: { orgId: string; idPrefix: string; safetyKey?: string },
       context: DataContext & { safetyKey?: string },
     ) => {

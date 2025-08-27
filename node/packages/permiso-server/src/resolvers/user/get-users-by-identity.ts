@@ -7,7 +7,7 @@ export { getUsersByIdentity };
 export const getUsersByIdentityResolver = {
   Query: {
     usersByIdentity: async (
-      _: any,
+      _: unknown,
       args: { identityProvider: string; identityProviderUserId: string },
       context: DataContext,
     ) => {

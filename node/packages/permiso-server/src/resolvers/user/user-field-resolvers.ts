@@ -10,7 +10,7 @@ export const userFieldResolvers = {
   User: {
     organization: async (
       parent: UserWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getOrganization(context, parent.orgId);
@@ -22,7 +22,7 @@ export const userFieldResolvers = {
 
     properties: async (
       parent: UserWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getUserProperties(context, parent.id);
@@ -32,7 +32,11 @@ export const userFieldResolvers = {
       return result.data;
     },
 
-    roles: async (parent: UserWithProperties, _: any, context: DataContext) => {
+    roles: async (
+      parent: UserWithProperties,
+      _: unknown,
+      context: DataContext,
+    ) => {
       if (!parent.roleIds || parent.roleIds.length === 0) {
         return [];
       }
@@ -48,7 +52,7 @@ export const userFieldResolvers = {
 
     permissions: async (
       parent: UserWithProperties,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getUserPermissions(context, parent.id);

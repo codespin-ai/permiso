@@ -91,7 +91,18 @@ export async function listResources(
     }
   `;
 
-  const result = await graphqlRequest<{ resources: any }>({
+  const result = await graphqlRequest<{
+    resources: {
+      nodes: Resource[];
+      totalCount: number;
+      pageInfo: {
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+        startCursor?: string;
+        endCursor?: string;
+      };
+    };
+  }>({
     endpoint: `${config.endpoint}/graphql`,
     query,
     variables: {

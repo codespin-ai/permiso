@@ -12,7 +12,7 @@ export const permissionFieldResolvers = {
   UserPermission: {
     organization: async (
       parent: UserPermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getOrganization(context, parent.orgId);
@@ -24,7 +24,7 @@ export const permissionFieldResolvers = {
 
     resource: async (
       parent: UserPermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getResource(context, parent.resourceId);
@@ -36,7 +36,7 @@ export const permissionFieldResolvers = {
 
     user: async (
       parent: UserPermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getUser(context, parent.userId);
@@ -50,7 +50,7 @@ export const permissionFieldResolvers = {
   RolePermission: {
     organization: async (
       parent: RolePermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getOrganization(context, parent.orgId);
@@ -62,7 +62,7 @@ export const permissionFieldResolvers = {
 
     resource: async (
       parent: RolePermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getResource(context, parent.resourceId);
@@ -74,7 +74,7 @@ export const permissionFieldResolvers = {
 
     role: async (
       parent: RolePermissionWithOrgId,
-      _: any,
+      _: unknown,
       context: DataContext,
     ) => {
       const result = await getRole(context, parent.roleId);

@@ -15,7 +15,7 @@ export async function getResources(
     // Apply sorting - validate and default to ASC if not specified
     const sortDirection = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
     let query = `SELECT * FROM resource ORDER BY id ${sortDirection}`;
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
 
     if (pagination?.limit) {
       query += ` LIMIT $(limit)`;
