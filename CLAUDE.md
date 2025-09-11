@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: NEVER ACT WITHOUT EXPLICIT USER APPROVAL
+
+**YOU MUST ALWAYS ASK FOR PERMISSION BEFORE:**
+
+- Making architectural decisions or changes
+- Implementing new features or functionality
+- Modifying APIs, interfaces, or data structures
+- Changing expected behavior or test expectations
+- Adding new dependencies or patterns
+
+**ONLY make changes AFTER the user explicitly approves.** When you identify issues or potential improvements, explain them clearly and wait for the user's decision. Do NOT assume what the user wants or make "helpful" changes without permission.
+
+## CRITICAL: NEVER USE MULTIEDIT
+
+**NEVER use the MultiEdit tool.** It has caused issues in multiple projects. Always use individual Edit operations instead, even if it means more edits. This ensures better control and prevents unintended changes.
+
 ## IMPORTANT: First Steps When Starting a Session
 
 When you begin working on this project, you MUST:
@@ -14,6 +30,8 @@ When you begin working on this project, you MUST:
    - Any other relevant docs based on the task at hand
 
 Only after reading these documents should you proceed with any implementation or analysis tasks.
+
+**IMPORTANT**: After every conversation compact/summary, you MUST re-read this CLAUDE.md file again as your first action. The conversation context gets compressed and critical project-specific instructions may be lost. Always start by reading CLAUDE.md after a compact.
 
 ## Overview
 
@@ -36,6 +54,25 @@ This means you should:
 - Design data structures and APIs for the ideal case, not for compatibility
 - Write code and comments as if everything is being written for the first time
 - Make architectural decisions based purely on technical merit
+
+## Documentation Principles
+
+**IMPORTANT**: When writing or updating documentation:
+
+- Write as if the spec was designed from the beginning, not evolved over time
+- Avoid phrases like "now allows", "changed from", "previously was", "only X is allowed"
+- Present features and constraints as inherent design decisions
+- Documentation should be timeless - readable as a complete spec at any point
+
+## Code Principles
+
+**NO BACKWARDS COMPATIBILITY**:
+
+- Do not write backwards compatibility code
+- Do not maintain legacy interfaces or environment variables
+- When refactoring, completely replace old implementations
+- Remove all deprecated code paths
+- The codebase should represent the current best design, not historical decisions
 
 ## Essential Commands
 
@@ -63,6 +100,8 @@ When the user asks you to commit and push:
 1. Run `./lint-all.sh` to ensure code passes linting
 2. Follow the git commit guidelines in the main Claude system prompt
 3. Get explicit user confirmation before any `git push`
+
+**VERSION UPDATES**: Consider incrementing the patch version in package.json files when committing changes. This ensures proper version tracking for all changes.
 
 ### Build Commands
 
@@ -188,6 +227,14 @@ npm run test:client:grep -- "fetch user"      # Only client tests
 - **DbRow Pattern**: All persistence functions use `XxxDbRow` types that mirror exact database schema
 - **Mapper Functions**: `mapXxxFromDb()` and `mapXxxToDb()` handle conversions between snake_case DB and camelCase domain types
 - **Type-safe Queries**: All queries use `db.one<XxxDbRow>()` with explicit type parameters
+
+### Query Optimization Guidelines
+
+- **Prefer simple separate queries over complex joins** when it only saves 1-3 database calls
+- **Use joins only to prevent N+1 query problems** (e.g., fetching data for many items in a loop)
+- **Prioritize code simplicity and readability** over minor performance optimizations
+- **Example**: Instead of a complex join to fetch related data, use 2-3 simple queries when clearer
+- This approach makes the code easier to understand and maintain
 
 ### 4. ESM Modules
 
@@ -355,6 +402,14 @@ const params = stringUtils.toSnakeCase({
 
 **Key guideline**: Use `toSnakeCase` when converting existing camelCase objects (like GraphQL inputs), but directly create snake_case objects when constructing from individual parameters. This is a pattern to apply based on context, not a rigid rule.
 
+## Debugging Tips
+
+1. **Permission issues**: Check RLS policies and user roles
+2. **GraphQL errors**: Check resolver return types and error handling
+3. **Database connection**: Verify DATABASE_URL and connection pooling
+4. **Authentication issues**: Verify JWT tokens and session configuration
+5. **Migration issues**: Check migration order and dependencies
+
 ## Key Documentation References
 
 - **Project Overview**: See [README.md](../README.md)
@@ -377,6 +432,78 @@ const params = stringUtils.toSnakeCase({
 6. **Keep README.md as single source of truth** - Most users only read README.md, ensure it covers essentials
 
 ## Testing Guidelines
+
+### Test Output Strategy for Full Test Suites
+
+**IMPORTANT**: When running the full test suite (which takes 3+ minutes), use `tee` to both display output to the user AND save to a file:
+
+```bash
+# Create .tests directory if it doesn't exist (gitignored)
+mkdir -p .tests
+
+# Run full test suite with tee - shows output to user AND saves to file
+npm test | tee .tests/run-$(date +%s).txt
+
+# Then you can analyze the saved output multiple times without re-running tests:
+grep "failing" .tests/run-*.txt
+tail -50 .tests/run-*.txt
+grep -A10 "specific test name" .tests/run-*.txt
+```
+
+**NEVER use plain redirection (`>` or `2>&1`) as it hides output from the user.** Always use `tee` so the user can see test progress in real-time while you also get a saved copy for analysis.
+
+This strategy prevents the need to re-run lengthy test suites when you need different information from the output. The `.tests/` directory is gitignored to keep test outputs from cluttering the repository.
+
+## Analysis and Documentation
+
+### Analysis Working Directory
+
+**IMPORTANT**: When performing long-running analysis, research, or documentation tasks, use the `.analysis/` directory as your working space:
+
+```bash
+# Create .analysis directory if it doesn't exist (gitignored)
+mkdir -p .analysis
+
+# Use for analysis outputs, reports, and working files
+cd .analysis
+
+# Examples of analysis work:
+# - Code complexity reports
+# - API documentation generation
+# - Dependency analysis
+# - Performance profiling results
+# - Architecture diagrams and documentation
+# - Database schema analysis
+# - Security audit reports
+```
+
+**Benefits of using `.analysis/` directory:**
+
+- Keeps analysis artifacts separate from source code
+- Allows iterative work without cluttering the repository
+- Can save large analysis outputs without affecting git
+- Provides a consistent location for all analysis work
+- Enables saving intermediate results for complex multi-step analysis
+
+**Common analysis patterns:**
+
+```bash
+# Save analysis results with timestamps
+echo "Analysis results" > .analysis/api-analysis-$(date +%Y%m%d).md
+
+# Create subdirectories for different analysis types
+mkdir -p .analysis/performance
+mkdir -p .analysis/security
+mkdir -p .analysis/dependencies
+
+# Use for generating documentation
+npx typedoc --out .analysis/api-docs src/
+
+# Save database schema analysis
+pg_dump --schema-only permisodb > .analysis/schema-$(date +%Y%m%d).sql
+```
+
+The `.analysis/` directory is gitignored to prevent temporary analysis files from being committed to the repository.
 
 ### Testing Guidelines for Debugging and Fixes
 
