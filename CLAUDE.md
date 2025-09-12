@@ -14,6 +14,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **ONLY make changes AFTER the user explicitly approves.** When you identify issues or potential improvements, explain them clearly and wait for the user's decision. Do NOT assume what the user wants or make "helpful" changes without permission.
 
+## CRITICAL: FINISH DISCUSSIONS BEFORE WRITING CODE
+
+**IMPORTANT**: When the user asks a question or you're in the middle of a discussion, DO NOT jump to writing code. Always:
+
+1. **Complete the discussion first** - Understand the problem fully
+2. **Analyze and explain** - Work through the issue verbally
+3. **Get confirmation** - Ensure the user agrees with the approach
+4. **Only then write code** - After the user explicitly asks you to implement
+
+Do not write code while discussing or analyzing a problem unless the user specifically asks you to.
+
 ## CRITICAL: NEVER USE MULTIEDIT
 
 **NEVER use the MultiEdit tool.** It has caused issues in multiple projects. Always use individual Edit operations instead, even if it means more edits. This ensures better control and prevents unintended changes.
@@ -110,6 +121,20 @@ When the user asks you to commit and push:
 
 **VERSION UPDATES**: Consider incrementing the patch version in package.json files when committing changes. This ensures proper version tracking for all changes.
 
+## Key Technical Decisions
+
+### Security: Never Use npx
+
+**CRITICAL SECURITY REQUIREMENT**: NEVER use `npx` for any commands. This poses grave security risks by executing arbitrary code.
+
+- **ALWAYS use exact dependency versions** in package.json
+- **ALWAYS use local node_modules binaries** (e.g., `prettier`, `mocha`, `http-server`)
+- **NEVER use `npx prettier`** - use `prettier` from local dependencies
+- **NEVER use `npx mocha`** - use `mocha` from local dependencies  
+- **NEVER use `npx http-server`** - add `http-server` as dependency and use directly
+
+**Exception**: The only acceptable `npx` usage is for one-time project initialization (e.g., `npx create-react-app`) when explicitly setting up new projects, but NEVER for ongoing development commands.
+
 ### Build Commands
 
 ```bash
@@ -131,9 +156,9 @@ When the user asks you to commit and push:
 ./scripts/lint-all.sh --fix     # Run ESLint with auto-fix
 
 # Docker commands
-./docker-build.sh       # Build Docker image
-./docker-test.sh        # Test Docker image (see Docker section for options)
-./docker-push.sh latest ghcr.io/codespin-ai  # Push to registry
+./scripts/docker-build.sh       # Build Docker image
+./scripts/docker-test.sh        # Test Docker image (see Docker section for options)  
+./scripts/docker-push.sh latest ghcr.io/codespin-ai  # Push to registry
 ```
 
 ### Database Commands
