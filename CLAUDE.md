@@ -110,6 +110,20 @@ When the user asks you to commit and push:
 
 **VERSION UPDATES**: Consider incrementing the patch version in package.json files when committing changes. This ensures proper version tracking for all changes.
 
+## Key Technical Decisions
+
+### Security: Never Use npx
+
+**CRITICAL SECURITY REQUIREMENT**: NEVER use `npx` for any commands. This poses grave security risks by executing arbitrary code.
+
+- **ALWAYS use exact dependency versions** in package.json
+- **ALWAYS use local node_modules binaries** (e.g., `prettier`, `mocha`, `http-server`)
+- **NEVER use `npx prettier`** - use `prettier` from local dependencies
+- **NEVER use `npx mocha`** - use `mocha` from local dependencies  
+- **NEVER use `npx http-server`** - add `http-server` as dependency and use directly
+
+**Exception**: The only acceptable `npx` usage is for one-time project initialization (e.g., `npx create-react-app`) when explicitly setting up new projects, but NEVER for ongoing development commands.
+
 ### Build Commands
 
 ```bash
