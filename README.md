@@ -31,7 +31,7 @@ docker run -p 5001:5001 \
 # Clone and build
 git clone https://github.com/codespin-ai/permiso.git
 cd permiso
-./build.sh
+./scripts/build.sh
 
 # Start PostgreSQL (from devenv directory)
 cd devenv && ./run.sh up && cd ..
@@ -49,7 +49,7 @@ cd node/packages/permiso-server
 npm run migrate:permiso:latest
 
 # Start server
-cd ../../.. && ./start.sh
+cd ../../.. && ./scripts/start.sh
 ```
 
 ## Core Concepts
@@ -109,9 +109,9 @@ mutation {
 ### Commands
 
 ```bash
-./build.sh                  # Build all packages
-./lint-all.sh              # Run ESLint
-./format-all.sh            # Format with Prettier, called automatically during build
+./scripts/build.sh                  # Build all packages
+./scripts/lint-all.sh              # Run ESLint
+./scripts/format-all.sh            # Format with Prettier, called automatically during build
 npm test                   # Run all tests
 npm run test:grep -- "pattern"  # Search tests
 ```

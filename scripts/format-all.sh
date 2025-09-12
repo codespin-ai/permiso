@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------
 set -euo pipefail
 
+# Change to the project root directory
+cd "$(dirname "$0")/.."
+
 # Check for --check flag
 CHECK_FLAG=""
 if [[ "${1:-}" == "--check" ]]; then
