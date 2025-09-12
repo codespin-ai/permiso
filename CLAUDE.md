@@ -95,9 +95,16 @@ This means you should:
 - **DO NOT** commit/push even if you think the task is complete
 - The user will explicitly tell you when they want to commit/push
 
+**NEW BRANCH REQUIREMENT**: ALL changes must be made on a new feature branch, never directly on main. When the user asks you to commit and push:
+
+1. **Always create a new branch** with a descriptive name (e.g., `organize-scripts`, `fix-auth-bug`, `add-feature-name`)
+2. **Make commits on the feature branch**
+3. **Push the feature branch to remote**
+4. **Never commit or push directly to main**
+
 When the user asks you to commit and push:
 
-1. Run `./lint-all.sh` to ensure code passes linting
+1. Run `./scripts/lint-all.sh` to ensure code passes linting
 2. Follow the git commit guidelines in the main Claude system prompt
 3. Get explicit user confirmation before any `git push`
 
@@ -107,21 +114,21 @@ When the user asks you to commit and push:
 
 ```bash
 # Build entire project (from root)
-./build.sh              # Standard build with formatting
-./build.sh --install    # Force npm install in all packages
-./build.sh --migrate    # Build + run DB migrations
-./build.sh --seed       # Build + run DB seeds
-./build.sh --no-format  # Skip prettier formatting (faster builds)
+./scripts/build.sh              # Standard build with formatting
+./scripts/build.sh --install    # Force npm install in all packages
+./scripts/build.sh --migrate    # Build + run DB migrations
+./scripts/build.sh --seed       # Build + run DB seeds
+./scripts/build.sh --no-format  # Skip prettier formatting (faster builds)
 
 # Clean build artifacts
-./clean.sh
+./scripts/clean.sh
 
 # Start the application
-./start.sh
+./scripts/start.sh
 
 # Lint entire project (from root)
-./lint-all.sh           # Run ESLint on all packages
-./lint-all.sh --fix     # Run ESLint with auto-fix
+./scripts/lint-all.sh           # Run ESLint on all packages
+./scripts/lint-all.sh --fix     # Run ESLint with auto-fix
 
 # Docker commands
 ./docker-build.sh       # Build Docker image
@@ -206,9 +213,9 @@ npm run test:client:grep -- "fetch user"      # Only client tests
 
 ### 1. Monorepo Without Workspaces
 
-- **NO npm workspaces** - Uses custom `./build.sh` script instead
+- **NO npm workspaces** - Uses custom `./scripts/build.sh` script instead
 - Dependencies between packages use `file:` protocol (e.g., `"@codespin/permiso-core": "file:../permiso-core"`)
-- **IMPORTANT**: When adding new packages, you MUST update the `PACKAGES` array in `./build.sh`
+- **IMPORTANT**: When adding new packages, you MUST update the `PACKAGES` array in `./scripts/build.sh`
 
 ### 2. Functional Programming Only
 
@@ -244,7 +251,7 @@ npm run test:client:grep -- "fetch user"      # Only client tests
 
 ## Package Structure
 
-See [Architecture Documentation](docs/architecture.md) for package details. Key point: When adding new packages, you MUST update the `PACKAGES` array in `./build.sh`.
+See [Architecture Documentation](docs/architecture.md) for package details. Key point: When adding new packages, you MUST update the `PACKAGES` array in `./scripts/build.sh`.
 
 ## Configuration
 
@@ -524,21 +531,21 @@ This approach:
 
 ### Optimizing Build Speed During Debugging
 
-**TIP**: Use `./build.sh --no-format` during debugging sessions to skip prettier formatting. This:
+**TIP**: Use `./scripts/build.sh --no-format` during debugging sessions to skip prettier formatting. This:
 
 - Reduces build time significantly
 - Minimizes output that gets sent to the AI model (reducing token count)
 - Makes the debugging cycle faster
 
-Only use the standard `./build.sh` (with formatting) for final builds before committing.
+Only use the standard `./scripts/build.sh` (with formatting) for final builds before committing.
 
 ### Important Build & Lint Workflow
 
 **ALWAYS follow this sequence:**
 
-1. Run `./lint-all.sh` first
-2. Run `./build.sh`
-3. **If build fails and you make changes**: You MUST run `./lint-all.sh` again before building
+1. Run `./scripts/lint-all.sh` first
+2. Run `./scripts/build.sh`
+3. **If build fails and you make changes**: You MUST run `./scripts/lint-all.sh` again before building
    - Your new changes haven"t been linted yet
    - Build errors often require code changes that may introduce lint issues
    - Always: lint → build → (if changes) → lint → build
@@ -551,9 +558,9 @@ See [README.md](../README.md#development) for testing commands and [deployment.m
 
 1. Create directory in `/node/packages/`
 2. Add package.json with `file:` dependencies
-3. **CRITICAL**: Add to `PACKAGES` array in `./build.sh` (respect dependency order)
+3. **CRITICAL**: Add to `PACKAGES` array in `./scripts/build.sh` (respect dependency order)
 4. Create `src/` directory and `tsconfig.json`
-5. Run `./build.sh --install`
+5. Run `./scripts/build.sh --install`
 
 ### Database Changes
 

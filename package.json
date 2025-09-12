@@ -5,9 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "./build.sh",
-    "clean": "./clean.sh",
-    "start": "./start.sh",
+    "build": "./scripts/build.sh",
+    "clean": "./scripts/clean.sh",
+    "start": "./scripts/start.sh",
     "test": "cd node/packages/permiso-integration-tests && npm test && cd ../permiso-client && npm test",
     "migrate:all": "./scripts/db-all.sh migrate:latest",
     "migrate:all:rollback": "./scripts/db-all.sh migrate:rollback",

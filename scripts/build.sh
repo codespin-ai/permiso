@@ -10,6 +10,9 @@
 # -------------------------------------------------------------------
 set -euo pipefail
 
+# Change to the project root directory
+cd "$(dirname "$0")/.."
+
 echo "=== Building Permiso ==="
 
 # Define the build order
@@ -24,7 +27,7 @@ PACKAGES=(
 )
 
 # 1 ▸ clean first
-./clean.sh
+./scripts/clean.sh
 
 # 2 ▸ install root deps (once)
 if [[ ! -d node_modules || "$*" == *--install* ]]; then
@@ -73,10 +76,10 @@ fi
 
 # Skip formatting if --no-format flag is provided
 if [[ "$*" != *--no-format* ]]; then
-  ./format-all.sh
+  ./scripts/format-all.sh
 else
   echo "Skipping formatting (--no-format flag provided)"
 fi
 
 echo "=== Build completed successfully ==="
-echo "To start the application, run: ./start.sh"
+echo "To start the application, run: ./scripts/start.sh"

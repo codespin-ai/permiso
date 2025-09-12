@@ -4,6 +4,9 @@
 # -------------------------------------------------------------------
 set -euo pipefail
 
+# Change to the project root directory
+cd "$(dirname "$0")/.."
+
 # Check for --fix flag
 FIX_FLAG=""
 LINT_COMMAND="lint"
