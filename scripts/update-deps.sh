@@ -1,97 +1,87 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# -------------------------------------------------------------------
+# update-deps.sh – Update all dependencies to absolute latest versions
+# -------------------------------------------------------------------
+set -euo pipefail
 
-# Usage: ./update-deps.sh <parent_dir>
-# Updates all npm dependencies to latest versions for all packages under parent_dir
+update_package_deps() {
+    local package_path="$1"
+    local package_name=$(basename "$package_path")
+    local original_dir=$(pwd)
 
-set -e
-
-# Check if parent directory is provided
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <parent_dir>"
-    echo "Example: $0 node/packages"
-    exit 1
-fi
-
-PARENT_DIR="$1"
-
-# Check if parent directory exists
-if [ ! -d "$PARENT_DIR" ]; then
-    echo "Error: Directory '$PARENT_DIR' does not exist"
-    exit 1
-fi
-
-echo "Updating dependencies for all packages under $PARENT_DIR..."
-echo
-
-# Find all directories containing package.json
-find "$PARENT_DIR" -maxdepth 2 -name "package.json" -type f | while read -r package_file; do
-    package_dir=$(dirname "$package_file")
-    package_name=$(basename "$package_dir")
-    
-    echo "=================================================="
-    echo "Processing: $package_name"
-    echo "Path: $package_dir"
-    echo "=================================================="
-    
-    cd "$package_dir"
-    
-    # Check if package.json has dependencies
-    if grep -q '"dependencies"' package.json; then
-        echo "Updating production dependencies..."
-        
-        # Extract dependency names and update them
-        deps=$(node -e "
-            const pkg = require('./package.json');
-            const deps = Object.keys(pkg.dependencies || {})
-                .filter(d => !d.startsWith('file:'))  // Skip file: dependencies
-                .join(' ');
-            console.log(deps);
-        ")
-        
-        if [ -n "$deps" ]; then
-            echo "Dependencies to update: $deps"
-            npm install --legacy-peer-deps $deps@latest || echo "Warning: Some dependencies failed to update"
-        else
-            echo "No external dependencies to update"
-        fi
-    else
-        echo "No dependencies section found"
+    if [[ ! -f "$package_path/package.json" ]]; then
+        return
     fi
-    
-    echo
-    
-    # Check if package.json has devDependencies
-    if grep -q '"devDependencies"' package.json; then
-        echo "Updating dev dependencies..."
-        
-        # Extract dev dependency names and update them
-        devDeps=$(node -e "
-            const pkg = require('./package.json');
-            const deps = Object.keys(pkg.devDependencies || {}).join(' ');
-            console.log(deps);
+
+    echo "Updating $package_name to latest versions..."
+
+    # Use subshell to avoid changing directory context
+    (
+        cd "$package_path"
+
+        # Get list of production dependencies (excluding local/workspace packages)
+        local deps=$(node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('package.json', 'utf8'));
+            const deps = Object.keys(pkg.dependencies || {}).filter(dep => {
+                const version = pkg.dependencies[dep];
+                // Skip local dependencies (file:, link:, workspace:, @codespin/ packages)
+                return !version.startsWith('file:') &&
+                       !version.startsWith('link:') &&
+                       !version.startsWith('workspace:') &&
+                       !dep.startsWith('@codespin/') &&
+                       !dep.includes('permiso-');
+            });
+            if (deps.length > 0) console.log(deps.join(' '));
         ")
-        
-        if [ -n "$devDeps" ]; then
-            echo "Dev dependencies to update: $devDeps"
-            npm install --legacy-peer-deps -D $devDeps@latest || echo "Warning: Some dev dependencies failed to update"
-        else
-            echo "No dev dependencies to update"
+
+        # Get list of dev dependencies (excluding local/workspace packages)
+        local devdeps=$(node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('package.json', 'utf8'));
+            const deps = Object.keys(pkg.devDependencies || {}).filter(dep => {
+                const version = pkg.devDependencies[dep];
+                // Skip local dependencies (file:, link:, workspace:, @codespin/ packages)
+                return !version.startsWith('file:') &&
+                       !version.startsWith('link:') &&
+                       !version.startsWith('workspace:') &&
+                       !dep.startsWith('@codespin/') &&
+                       !dep.includes('permiso-');
+            });
+            if (deps.length > 0) console.log(deps.join(' '));
+        ")
+
+        # Update production dependencies to latest
+        if [[ -n "$deps" ]]; then
+            echo "  - Updating production dependencies..."
+            npm install --save --save-exact $deps@latest
         fi
-    else
-        echo "No devDependencies section found"
+
+        # Update dev dependencies to latest
+        if [[ -n "$devdeps" ]]; then
+            echo "  - Updating dev dependencies..."
+            npm install --save-dev --save-exact $devdeps@latest
+        fi
+    )
+
+    echo "  ✓ $package_name updated"
+}
+
+echo "=== Updating all dependencies to absolute latest versions ==="
+echo "This will update ALL packages to their newest available versions with exact versions."
+echo ""
+
+# Update root package
+echo "Updating root package..."
+update_package_deps "."
+
+# Update each package in node/packages/
+for pkg in node/packages/*; do
+    if [[ -d "$pkg" ]]; then
+        echo ""
+        update_package_deps "$pkg"
     fi
-    
-    echo
-    cd - > /dev/null
 done
 
-echo "=================================================="
-echo "All packages processed!"
-echo "=================================================="
-echo
-echo "Note: Some updates may have failed if:"
-echo "  - The package doesn't exist on npm"
-echo "  - There are version conflicts"
-echo "  - Network issues occurred"
-echo
-echo "Run 'npm outdated' in each package to verify updates."
+echo ""
+echo "=== All dependencies updated to latest exact versions ==="
+echo "⚠️  IMPORTANT: Run tests to ensure compatibility: npm test"
+echo "⚠️  Review changes carefully before committing"
