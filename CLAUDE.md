@@ -44,6 +44,32 @@ Only after reading these documents should you proceed with any implementation or
 
 **IMPORTANT**: After every conversation compact/summary, you MUST re-read this CLAUDE.md file again as your first action. The conversation context gets compressed and critical project-specific instructions may be lost. Always start by reading CLAUDE.md after a compact.
 
+## Task Management with .todos Directory
+
+**IMPORTANT**: For major multi-step tasks that span sessions or require comprehensive tracking:
+
+1. **Before starting a major task**, create a detailed task file in `.todos/` directory:
+   - Filename format: `YYYY-MM-DD-task-name.md` (e.g., `2025-01-13-auth-implementation.md`)
+   - Include ALL context, decisions, completed work, and remaining work
+   - Write comprehensively so the task can be resumed in any future session
+
+2. **Task file must include**:
+   - Task overview and objectives
+   - Current status (what's been completed)
+   - Detailed list of remaining work
+   - Important decisions made
+   - Code locations affected
+   - Testing requirements
+   - Any gotchas or special considerations
+
+3. **When resuming work**, always check `.todos/` first for in-progress tasks
+
+4. **Update the task file** as you make progress
+
+5. **Mark as complete** by renaming to `YYYY-MM-DD-task-name-COMPLETED.md`
+
+The `.todos/` directory is gitignored, so it won't clutter the repository but provides persistent task tracking across sessions.
+
 ## Overview
 
 This guide helps AI assistants work effectively with the Permiso codebase. For project overview, see [README.md](../README.md).
@@ -115,11 +141,12 @@ This means you should:
 
 When the user asks you to commit and push:
 
-1. Run `./scripts/lint-all.sh` to ensure code passes linting
-2. Follow the git commit guidelines in the main Claude system prompt
-3. Get explicit user confirmation before any `git push`
+1. Run `./scripts/format-all.sh` to format all files with Prettier
+2. Run `./scripts/lint-all.sh` to ensure code passes linting
+3. Follow the git commit guidelines in the main Claude system prompt
+4. Get explicit user confirmation before any `git push`
 
-**VERSION UPDATES**: Consider incrementing the patch version in package.json files when committing changes. This ensures proper version tracking for all changes.
+**VERSION UPDATES**: Whenever committing changes, you MUST increment the patch version in package.json files when committing changes. This ensures proper version tracking for all changes.
 
 ## Key Technical Decisions
 
@@ -154,6 +181,10 @@ When the user asks you to commit and push:
 # Lint entire project (from root)
 ./scripts/lint-all.sh           # Run ESLint on all packages
 ./scripts/lint-all.sh --fix     # Run ESLint with auto-fix
+
+# Format code with Prettier (MUST run before committing)
+./scripts/format-all.sh         # Format all files
+./scripts/format-all.sh --check # Check formatting without changing files
 
 # Docker commands
 ./scripts/docker-build.sh       # Build Docker image
@@ -273,6 +304,7 @@ npm run test:client:grep -- "fetch user"      # Only client tests
 - All imports MUST include `.js` extension: `import { foo } from "./bar.js"`
 - TypeScript configured for `"module": "NodeNext"`
 - Type: `"module"` in all package.json files
+- **NO DYNAMIC IMPORTS**: Always use static imports. Never use `await import()` or `import()` in the code
 
 ## Package Structure
 

@@ -40,6 +40,11 @@ logs/
 tmp/
 temp/
 
+# Task management
+.todos/
+.tests/
+.analysis/
+
 # OS generated files
 Thumbs.db
 
