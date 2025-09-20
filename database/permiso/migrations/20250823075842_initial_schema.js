@@ -6,10 +6,10 @@ export async function up(knex) {
   // Create organization table
   await knex.schema.createTable("organization", (table) => {
     table.string("id", 255).primary();
-    table.string("name", 255).notNullable().defaultTo("");
+    table.string("name", 255).notNullable();
     table.text("description");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
+    table.bigint("updated_at").notNullable();
 
     // Indexes
     table.index("created_at");
@@ -21,8 +21,8 @@ export async function up(knex) {
     table.string("parent_id", 255).notNullable();
     table.string("name", 255).notNullable();
     table.jsonb("value").notNullable();
-    table.boolean("hidden").notNullable().defaultTo(false);
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.boolean("hidden").notNullable();
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["parent_id", "name"]);
@@ -44,10 +44,10 @@ export async function up(knex) {
   await knex.schema.createTable("role", (table) => {
     table.string("id", 255).notNullable();
     table.string("org_id", 255).notNullable();
-    table.string("name", 255).notNullable().defaultTo("");
+    table.string("name", 255).notNullable();
     table.text("description");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
+    table.bigint("updated_at").notNullable();
 
     // Composite primary key
     table.primary(["id", "org_id"]);
@@ -71,8 +71,8 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("name", 255).notNullable();
     table.jsonb("value").notNullable();
-    table.boolean("hidden").notNullable().defaultTo(false);
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.boolean("hidden").notNullable();
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["parent_id", "org_id", "name"]);
@@ -96,8 +96,8 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("identity_provider", 255).notNullable();
     table.string("identity_provider_user_id", 255).notNullable();
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
+    table.bigint("updated_at").notNullable();
 
     // Composite primary key
     table.primary(["id", "org_id"]);
@@ -121,8 +121,8 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("name", 255).notNullable();
     table.jsonb("value").notNullable();
-    table.boolean("hidden").notNullable().defaultTo(false);
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.boolean("hidden").notNullable();
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["parent_id", "org_id", "name"]);
@@ -144,10 +144,10 @@ export async function up(knex) {
   await knex.schema.createTable("resource", (table) => {
     table.string("id", 255).notNullable();
     table.string("org_id", 255).notNullable();
-    table.string("name", 255);
+    table.string("name", 255).notNullable();
     table.text("description");
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
-    table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
+    table.bigint("updated_at").notNullable();
 
     // Composite primary key
     table.primary(["id", "org_id"]);
@@ -170,7 +170,7 @@ export async function up(knex) {
     table.string("user_id", 255).notNullable();
     table.string("role_id", 255).notNullable();
     table.string("org_id", 255).notNullable();
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["user_id", "role_id", "org_id"]);
@@ -198,7 +198,7 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("resource_id", 255).notNullable();
     table.string("action", 255).notNullable();
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["user_id", "org_id", "resource_id", "action"]);
@@ -227,7 +227,7 @@ export async function up(knex) {
     table.string("org_id", 255).notNullable();
     table.string("resource_id", 255).notNullable();
     table.string("action", 255).notNullable();
-    table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
+    table.bigint("created_at").notNullable();
 
     // Composite primary key
     table.primary(["role_id", "org_id", "resource_id", "action"]);

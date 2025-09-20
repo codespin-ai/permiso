@@ -25,7 +25,6 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  DateTime: { input: string; output: string };
   JSON: { input: unknown; output: unknown };
 };
 
@@ -60,7 +59,7 @@ export type CreateUserInput = {
 export type EffectivePermission = {
   __typename?: "EffectivePermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   resourceId: Scalars["ID"]["output"];
   source: Scalars["String"]["output"];
   sourceId: Maybe<Scalars["ID"]["output"]>;
@@ -227,14 +226,14 @@ export type MutationUpdateUserArgs = {
 
 export type Organization = {
   __typename?: "Organization";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Scalars["String"]["output"];
   properties: Array<Property>;
   resources: ResourceConnection;
   roles: RoleConnection;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
   users: UserConnection;
 };
 
@@ -280,7 +279,7 @@ export type PaginationInput = {
 
 export type Permission = {
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];
@@ -288,7 +287,7 @@ export type Permission = {
 
 export type Property = {
   __typename?: "Property";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   hidden: Scalars["Boolean"]["output"];
   name: Scalars["String"]["output"];
   value: Maybe<Scalars["JSON"]["output"]>;
@@ -434,14 +433,14 @@ export type QueryUsersByIdsArgs = {
 
 export type Resource = {
   __typename?: "Resource";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Maybe<Scalars["String"]["output"]>;
   orgId: Scalars["ID"]["output"];
   organization: Organization;
   permissions: Array<Permission>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
 };
 
 export type ResourceConnection = {
@@ -457,7 +456,7 @@ export type ResourceFilter = {
 
 export type Role = {
   __typename?: "Role";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Scalars["String"]["output"];
@@ -465,7 +464,7 @@ export type Role = {
   organization: Organization;
   permissions: Array<RolePermission>;
   properties: Array<Property>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
   users: Array<User>;
 };
 
@@ -483,7 +482,7 @@ export type RoleFilter = {
 export type RolePermission = Permission & {
   __typename?: "RolePermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];
@@ -515,7 +514,7 @@ export type UpdateUserInput = {
 
 export type User = {
   __typename?: "User";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   effectivePermissions: Array<EffectivePermission>;
   id: Scalars["ID"]["output"];
   identityProvider: Scalars["String"]["output"];
@@ -525,7 +524,7 @@ export type User = {
   permissions: Array<UserPermission>;
   properties: Array<Property>;
   roles: Array<Role>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
 };
 
 export type UserEffectivePermissionsArgs = {
@@ -549,7 +548,7 @@ export type UserFilter = {
 export type UserPermission = Permission & {
   __typename?: "UserPermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];

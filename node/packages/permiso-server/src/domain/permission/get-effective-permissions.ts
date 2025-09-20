@@ -45,7 +45,7 @@ export async function getEffectivePermissions(
             resource_id: string;
             action: string;
             source_id: string;
-            created_at: Date;
+            created_at: number;
           }>
         ).map((p) => ({
           resourceId: p.resource_id,
@@ -59,7 +59,7 @@ export async function getEffectivePermissions(
             resource_id: string;
             action: string;
             source_id: string;
-            created_at: Date;
+            created_at: number;
           }>
         ).map((p) => ({
           resourceId: p.resource_id,
@@ -117,7 +117,7 @@ export async function getEffectivePermissions(
           resource_id: string;
           action: string;
           source_id: string;
-          created_at: Date;
+          created_at: number;
         }>
       ).map((p) => ({
         resourceId: p.resource_id,
@@ -131,7 +131,7 @@ export async function getEffectivePermissions(
           resource_id: string;
           action: string;
           source_id: string;
-          created_at: Date;
+          created_at: number;
         }>
       ).map((p) => ({
         resourceId: p.resource_id,

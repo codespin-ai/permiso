@@ -14,11 +14,14 @@ export async function createRole(
 ): Promise<Result<Role>> {
   try {
     const role = await ctx.db.tx(async (t) => {
+      const now = Date.now();
       const params = {
         id: input.id,
         org_id: ctx.orgId,
         name: input.name,
         description: input.description ?? null,
+        created_at: now,
+        updated_at: now,
       };
 
       const roleRow = await t.one<RoleDbRow>(
@@ -33,6 +36,7 @@ export async function createRole(
           name: p.name,
           value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false,
+          created_at: now,
         }));
 
         for (const prop of propertyValues) {

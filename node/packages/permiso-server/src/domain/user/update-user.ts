@@ -25,12 +25,13 @@ export async function updateUser(
     }
 
     const snakeParams = typeUtils.toSnakeCase(updateParams);
+    snakeParams.updated_at = Date.now();
     const whereParams = {
       user_id: userId,
     };
 
     const query = `
-      ${sql.update('"user"', snakeParams)}, updated_at = NOW()
+      ${sql.update('"user"', snakeParams)}
       WHERE id = $(user_id)
       RETURNING *
     `;

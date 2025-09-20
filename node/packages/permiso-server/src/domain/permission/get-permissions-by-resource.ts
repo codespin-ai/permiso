@@ -17,7 +17,7 @@ export async function getPermissionsByResource(
       roleId?: string;
       resourceId: string;
       action: string;
-      createdAt: Date;
+      createdAt: number;
       orgId: string;
     }>
   >

@@ -13,11 +13,14 @@ export async function createResource(
   input: CreateResourceInput,
 ): Promise<Result<Resource>> {
   try {
+    const now = Date.now();
     const params = {
       id: input.id,
       org_id: ctx.orgId,
       name: input.name ?? null,
       description: input.description ?? null,
+      created_at: now,
+      updated_at: now,
     };
 
     const row = await ctx.db.one<ResourceDbRow>(

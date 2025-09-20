@@ -22,11 +22,12 @@ export async function grantRolePermission(
       role_id: roleId,
       resource_id: resourceId,
       action: action,
+      created_at: Date.now(),
     };
 
     const row = await ctx.db.one<RolePermissionDbRow>(
       `${sql.insert("role_permission", params)}
-       ON CONFLICT (org_id, role_id, resource_id, action) DO UPDATE SET created_at = NOW()
+       ON CONFLICT (org_id, role_id, resource_id, action) DO UPDATE SET created_at = $(created_at)
        RETURNING *`,
       params,
     );

@@ -24,12 +24,14 @@ export async function updateRole(
       updateParams.description = input.description;
     }
 
+    updateParams.updated_at = Date.now();
+
     const whereParams = {
       role_id: roleId,
     };
 
     const query = `
-      ${sql.update("role", updateParams)}, updated_at = NOW()
+      ${sql.update("role", updateParams)}
       WHERE id = $(role_id)
       RETURNING *
     `;

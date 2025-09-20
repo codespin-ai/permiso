@@ -17,6 +17,7 @@ export async function assignUserRole(
       org_id: ctx.orgId,
       user_id: userId,
       role_id: roleId,
+      created_at: Date.now(),
     };
 
     const row = await ctx.db.oneOrNone<UserRoleDbRow>(

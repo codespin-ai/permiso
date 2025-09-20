@@ -35,7 +35,6 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  DateTime: { input: Date; output: Date };
   JSON: { input: unknown; output: unknown };
 };
 
@@ -70,7 +69,7 @@ export type CreateUserInput = {
 export type EffectivePermission = {
   __typename?: "EffectivePermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   resourceId: Scalars["ID"]["output"];
   source: Scalars["String"]["output"];
   sourceId: Maybe<Scalars["ID"]["output"]>;
@@ -237,14 +236,14 @@ export type MutationUpdateUserArgs = {
 
 export type Organization = {
   __typename?: "Organization";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Scalars["String"]["output"];
   properties: Array<Property>;
   resources: ResourceConnection;
   roles: RoleConnection;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
   users: UserConnection;
 };
 
@@ -290,7 +289,7 @@ export type PaginationInput = {
 
 export type Permission = {
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];
@@ -298,7 +297,7 @@ export type Permission = {
 
 export type Property = {
   __typename?: "Property";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   hidden: Scalars["Boolean"]["output"];
   name: Scalars["String"]["output"];
   value: Maybe<Scalars["JSON"]["output"]>;
@@ -444,14 +443,14 @@ export type QueryUsersByIdsArgs = {
 
 export type Resource = {
   __typename?: "Resource";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Maybe<Scalars["String"]["output"]>;
   orgId: Scalars["ID"]["output"];
   organization: Organization;
   permissions: Array<Permission>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
 };
 
 export type ResourceConnection = {
@@ -467,7 +466,7 @@ export type ResourceFilter = {
 
 export type Role = {
   __typename?: "Role";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   description: Maybe<Scalars["String"]["output"]>;
   id: Scalars["ID"]["output"];
   name: Scalars["String"]["output"];
@@ -475,7 +474,7 @@ export type Role = {
   organization: Organization;
   permissions: Array<RolePermission>;
   properties: Array<Property>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
   users: Array<User>;
 };
 
@@ -493,7 +492,7 @@ export type RoleFilter = {
 export type RolePermission = Permission & {
   __typename?: "RolePermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];
@@ -525,7 +524,7 @@ export type UpdateUserInput = {
 
 export type User = {
   __typename?: "User";
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   effectivePermissions: Array<EffectivePermission>;
   id: Scalars["ID"]["output"];
   identityProvider: Scalars["String"]["output"];
@@ -535,7 +534,7 @@ export type User = {
   permissions: Array<UserPermission>;
   properties: Array<Property>;
   roles: Array<Role>;
-  updatedAt: Scalars["DateTime"]["output"];
+  updatedAt: Scalars["Float"]["output"];
 };
 
 export type UserEffectivePermissionsArgs = {
@@ -559,7 +558,7 @@ export type UserFilter = {
 export type UserPermission = Permission & {
   __typename?: "UserPermission";
   action: Scalars["String"]["output"];
-  createdAt: Scalars["DateTime"]["output"];
+  createdAt: Scalars["Float"]["output"];
   organization: Organization;
   resource: Resource;
   resourceId: Scalars["ID"]["output"];
@@ -690,8 +689,8 @@ export type ResolversTypes = ResolversObject<{
   CreateResourceInput: CreateResourceInput;
   CreateRoleInput: CreateRoleInput;
   CreateUserInput: CreateUserInput;
-  DateTime: ResolverTypeWrapper<Scalars["DateTime"]["output"]>;
   EffectivePermission: ResolverTypeWrapper<EffectivePermission>;
+  Float: ResolverTypeWrapper<Scalars["Float"]["output"]>;
   GrantRolePermissionInput: GrantRolePermissionInput;
   GrantUserPermissionInput: GrantUserPermissionInput;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
@@ -752,8 +751,8 @@ export type ResolversParentTypes = ResolversObject<{
   CreateResourceInput: CreateResourceInput;
   CreateRoleInput: CreateRoleInput;
   CreateUserInput: CreateUserInput;
-  DateTime: Scalars["DateTime"]["output"];
   EffectivePermission: EffectivePermission;
+  Float: Scalars["Float"]["output"];
   GrantRolePermissionInput: GrantRolePermissionInput;
   GrantUserPermissionInput: GrantUserPermissionInput;
   ID: Scalars["ID"]["output"];
@@ -798,18 +797,13 @@ export type ResolversParentTypes = ResolversObject<{
   };
 }>;
 
-export interface DateTimeScalarConfig
-  extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
-  name: "DateTime";
-}
-
 export type EffectivePermissionResolvers<
   ContextType = GraphQLContext,
   ParentType extends
     ResolversParentTypes["EffectivePermission"] = ResolversParentTypes["EffectivePermission"],
 > = ResolversObject<{
   action?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   resourceId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   source?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
@@ -983,7 +977,7 @@ export type OrganizationResolvers<
   ParentType extends
     ResolversParentTypes["Organization"] = ResolversParentTypes["Organization"],
 > = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   description?: Resolver<
     Maybe<ResolversTypes["String"]>,
     ParentType,
@@ -1008,7 +1002,7 @@ export type OrganizationResolvers<
     ContextType,
     Partial<OrganizationRolesArgs>
   >;
-  updatedAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   users?: Resolver<
     ResolversTypes["UserConnection"],
     ParentType,
@@ -1068,7 +1062,7 @@ export type PermissionResolvers<
     ContextType
   >;
   action?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   organization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -1083,7 +1077,7 @@ export type PropertyResolvers<
   ParentType extends
     ResolversParentTypes["Property"] = ResolversParentTypes["Property"],
 > = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   hidden?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   value?: Resolver<Maybe<ResolversTypes["JSON"]>, ParentType, ContextType>;
@@ -1234,7 +1228,7 @@ export type ResourceResolvers<
   ParentType extends
     ResolversParentTypes["Resource"] = ResolversParentTypes["Resource"],
 > = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   description?: Resolver<
     Maybe<ResolversTypes["String"]>,
     ParentType,
@@ -1253,7 +1247,7 @@ export type ResourceResolvers<
     ParentType,
     ContextType
   >;
-  updatedAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1273,7 +1267,7 @@ export type RoleResolvers<
   ParentType extends
     ResolversParentTypes["Role"] = ResolversParentTypes["Role"],
 > = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   description?: Resolver<
     Maybe<ResolversTypes["String"]>,
     ParentType,
@@ -1297,7 +1291,7 @@ export type RoleResolvers<
     ParentType,
     ContextType
   >;
-  updatedAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes["User"]>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -1319,7 +1313,7 @@ export type RolePermissionResolvers<
     ResolversParentTypes["RolePermission"] = ResolversParentTypes["RolePermission"],
 > = ResolversObject<{
   action?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   organization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -1337,7 +1331,7 @@ export type UserResolvers<
   ParentType extends
     ResolversParentTypes["User"] = ResolversParentTypes["User"],
 > = ResolversObject<{
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   effectivePermissions?: Resolver<
     Array<ResolversTypes["EffectivePermission"]>,
     ParentType,
@@ -1372,7 +1366,7 @@ export type UserResolvers<
     ContextType
   >;
   roles?: Resolver<Array<ResolversTypes["Role"]>, ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1393,7 +1387,7 @@ export type UserPermissionResolvers<
     ResolversParentTypes["UserPermission"] = ResolversParentTypes["UserPermission"],
 > = ResolversObject<{
   action?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes["DateTime"], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   organization?: Resolver<
     ResolversTypes["Organization"],
     ParentType,
@@ -1407,7 +1401,6 @@ export type UserPermissionResolvers<
 }>;
 
 export type Resolvers<ContextType = GraphQLContext> = ResolversObject<{
-  DateTime?: GraphQLScalarType;
   EffectivePermission?: EffectivePermissionResolvers<ContextType>;
   JSON?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
