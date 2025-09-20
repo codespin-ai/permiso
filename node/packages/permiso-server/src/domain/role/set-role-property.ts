@@ -21,12 +21,13 @@ export async function setRoleProperty(
       name,
       value: value === undefined ? null : JSON.stringify(value),
       hidden,
+      created_at: Date.now(),
     };
 
     const row = await ctx.db.one<PropertyDbRow>(
       `${sql.insert("role_property", params)}
-       ON CONFLICT (org_id, parent_id, name) 
-       DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = NOW()
+       ON CONFLICT (org_id, parent_id, name)
+       DO UPDATE SET value = EXCLUDED.value, hidden = EXCLUDED.hidden, created_at = EXCLUDED.created_at
        RETURNING *`,
       params,
     );

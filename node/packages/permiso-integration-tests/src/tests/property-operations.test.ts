@@ -82,7 +82,7 @@ describe("Property Operations", () => {
           "initial_value",
         );
         expect(result.data?.organizationProperty?.hidden).to.be.false;
-        expect(result.data?.organizationProperty?.createdAt).to.be.a("string");
+        expect(result.data?.organizationProperty?.createdAt).to.be.a("number");
       });
 
       it("should return null for non-existent property", async () => {

@@ -7,7 +7,7 @@ export type UserPermissionWithOrgId = {
   orgId: string;
   resourceId: string;
   action: string;
-  createdAt: Date;
+  createdAt: number;
 };
 
 export type RolePermissionWithOrgId = {
@@ -15,7 +15,7 @@ export type RolePermissionWithOrgId = {
   orgId: string;
   resourceId: string;
   action: string;
-  createdAt: Date;
+  createdAt: number;
 };
 
 // Database row types (snake_case)
@@ -23,8 +23,8 @@ export type OrganizationDbRow = {
   id: string;
   name: string;
   description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: number;
+  updated_at: number;
 };
 
 export type PropertyDbRow = {
@@ -33,7 +33,7 @@ export type PropertyDbRow = {
   name: string;
   value: unknown; // JSONB value
   hidden: boolean;
-  created_at: Date;
+  created_at: number;
 };
 
 // Legacy type aliases for backward compatibility during migration
@@ -46,8 +46,8 @@ export type RoleDbRow = {
   org_id: string;
   name: string;
   description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: number;
+  updated_at: number;
 };
 
 export type UserDbRow = {
@@ -55,8 +55,8 @@ export type UserDbRow = {
   org_id: string;
   identity_provider: string;
   identity_provider_user_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: number;
+  updated_at: number;
 };
 
 export type ResourceDbRow = {
@@ -64,15 +64,15 @@ export type ResourceDbRow = {
   org_id: string;
   name: string | null;
   description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: number;
+  updated_at: number;
 };
 
 export type UserRoleDbRow = {
   user_id: string;
   role_id: string;
   org_id: string;
-  created_at: Date;
+  created_at: number;
 };
 
 export type UserPermissionDbRow = {
@@ -80,7 +80,7 @@ export type UserPermissionDbRow = {
   org_id: string;
   resource_id: string;
   action: string;
-  created_at: Date;
+  created_at: number;
 };
 
 export type RolePermissionDbRow = {
@@ -88,7 +88,7 @@ export type RolePermissionDbRow = {
   org_id: string;
   resource_id: string;
   action: string;
-  created_at: Date;
+  created_at: number;
 };
 
 // Domain-specific types that bridge database and GraphQL
@@ -98,7 +98,7 @@ export type UserRole = {
   userId: string;
   roleId: string;
   orgId: string;
-  createdAt: Date;
+  createdAt: number;
 };
 
 // Extended types with properties as Record (for internal use)
@@ -106,8 +106,8 @@ export type OrganizationWithProperties = {
   id: string;
   name: string;
   description?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: number;
+  updatedAt: number;
   properties: Record<string, unknown>;
 };
 
@@ -116,8 +116,8 @@ export type RoleWithProperties = {
   orgId: string;
   name: string;
   description?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: number;
+  updatedAt: number;
   properties: Record<string, unknown>;
 };
 
@@ -126,8 +126,8 @@ export type UserWithProperties = {
   orgId: string;
   identityProvider: string;
   identityProviderUserId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: number;
+  updatedAt: number;
   properties: Record<string, unknown>;
   roleIds: string[];
 };

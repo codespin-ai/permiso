@@ -18,10 +18,13 @@ export async function createOrganization(
     const rootDb = ctx.db.upgradeToRoot?.("Create new organization") || ctx.db;
 
     const org = await rootDb.tx(async (t) => {
+      const now = Date.now();
       const params = {
         id: input.id,
         name: input.name,
         description: input.description !== undefined ? input.description : null,
+        created_at: now,
+        updated_at: now,
       };
 
       const orgRow = await t.one<OrganizationDbRow>(
@@ -35,6 +38,7 @@ export async function createOrganization(
           name: p.name,
           value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false,
+          created_at: now,
         }));
 
         for (const prop of propertyValues) {

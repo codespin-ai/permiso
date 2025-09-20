@@ -14,11 +14,14 @@ export async function createUser(
 ): Promise<Result<User>> {
   try {
     const user = await ctx.db.tx(async (t) => {
+      const now = Date.now();
       const params = {
         id: input.id,
         org_id: ctx.orgId,
         identity_provider: input.identityProvider,
         identity_provider_user_id: input.identityProviderUserId,
+        created_at: now,
+        updated_at: now,
       };
 
       const userRow = await t.one<UserDbRow>(
@@ -33,6 +36,7 @@ export async function createUser(
           name: p.name,
           value: p.value === undefined ? null : JSON.stringify(p.value),
           hidden: p.hidden ?? false,
+          created_at: now,
         }));
 
         for (const prop of propertyValues) {
@@ -46,6 +50,7 @@ export async function createUser(
             user_id: input.id,
             role_id: roleId,
             org_id: ctx.orgId,
+            created_at: now,
           };
           await t.none(sql.insert("user_role", roleParams), roleParams);
         }

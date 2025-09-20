@@ -167,8 +167,8 @@ describe("Organizations", () => {
         value: "premium",
         hidden: false,
       });
-      expect(result.data?.organization?.createdAt).to.be.a("string");
-      expect(result.data?.organization?.updatedAt).to.be.a("string");
+      expect(result.data?.organization?.createdAt).to.be.a("number");
+      expect(result.data?.organization?.updatedAt).to.be.a("number");
     });
 
     it("should return null for non-existent organization", async () => {

@@ -1,4 +1,3 @@
-scalar DateTime
 scalar JSON
 
 # Core Types
@@ -7,8 +6,8 @@ type Organization {
   name: String!
   description: String
   properties: [Property!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Float!
+  updatedAt: Float!
   
   # Relationships
   users(filter: UserFilter, pagination: PaginationInput): UserConnection!
@@ -22,8 +21,8 @@ type User {
   identityProvider: String!
   identityProviderUserId: String!
   properties: [Property!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Float!
+  updatedAt: Float!
   
   # Relationships
   organization: Organization!
@@ -38,8 +37,8 @@ type Role {
   name: String!
   description: String
   properties: [Property!]!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Float!
+  updatedAt: Float!
   
   # Relationships
   organization: Organization!
@@ -52,8 +51,8 @@ type Resource {
   orgId: ID!
   name: String
   description: String
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: Float!
+  updatedAt: Float!
   
   # Relationships
   organization: Organization!
@@ -64,13 +63,13 @@ type Property {
   name: String!
   value: JSON
   hidden: Boolean!
-  createdAt: DateTime!
+  createdAt: Float!
 }
 
 interface Permission {
   resourceId: ID!
   action: String!
-  createdAt: DateTime!
+  createdAt: Float!
   organization: Organization!
   resource: Resource!
 }
@@ -79,7 +78,7 @@ type UserPermission implements Permission {
   userId: ID!
   resourceId: ID!
   action: String!
-  createdAt: DateTime!
+  createdAt: Float!
   organization: Organization!
   resource: Resource!
   user: User!
@@ -89,7 +88,7 @@ type RolePermission implements Permission {
   roleId: ID!
   resourceId: ID!
   action: String!
-  createdAt: DateTime!
+  createdAt: Float!
   organization: Organization!
   resource: Resource!
   role: Role!
@@ -100,7 +99,7 @@ type EffectivePermission {
   action: String!
   source: String! # 'user' or 'role'
   sourceId: ID # userId or roleId
-  createdAt: DateTime!
+  createdAt: Float!
 }
 
 # Connection types for pagination

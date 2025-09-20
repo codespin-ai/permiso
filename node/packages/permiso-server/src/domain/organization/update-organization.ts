@@ -26,8 +26,10 @@ export async function updateOrganization(
       updateParams.description = input.description;
     }
 
+    updateParams.updated_at = Date.now();
+
     const query = `
-      ${sql.update("organization", updateParams)}, updated_at = NOW()
+      ${sql.update("organization", updateParams)}
       WHERE id = $(id)
       RETURNING *
     `;

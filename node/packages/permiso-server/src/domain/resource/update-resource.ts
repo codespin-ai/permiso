@@ -24,12 +24,14 @@ export async function updateResource(
       updateParams.description = input.description;
     }
 
+    updateParams.updated_at = Date.now();
+
     const whereParams = {
       resource_id: resourceId,
     };
 
     const query = `
-      ${sql.update("resource", updateParams)}, updated_at = NOW()
+      ${sql.update("resource", updateParams)}
       WHERE id = $(resource_id)
       RETURNING *
     `;
