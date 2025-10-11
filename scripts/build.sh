@@ -29,26 +29,14 @@ PACKAGES=(
 # 1 ▸ clean first
 ./scripts/clean.sh
 
-# 2 ▸ install root deps (once)
-if [[ ! -d node_modules || "$*" == *--install* ]]; then
-  echo "Installing root dependencies…"
-  npm install --legacy-peer-deps
+# 2 ▸ install dependencies
+if [[ "$*" == *--install* ]]; then
+  ./scripts/install-deps.sh --force
+else
+  ./scripts/install-deps.sh
 fi
 
-# 3 ▸ loop through every package in build order
-for pkg_name in "${PACKAGES[@]}"; do
-  pkg="node/packages/$pkg_name"
-  if [[ ! -d "$pkg" ]]; then
-    echo "Package $pkg not found, skipping."
-    continue
-  fi
-  if [[ ! -d "$pkg/node_modules" || "$*" == *--install* ]]; then
-    echo "Installing deps in $pkg…"
-    (cd "$pkg" && npm install --legacy-peer-deps)
-  fi
-done
-
-# 4 ▸ build each package that defines a build script, in order
+# 3 ▸ build each package that defines a build script, in order
 for pkg_name in "${PACKAGES[@]}"; do
   pkg="node/packages/$pkg_name"
   if [[ ! -f "$pkg/package.json" ]]; then
@@ -63,7 +51,7 @@ for pkg_name in "${PACKAGES[@]}"; do
   fi
 done
 
-# 5 ▸ optional migrations / seeds via root scripts
+# 4 ▸ optional migrations / seeds via root scripts
 if [[ "$*" == *--migrate* ]]; then
   echo "Running database migrations for all databases…"
   npm run migrate:all
