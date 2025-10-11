@@ -31,6 +31,7 @@ docker run -p 5001:5001 \
 # Clone and build
 git clone https://github.com/codespin-ai/permiso.git
 cd permiso
+./scripts/install-deps.sh  # Optional - build.sh does this automatically
 ./scripts/build.sh
 
 # Start PostgreSQL (from devenv directory)
@@ -109,11 +110,14 @@ mutation {
 ### Commands
 
 ```bash
-./scripts/build.sh                  # Build all packages
-./scripts/lint-all.sh              # Run ESLint
-./scripts/format-all.sh            # Format with Prettier, called automatically during build
-npm test                   # Run all tests
-npm run test:grep -- "pattern"  # Search tests
+./scripts/install-deps.sh           # Install dependencies for all packages
+./scripts/install-deps.sh --force   # Force reinstall all dependencies
+./scripts/build.sh                  # Build all packages (includes dependency installation)
+./scripts/build.sh --install        # Build with forced dependency reinstall
+./scripts/lint-all.sh               # Run ESLint
+./scripts/format-all.sh             # Format with Prettier, called automatically during build
+npm test                            # Run all tests
+npm run test:grep -- "pattern"      # Search tests
 ```
 
 ### Project Structure
