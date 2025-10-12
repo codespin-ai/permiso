@@ -8,6 +8,7 @@
     "test": "mocha --exit",
     "test:grep": "mocha --exit --grep",
     "build": "tsc --noEmit",
+    "test:build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
