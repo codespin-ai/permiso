@@ -5,7 +5,6 @@
 # Flags:
 #   --install    Force npm install in every package even if node_modules exists
 #   --migrate    Run DB migrations after build for all databases
-#   --seed       Run DB seeders after build for all databases
 #   --no-format  Skip prettier formatting (reduces output for debugging)
 # -------------------------------------------------------------------
 set -euo pipefail
@@ -51,22 +50,32 @@ for pkg_name in "${PACKAGES[@]}"; do
   fi
 done
 
-# 4 ▸ optional migrations / seeds via root scripts
-if [[ "$*" == *--migrate* ]]; then
-  echo "Running database migrations for all databases…"
-  npm run migrate:all
-fi
+# 4 ▸ verify test files compile with strict mode
+echo "Verifying test files compile with strict mode…"
+for pkg_name in "${PACKAGES[@]}"; do
+  pkg="node/packages/$pkg_name"
+  if [[ ! -f "$pkg/package.json" ]]; then
+    continue
+  fi
+  # Check if test:build script exists
+  if node -e "process.exit(require('./$pkg/package.json').scripts?.['test:build'] ? 0 : 1)"; then
+    echo "Checking test compilation in $pkg…"
+    (cd "$pkg" && npm run test:build)
+  fi
+done
 
-if [[ "$*" == *--seed* ]]; then
-  echo "Running database seeds for all databases…"
-  npm run seed:all
-fi
-
-# Skip formatting if --no-format flag is provided
+# 5 ▸ run prettier formatting (unless --no-format is passed)
 if [[ "$*" != *--no-format* ]]; then
+  echo "Running prettier formatting…"
   ./scripts/format-all.sh
 else
   echo "Skipping formatting (--no-format flag provided)"
+fi
+
+# 6 ▸ optional migrations via root scripts
+if [[ "$*" == *--migrate* ]]; then
+  echo "Running database migrations for all databases…"
+  npm run migrate:all
 fi
 
 echo "=== Build completed successfully ==="
