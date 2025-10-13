@@ -3,7 +3,8 @@
 # build.sh – monorepo-aware build helper for Permiso
 #
 # Flags:
-#   --install    Force npm install in every package even if node_modules exists
+#   --clean      Clean build artifacts (dist, node_modules) and install dependencies
+#   --install    Force npm install without cleaning
 #   --migrate    Run DB migrations after build for all databases
 #   --no-format  Skip prettier formatting (reduces output for debugging)
 # -------------------------------------------------------------------
@@ -25,14 +26,20 @@ PACKAGES=(
   "permiso-integration-tests"
 )
 
-# 1 ▸ clean first
-./scripts/clean.sh
+# 1 ▸ clean if --clean flag present
+if [[ "$*" == *--clean* ]]; then
+  ./scripts/clean.sh
+fi
 
-# 2 ▸ install dependencies
-if [[ "$*" == *--install* ]]; then
-  ./scripts/install-deps.sh --force
-else
-  ./scripts/install-deps.sh
+# 2 ▸ install dependencies if --clean or --install flag present
+if [[ "$*" == *--clean* || "$*" == *--install* ]]; then
+  if [[ "$*" == *--clean* ]]; then
+    # Clean already removed node_modules, so normal install
+    ./scripts/install-deps.sh
+  elif [[ "$*" == *--install* ]]; then
+    # Install without clean, so use --force
+    ./scripts/install-deps.sh --force
+  fi
 fi
 
 # 3 ▸ build each package that defines a build script, in order
