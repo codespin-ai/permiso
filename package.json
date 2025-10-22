@@ -1,6 +1,6 @@
 {
   "name": "@codespin/permiso",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A comprehensive Role-Based Access Control (RBAC) system with GraphQL",
   "type": "module",
   "private": true,
