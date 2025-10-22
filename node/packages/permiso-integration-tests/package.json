@@ -1,6 +1,6 @@
 {
   "name": "@codespin/permiso-integration-tests",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Integration tests for Permiso RBAC system",
   "type": "module",
   "private": true,
@@ -15,8 +15,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
-    "graphql": "^16.11.0",
-    "node-fetch": "^3.3.2"
+    "graphql": "^16.11.0"
   },
   "devDependencies": {
     "@codespin/permiso-test-utils": "file:../permiso-test-utils",
