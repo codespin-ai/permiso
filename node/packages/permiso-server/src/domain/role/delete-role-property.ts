@@ -10,11 +10,8 @@ export async function deleteRoleProperty(
   name: string,
 ): Promise<Result<boolean>> {
   try {
-    const result = await ctx.db.result(
-      `DELETE FROM role_property WHERE parent_id = $(roleId) AND name = $(name)`,
-      { roleId, name },
-    );
-    return { success: true, data: result.rowCount > 0 };
+    const result = await ctx.repos.role.deleteProperty(ctx.orgId, roleId, name);
+    return result;
   } catch (error) {
     logger.error("Failed to delete role property", {
       error,

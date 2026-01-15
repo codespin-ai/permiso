@@ -11,12 +11,13 @@ export async function revokeUserPermission(
   action: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(
-      `DELETE FROM user_permission 
-       WHERE user_id = $(userId) AND resource_id = $(resourceId) AND action = $(action)`,
-      { userId, resourceId, action },
+    const result = await ctx.repos.permission.revokeUserPermission(
+      ctx.orgId,
+      userId,
+      resourceId,
+      action,
     );
-    return { success: true, data: true };
+    return result;
   } catch (error) {
     logger.error("Failed to revoke user permission", {
       error,

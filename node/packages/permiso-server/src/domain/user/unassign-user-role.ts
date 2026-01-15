@@ -10,10 +10,10 @@ export async function unassignUserRole(
   roleId: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(
-      `DELETE FROM user_role WHERE user_id = $(userId) AND role_id = $(roleId)`,
-      { userId, roleId },
-    );
+    const result = await ctx.repos.user.unassignRole(ctx.orgId, userId, roleId);
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to unassign user role", {

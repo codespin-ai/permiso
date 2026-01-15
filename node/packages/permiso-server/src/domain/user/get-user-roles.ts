@@ -9,12 +9,8 @@ export async function getUserRoles(
   userId: string,
 ): Promise<Result<string[]>> {
   try {
-    const rows = await ctx.db.manyOrNone<{ role_id: string }>(
-      `SELECT role_id FROM user_role WHERE user_id = $(userId)`,
-      { userId },
-    );
-
-    return { success: true, data: rows.map((r) => r.role_id) };
+    const result = await ctx.repos.user.getRoleIds(ctx.orgId, userId);
+    return result;
   } catch (error) {
     logger.error("Failed to get user roles", { error, userId });
     return { success: false, error: error as Error };

@@ -1,12 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type {
-  RolePermissionWithOrgId,
-  RolePermissionDbRow,
-} from "../../types.js";
-import { mapRolePermissionFromDb } from "../../mappers.js";
+import type { RolePermissionWithOrgId } from "../../types.js";
 
 const logger = createLogger("permiso-server:permissions");
 
@@ -17,22 +12,17 @@ export async function grantRolePermission(
   action: string,
 ): Promise<Result<RolePermissionWithOrgId>> {
   try {
-    const params = {
-      org_id: ctx.orgId,
-      role_id: roleId,
-      resource_id: resourceId,
-      action: action,
-      created_at: Date.now(),
-    };
-
-    const row = await ctx.db.one<RolePermissionDbRow>(
-      `${sql.insert("role_permission", params)}
-       ON CONFLICT (org_id, role_id, resource_id, action) DO UPDATE SET created_at = $(created_at)
-       RETURNING *`,
-      params,
+    const result = await ctx.repos.permission.grantRolePermission(
+      ctx.orgId,
+      roleId,
+      { resourceId, action },
     );
 
-    return { success: true, data: mapRolePermissionFromDb(row) };
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result.data };
   } catch (error) {
     logger.error("Failed to grant role permission", {
       error,

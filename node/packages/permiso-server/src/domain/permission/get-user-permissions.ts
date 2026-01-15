@@ -1,43 +1,9 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type {
-  UserPermissionWithOrgId,
-  UserPermissionDbRow,
-} from "../../types.js";
-import { mapUserPermissionFromDb } from "../../mappers.js";
+import type { UserPermissionWithOrgId } from "../../types.js";
 
 const logger = createLogger("permiso-server:permissions");
-
-function buildUserPermissionsQuery(
-  userId?: string,
-  resourceId?: string,
-  action?: string,
-): { query: string; params: Record<string, unknown> } {
-  const params: Record<string, unknown> = {};
-  const conditions: string[] = [];
-
-  if (userId) {
-    conditions.push(`user_id = $(userId)`);
-    params.userId = userId;
-  }
-
-  if (resourceId) {
-    conditions.push(`resource_id = $(resourceId)`);
-    params.resourceId = resourceId;
-  }
-
-  if (action) {
-    conditions.push(`action = $(action)`);
-    params.action = action;
-  }
-
-  const whereClause =
-    conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
-  const query = `SELECT * FROM user_permission${whereClause} ORDER BY created_at DESC`;
-
-  return { query, params };
-}
 
 export async function getUserPermissions(
   ctx: DataContext,
@@ -46,14 +12,50 @@ export async function getUserPermissions(
   action?: string,
 ): Promise<Result<UserPermissionWithOrgId[]>> {
   try {
-    const { query, params } = buildUserPermissionsQuery(
-      userId,
-      resourceId,
-      action,
-    );
+    // If userId is provided, get permissions for that user
+    if (userId) {
+      const result = await ctx.repos.permission.getUserPermissions(
+        ctx.orgId,
+        userId,
+      );
 
-    const rows = await ctx.db.manyOrNone<UserPermissionDbRow>(query, params);
-    return { success: true, data: rows.map(mapUserPermissionFromDb) };
+      if (!result.success) {
+        return result;
+      }
+
+      // Apply additional filters if provided
+      let permissions = result.data;
+      if (resourceId) {
+        permissions = permissions.filter((p) => p.resourceId === resourceId);
+      }
+      if (action) {
+        permissions = permissions.filter((p) => p.action === action);
+      }
+
+      return { success: true, data: permissions };
+    }
+
+    // If resourceId is provided without userId, get by resource
+    if (resourceId) {
+      const result = await ctx.repos.permission.getPermissionsByResource(
+        ctx.orgId,
+        resourceId,
+      );
+
+      if (!result.success) {
+        return result;
+      }
+
+      let permissions = result.data.userPermissions;
+      if (action) {
+        permissions = permissions.filter((p) => p.action === action);
+      }
+
+      return { success: true, data: permissions };
+    }
+
+    // No filters - return empty array (we don't have a list all method)
+    return { success: true, data: [] };
   } catch (error) {
     logger.error("Failed to get user permissions", {
       error,

@@ -1,8 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { ResourceDbRow, Resource } from "../../types.js";
-import { mapResourceFromDb } from "../../mappers.js";
+import type { Resource } from "../../repositories/interfaces/index.js";
 
 const logger = createLogger("permiso-server:resources");
 
@@ -17,31 +16,39 @@ export async function getResourcesByOrg(
   pagination?: { limit?: number; offset?: number },
 ): Promise<Result<Resource[]>> {
   try {
-    let query = `SELECT * FROM resource WHERE org_id = $(orgId)`;
-    const params: Record<string, unknown> = { orgId };
-
-    // Apply id prefix filter if provided
+    // If id prefix filter is provided, use the prefix method
     if (filter?.idPrefix) {
-      query += ` AND id LIKE $(idPattern)`;
-      params.idPattern = `${filter.idPrefix}%`;
+      const prefixResult = await ctx.repos.resource.listByIdPrefix(
+        orgId,
+        filter.idPrefix,
+      );
+      if (!prefixResult.success) {
+        return prefixResult;
+      }
+
+      // Apply pagination manually if needed
+      let resources = prefixResult.data;
+      if (pagination?.offset) {
+        resources = resources.slice(pagination.offset);
+      }
+      if (pagination?.limit) {
+        resources = resources.slice(0, pagination.limit);
+      }
+
+      return { success: true, data: resources };
     }
 
-    query += ` ORDER BY id ASC`;
+    // Otherwise list all resources by org
+    const result = await ctx.repos.resource.listByOrg(
+      orgId,
+      pagination?.limit ? { first: pagination.limit } : undefined,
+    );
 
-    // Apply pagination
-    if (pagination?.limit) {
-      query += ` LIMIT $(limit)`;
-      params.limit = pagination.limit;
-    }
-    if (pagination?.offset) {
-      query += ` OFFSET $(offset)`;
-      params.offset = pagination.offset;
+    if (!result.success) {
+      return result;
     }
 
-    const rows = await ctx.db.manyOrNone<ResourceDbRow>(query, params);
-    const resources = rows.map(mapResourceFromDb);
-
-    return { success: true, data: resources };
+    return { success: true, data: result.data.nodes };
   } catch (error) {
     logger.error("Failed to get resources by org", { error, orgId });
     return { success: false, error: error as Error };

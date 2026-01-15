@@ -1,10 +1,8 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type { Resource, ResourceDbRow } from "../../types.js";
+import type { Resource } from "../../repositories/interfaces/index.js";
 import type { UpdateResourceInput } from "../../generated/graphql.js";
-import { mapResourceFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:resources");
 
@@ -14,37 +12,28 @@ export async function updateResource(
   input: UpdateResourceInput,
 ): Promise<Result<Resource>> {
   try {
-    const updateParams: Record<string, unknown> = {};
-
-    if (input.name !== undefined) {
-      updateParams.name = input.name;
-    }
-
-    if (input.description !== undefined) {
-      updateParams.description = input.description;
-    }
-
-    updateParams.updated_at = Date.now();
-
-    const whereParams = {
-      resource_id: resourceId,
-    };
-
-    const query = `
-      ${sql.update("resource", updateParams)}
-      WHERE id = $(resource_id)
-      RETURNING *
-    `;
-
-    const params = { ...updateParams, ...whereParams };
-    const row = await ctx.db.one<ResourceDbRow>(query, params);
-    return { success: true, data: mapResourceFromDb(row) };
-  } catch (error) {
-    logger.error("Failed to update resource", {
-      error,
-      resourceId,
-      input,
+    const result = await ctx.repos.resource.update(ctx.orgId, resourceId, {
+      name: input.name ?? undefined,
+      description: input.description ?? undefined,
     });
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: result.data.id,
+        orgId: result.data.orgId,
+        name: result.data.name,
+        description: result.data.description,
+        createdAt: result.data.createdAt,
+        updatedAt: result.data.updatedAt,
+      },
+    };
+  } catch (error) {
+    logger.error("Failed to update resource", { error, resourceId, input });
     return { success: false, error: error as Error };
   }
 }

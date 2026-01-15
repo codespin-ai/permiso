@@ -1,8 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { Resource, ResourceDbRow } from "../../types.js";
-import { mapResourceFromDb } from "../../mappers.js";
+import type { Resource } from "../../repositories/interfaces/index.js";
 
 const logger = createLogger("permiso-server:resources");
 
@@ -11,15 +10,13 @@ export async function getResource(
   resourceId: string,
 ): Promise<Result<Resource | null>> {
   try {
-    const row = await ctx.db.oneOrNone<ResourceDbRow>(
-      `SELECT * FROM resource WHERE id = $(resourceId)`,
-      { resourceId },
-    );
+    const result = await ctx.repos.resource.getById(ctx.orgId, resourceId);
 
-    return {
-      success: true,
-      data: row ? mapResourceFromDb(row) : null,
-    };
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result.data };
   } catch (error) {
     logger.error("Failed to get resource", { error, resourceId });
     return { success: false, error: error as Error };

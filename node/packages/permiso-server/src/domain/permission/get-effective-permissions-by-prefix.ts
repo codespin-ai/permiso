@@ -12,75 +12,23 @@ export async function getEffectivePermissionsByPrefix(
   action?: string,
 ): Promise<Result<EffectivePermission[]>> {
   try {
-    // Get user's direct permissions
-    const userPermsQuery = action
-      ? `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
-         FROM user_permission 
-         WHERE user_id = $(userId) AND resource_id LIKE $(resourcePattern) AND action = $(action)`
-      : `SELECT 'user' as source, user_id as source_id, resource_id, action, created_at 
-         FROM user_permission 
-         WHERE user_id = $(userId) AND resource_id LIKE $(resourcePattern)`;
-
-    const userPermsParams: Record<string, unknown> = {
+    const result = await ctx.repos.permission.getEffectivePermissionsByPrefix(
+      ctx.orgId,
       userId,
-      resourcePattern: `${resourceIdPrefix}%`,
-    };
-    if (action) userPermsParams.action = action;
+      resourceIdPrefix,
+    );
 
-    // Get permissions from user's roles
-    const rolePermsQuery = action
-      ? `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
-         FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id
-         WHERE ur.user_id = $(userId) AND rp.resource_id LIKE $(resourcePattern) AND rp.action = $(action)`
-      : `SELECT 'role' as source, rp.role_id as source_id, rp.resource_id, rp.action, rp.created_at 
-         FROM role_permission rp
-         INNER JOIN user_role ur ON rp.role_id = ur.role_id
-         WHERE ur.user_id = $(userId) AND rp.resource_id LIKE $(resourcePattern)`;
+    if (!result.success) {
+      return result;
+    }
 
-    const rolePermsParams: Record<string, unknown> = {
-      userId,
-      resourcePattern: `${resourceIdPrefix}%`,
-    };
-    if (action) rolePermsParams.action = action;
+    // Apply action filter if provided
+    let permissions = result.data;
+    if (action) {
+      permissions = permissions.filter((p) => p.action === action);
+    }
 
-    const [userPerms, rolePerms] = await Promise.all([
-      ctx.db.manyOrNone(userPermsQuery, userPermsParams),
-      ctx.db.manyOrNone(rolePermsQuery, rolePermsParams),
-    ]);
-
-    const effectivePerms: EffectivePermission[] = [
-      ...(
-        userPerms as Array<{
-          resource_id: string;
-          action: string;
-          source_id: string;
-          created_at: number;
-        }>
-      ).map((p) => ({
-        resourceId: p.resource_id,
-        action: p.action,
-        source: "user" as const,
-        sourceId: p.source_id,
-        createdAt: p.created_at,
-      })),
-      ...(
-        rolePerms as Array<{
-          resource_id: string;
-          action: string;
-          source_id: string;
-          created_at: number;
-        }>
-      ).map((p) => ({
-        resourceId: p.resource_id,
-        action: p.action,
-        source: "role" as const,
-        sourceId: p.source_id,
-        createdAt: p.created_at,
-      })),
-    ];
-
-    return { success: true, data: effectivePerms };
+    return { success: true, data: permissions };
   } catch (error) {
     logger.error("Failed to get effective permissions by prefix", {
       error,

@@ -1,12 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type {
-  UserPermissionWithOrgId,
-  UserPermissionDbRow,
-} from "../../types.js";
-import { mapUserPermissionFromDb } from "../../mappers.js";
+import type { UserPermissionWithOrgId } from "../../types.js";
 
 const logger = createLogger("permiso-server:permissions");
 
@@ -17,22 +12,17 @@ export async function grantUserPermission(
   action: string,
 ): Promise<Result<UserPermissionWithOrgId>> {
   try {
-    const params = {
-      org_id: ctx.orgId,
-      user_id: userId,
-      resource_id: resourceId,
-      action: action,
-      created_at: Date.now(),
-    };
-
-    const row = await ctx.db.one<UserPermissionDbRow>(
-      `${sql.insert("user_permission", params)}
-       ON CONFLICT (org_id, user_id, resource_id, action) DO UPDATE SET created_at = $(created_at)
-       RETURNING *`,
-      params,
+    const result = await ctx.repos.permission.grantUserPermission(
+      ctx.orgId,
+      userId,
+      { resourceId, action },
     );
 
-    return { success: true, data: mapUserPermissionFromDb(row) };
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, data: result.data };
   } catch (error) {
     logger.error("Failed to grant user permission", {
       error,

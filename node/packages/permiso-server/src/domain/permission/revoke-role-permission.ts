@@ -11,12 +11,13 @@ export async function revokeRolePermission(
   action: string,
 ): Promise<Result<boolean>> {
   try {
-    const result = await ctx.db.result(
-      `DELETE FROM role_permission 
-       WHERE role_id = $(roleId) AND resource_id = $(resourceId) AND action = $(action)`,
-      { roleId, resourceId, action },
+    const result = await ctx.repos.permission.revokeRolePermission(
+      ctx.orgId,
+      roleId,
+      resourceId,
+      action,
     );
-    return { success: true, data: result.rowCount > 0 };
+    return result;
   } catch (error) {
     logger.error("Failed to revoke role permission", {
       error,

@@ -9,8 +9,8 @@ export async function deleteUser(
   userId: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(`DELETE FROM "user" WHERE id = $(userId)`, { userId });
-    return { success: true, data: true };
+    const result = await ctx.repos.user.delete(ctx.orgId, userId);
+    return result;
   } catch (error) {
     logger.error("Failed to delete user", { error, userId });
     return { success: false, error: error as Error };
