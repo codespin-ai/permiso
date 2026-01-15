@@ -10,6 +10,8 @@ export type PaginationInput = {
   after?: string;
   last?: number;
   before?: string;
+  offset?: number;
+  sortDirection?: "ASC" | "DESC";
 };
 
 // Page info for pagination

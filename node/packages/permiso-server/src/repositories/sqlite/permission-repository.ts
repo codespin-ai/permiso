@@ -200,20 +200,12 @@ export function createPermissionRepository(
       action: string,
     ): Promise<Result<boolean>> {
       try {
-        executeDelete(
-          db,
-          schema,
-          (q, p: { roleId: string; orgId: string; resourceId: string; action: string }) =>
-            q.deleteFrom("role_permission").where(
-              (rp) =>
-                rp.role_id === p.roleId &&
-                rp.org_id === p.orgId &&
-                rp.resource_id === p.resourceId &&
-                rp.action === p.action,
-            ),
-          { roleId, orgId: inputOrgId, resourceId, action },
+        // Use raw SQL to get the number of affected rows
+        const stmt = db.prepare(
+          `DELETE FROM role_permission WHERE role_id = @roleId AND org_id = @orgId AND resource_id = @resourceId AND action = @action`,
         );
-        return { success: true, data: true };
+        const result = stmt.run({ roleId, orgId: inputOrgId, resourceId, action });
+        return { success: true, data: result.changes > 0 };
       } catch (error) {
         logger.error("Failed to revoke role permission", { error, roleId, resourceId, action });
         return { success: false, error: error as Error };

@@ -191,15 +191,17 @@ export function createRoleRepository(
         }) as { count: number };
         const totalCount = countResult.count;
 
+        const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM role WHERE org_id = @orgId${
             filter?.name ? " AND name LIKE @name" : ""
-          } ORDER BY created_at DESC${pagination?.first ? " LIMIT @limit" : ""}`,
+          } ORDER BY id ${sortDir}${pagination?.first ? " LIMIT @limit" : ""}${pagination?.offset ? " OFFSET @offset" : ""}`,
         );
         const rows = stmt.all({
           orgId: inputOrgId,
           ...(filter?.name ? { name: `%${filter.name}%` } : {}),
           ...(pagination?.first ? { limit: pagination.first } : {}),
+          ...(pagination?.offset ? { offset: pagination.offset } : {}),
         }) as Array<{
           id: string;
           org_id: string;

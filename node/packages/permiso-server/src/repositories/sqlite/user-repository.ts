@@ -254,15 +254,17 @@ export function createUserRepository(
 
         // Main query - Tinqer doesn't support orderBy/limit directly in all cases,
         // so we use raw SQL for complex queries
+        const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM "user" WHERE org_id = @orgId${
             filter?.identityProvider ? " AND identity_provider = @identityProvider" : ""
-          } ORDER BY created_at DESC${pagination?.first ? " LIMIT @limit" : ""}`,
+          } ORDER BY id ${sortDir}${pagination?.first ? " LIMIT @limit" : ""}${pagination?.offset ? " OFFSET @offset" : ""}`,
         );
         const rows = stmt.all({
           orgId: inputOrgId,
           identityProvider: filter?.identityProvider,
           limit: pagination?.first,
+          offset: pagination?.offset,
         }) as Array<{
           id: string;
           org_id: string;

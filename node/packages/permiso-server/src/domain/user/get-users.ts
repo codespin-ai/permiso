@@ -24,7 +24,7 @@ export async function getUsers(
     const listResult = await ctx.repos.user.list(
       ctx.orgId,
       filters?.identityProvider ? { identityProvider: filters.identityProvider } : undefined,
-      pagination ? { first: pagination.limit ?? undefined } : undefined,
+      pagination ? { first: pagination.limit ?? undefined, offset: pagination.offset ?? undefined, sortDirection: pagination.sortDirection ?? undefined } : undefined,
     );
 
     if (!listResult.success) {

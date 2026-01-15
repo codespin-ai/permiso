@@ -18,14 +18,14 @@ export async function getUsersByOrg(
     identityProvider?: string;
     identityProviderUserId?: string;
   },
-  pagination?: { limit?: number; offset?: number },
+  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
 ): Promise<Result<UserWithProperties[]>> {
   try {
     // Get users with optional identity provider filter
     const listResult = await ctx.repos.user.list(
       orgId,
       filter?.identityProvider ? { identityProvider: filter.identityProvider } : undefined,
-      pagination?.limit ? { first: pagination.limit } : undefined,
+      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
     );
 
     if (!listResult.success) {

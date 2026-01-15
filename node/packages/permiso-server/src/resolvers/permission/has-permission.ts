@@ -6,9 +6,8 @@ export const hasPermissionResolver = {
     hasPermission: async (
       _: unknown,
       args: {
-        orgId: string;
         userId: string;
-        resourcePath: string;
+        resourceId: string;
         action: string;
       },
       context: DataContext,
@@ -16,7 +15,7 @@ export const hasPermissionResolver = {
       const result = await hasPermission(
         context,
         args.userId,
-        args.resourcePath,
+        args.resourceId,
         args.action,
       );
       if (!result.success) {

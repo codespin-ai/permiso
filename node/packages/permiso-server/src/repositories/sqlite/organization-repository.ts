@@ -176,15 +176,17 @@ export function createOrganizationRepository(
         ) as { count: number };
         const totalCount = countResult.count;
 
-        // Main query - use raw SQL for LIKE, ORDER BY, LIMIT
+        // Main query - use raw SQL for LIKE, ORDER BY, LIMIT, OFFSET
+        const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM organization${
             filter?.name ? " WHERE name LIKE @name" : ""
-          } ORDER BY created_at DESC${pagination?.first ? " LIMIT @limit" : ""}`,
+          } ORDER BY id ${sortDir}${pagination?.first ? " LIMIT @limit" : ""}${pagination?.offset ? " OFFSET @offset" : ""}`,
         );
         const rows = stmt.all({
           ...(filter?.name ? { name: `%${filter.name}%` } : {}),
           ...(pagination?.first ? { limit: pagination.first } : {}),
+          ...(pagination?.offset ? { offset: pagination.offset } : {}),
         }) as Array<{
           id: string;
           name: string;
@@ -419,16 +421,12 @@ export function createOrganizationRepository(
       name: string,
     ): Promise<Result<boolean>> {
       try {
-        executeDelete(
-          db,
-          schema,
-          (q, p: { orgId: string; name: string }) =>
-            q.deleteFrom("organization_property").where(
-              (op) => op.parent_id === p.orgId && op.name === p.name,
-            ),
-          { orgId, name },
+        // Use raw SQL to get the number of affected rows
+        const stmt = db.prepare(
+          `DELETE FROM organization_property WHERE parent_id = @orgId AND name = @name`,
         );
-        return { success: true, data: true };
+        const result = stmt.run({ orgId, name });
+        return { success: true, data: result.changes > 0 };
       } catch (error) {
         logger.error("Failed to delete organization property", { error, orgId, name });
         return { success: false, error: error as Error };

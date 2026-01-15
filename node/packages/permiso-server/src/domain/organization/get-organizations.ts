@@ -12,13 +12,13 @@ export async function getOrganizations(
     ids?: string[];
     properties?: PropertyFilter[];
   },
-  pagination?: { limit?: number; offset?: number },
+  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
 ): Promise<Result<OrganizationWithProperties[]>> {
   try {
     // Get organizations with optional name filter
     const listResult = await ctx.repos.organization.list(
       undefined, // no name filter in current interface
-      pagination ? { first: pagination.limit } : undefined,
+      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
     );
 
     if (!listResult.success) {

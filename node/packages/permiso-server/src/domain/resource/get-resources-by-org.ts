@@ -13,7 +13,7 @@ export async function getResourcesByOrg(
   ctx: DataContext,
   orgId: string,
   filter?: { idPrefix?: string },
-  pagination?: { limit?: number; offset?: number },
+  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
 ): Promise<Result<Resource[]>> {
   try {
     // If id prefix filter is provided, use the prefix method
@@ -41,7 +41,7 @@ export async function getResourcesByOrg(
     // Otherwise list all resources by org
     const result = await ctx.repos.resource.listByOrg(
       orgId,
-      pagination?.limit ? { first: pagination.limit } : undefined,
+      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
     );
 
     if (!result.success) {

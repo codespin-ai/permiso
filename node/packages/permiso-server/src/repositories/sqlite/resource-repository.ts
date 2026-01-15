@@ -141,15 +141,17 @@ export function createResourceRepository(
         }) as { count: number };
         const totalCount = countResult.count;
 
+        const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM resource WHERE org_id = @orgId${
             filter?.idPrefix ? " AND id LIKE @idPrefix" : ""
-          } ORDER BY id ASC${pagination?.first ? " LIMIT @limit" : ""}`,
+          } ORDER BY id ${sortDir}${pagination?.first ? " LIMIT @limit" : ""}${pagination?.offset ? " OFFSET @offset" : ""}`,
         );
         const rows = stmt.all({
           orgId: inputOrgId,
           ...(filter?.idPrefix ? { idPrefix: `${filter.idPrefix}%` } : {}),
           ...(pagination?.first ? { limit: pagination.first } : {}),
+          ...(pagination?.offset ? { offset: pagination.offset } : {}),
         }) as Array<{
           id: string;
           org_id: string;

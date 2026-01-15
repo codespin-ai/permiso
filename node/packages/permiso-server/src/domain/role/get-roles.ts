@@ -11,14 +11,14 @@ export async function getRoles(
     ids?: string[];
     properties?: Array<{ name: string; value: unknown }>;
   },
-  pagination?: { limit?: number; offset?: number },
+  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
 ): Promise<Result<RoleWithProperties[]>> {
   try {
     // Get roles from repository
     const listResult = await ctx.repos.role.list(
       ctx.orgId,
       undefined,
-      pagination ? { first: pagination.limit } : undefined,
+      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
     );
 
     if (!listResult.success) {
