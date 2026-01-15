@@ -237,23 +237,19 @@ export function createUserRepository(
       pagination?: PaginationInput,
     ): Promise<Result<Connection<User>>> {
       try {
-        // Count query
-        const countRows = executeSelect(
-          db,
-          schema,
-          (q, p: { orgId: string; identityProvider?: string }) => {
-            let query = q.from("user").where((u) => u.org_id === p.orgId);
-            if (p.identityProvider) {
-              query = query.where((u) => u.identity_provider === p.identityProvider);
-            }
-            return query.select(() => ({ count: 1 }));
-          },
-          { orgId: inputOrgId, identityProvider: filter?.identityProvider },
+        // Count query using raw SQL
+        const countStmt = db.prepare(
+          filter?.identityProvider
+            ? `SELECT COUNT(*) as count FROM "user" WHERE org_id = @orgId AND identity_provider = @identityProvider`
+            : `SELECT COUNT(*) as count FROM "user" WHERE org_id = @orgId`,
         );
-        const totalCount = countRows.length;
+        const countResult = countStmt.get({
+          orgId: inputOrgId,
+          ...(filter?.identityProvider ? { identityProvider: filter.identityProvider } : {}),
+        }) as { count: number };
+        const totalCount = countResult.count;
 
-        // Main query - Tinqer doesn't support orderBy/limit directly in all cases,
-        // so we use raw SQL for complex queries
+        // Main query - use raw SQL for complex queries
         const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM "user" WHERE org_id = @orgId${
@@ -262,9 +258,9 @@ export function createUserRepository(
         );
         const rows = stmt.all({
           orgId: inputOrgId,
-          identityProvider: filter?.identityProvider,
-          limit: pagination?.first,
-          offset: pagination?.offset,
+          ...(filter?.identityProvider ? { identityProvider: filter.identityProvider } : {}),
+          ...(pagination?.first ? { limit: pagination.first } : {}),
+          ...(pagination?.offset ? { offset: pagination.offset } : {}),
         }) as Array<{
           id: string;
           org_id: string;

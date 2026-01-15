@@ -90,6 +90,7 @@ describe("Organizations", () => {
             (msg: string) =>
               msg.includes("duplicate") ||
               msg.includes("already exists") ||
+              msg.includes("unique constraint") || // SQLite error
               msg.includes("23505"),
           );
           return; // Test passes if we got the expected error
@@ -115,6 +116,7 @@ describe("Organizations", () => {
           (msg: string) =>
             msg.includes("duplicate") ||
             msg.includes("already exists") ||
+            msg.includes("unique constraint") || // SQLite error
             msg.includes("23505"),
         );
       }
