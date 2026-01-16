@@ -1,8 +1,6 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import { getUserPermissions } from "./get-user-permissions.js";
-import { getRolePermissions } from "./get-role-permissions.js";
 
 const logger = createLogger("permiso-server:permissions");
 
@@ -23,33 +21,18 @@ export async function getPermissionsByResource(
   >
 > {
   try {
-    // Get user permissions for this resource
-    const userPermsResult = await getUserPermissions(
-      ctx,
-      undefined, // no specific user filter
+    const result = await ctx.repos.permission.getPermissionsByResource(
+      ctx.orgId,
       resourceId,
-      undefined, // no specific action filter
     );
 
-    if (!userPermsResult.success) {
-      return userPermsResult;
-    }
-
-    // Get role permissions for this resource
-    const rolePermsResult = await getRolePermissions(
-      ctx,
-      undefined, // no specific role filter
-      resourceId,
-      undefined, // no specific action filter
-    );
-
-    if (!rolePermsResult.success) {
-      return rolePermsResult;
+    if (!result.success) {
+      return result;
     }
 
     // Combine both permission types with __typename for GraphQL union resolution
     const permissions = [
-      ...userPermsResult.data.map((p) => ({
+      ...result.data.userPermissions.map((p) => ({
         __typename: "UserPermission" as const,
         userId: p.userId,
         resourceId: p.resourceId,
@@ -57,7 +40,7 @@ export async function getPermissionsByResource(
         createdAt: p.createdAt,
         orgId: p.orgId,
       })),
-      ...rolePermsResult.data.map((p) => ({
+      ...result.data.rolePermissions.map((p) => ({
         __typename: "RolePermission" as const,
         roleId: p.roleId,
         resourceId: p.resourceId,
@@ -69,10 +52,7 @@ export async function getPermissionsByResource(
 
     return { success: true, data: permissions };
   } catch (error) {
-    logger.error("Failed to get permissions by resource", {
-      error,
-      resourceId,
-    });
+    logger.error("Failed to get permissions by resource", { error, resourceId });
     return { success: false, error: error as Error };
   }
 }

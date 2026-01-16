@@ -1,7 +1,7 @@
 import type { RoleWithProperties } from "../../types.js";
 import { getRoleProperties } from "../../domain/role/get-role-properties.js";
-import { getRoleUsers } from "../../domain/role/get-role-users.js";
-import { getUsers } from "../../domain/user/get-users.js";
+import { getRoleUsersByOrg } from "../../domain/role/get-role-users-by-org.js";
+import { getUsersByOrg } from "../../domain/user/get-users-by-org.js";
 import { getRolePermissions } from "../../domain/permission/get-role-permissions.js";
 import { getOrganization } from "../../domain/organization/get-organization.js";
 import { DataContext } from "../../domain/data-context.js";
@@ -37,7 +37,8 @@ export const roleFieldResolvers = {
       _: unknown,
       context: DataContext,
     ) => {
-      const userIdsResult = await getRoleUsers(context, parent.id);
+      // Use parent.orgId instead of context.orgId to work with ROOT queries
+      const userIdsResult = await getRoleUsersByOrg(context, parent.orgId, parent.id);
       if (!userIdsResult.success) {
         throw userIdsResult.error;
       }
@@ -46,7 +47,7 @@ export const roleFieldResolvers = {
         return [];
       }
 
-      const result = await getUsers(context, {
+      const result = await getUsersByOrg(context, parent.orgId, {
         ids: userIdsResult.data,
       });
       if (!result.success) {

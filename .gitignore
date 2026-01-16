@@ -9,12 +9,13 @@ dist/
 build/
 *.tsbuildinfo
 
-# Environment files
+# Environment files (keep .env.*.example files)
 .env
 .env.local
 .env.development
 .env.test
 .env.production
+.env.docker
 
 # IDE
 .vscode/

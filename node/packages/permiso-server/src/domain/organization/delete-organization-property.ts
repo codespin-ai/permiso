@@ -10,11 +10,8 @@ export async function deleteOrganizationProperty(
   name: string,
 ): Promise<Result<boolean>> {
   try {
-    const result = await ctx.db.result(
-      `DELETE FROM organization_property WHERE parent_id = $(orgId) AND name = $(name)`,
-      { orgId, name },
-    );
-    return { success: true, data: result.rowCount > 0 };
+    const result = await ctx.repos.organization.deleteProperty(orgId, name);
+    return result;
   } catch (error) {
     logger.error("Failed to delete organization property", {
       error,

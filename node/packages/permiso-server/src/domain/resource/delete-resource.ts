@@ -9,9 +9,10 @@ export async function deleteResource(
   resourceId: string,
 ): Promise<Result<boolean>> {
   try {
-    await ctx.db.none(`DELETE FROM resource WHERE id = $(resourceId)`, {
-      resourceId,
-    });
+    const result = await ctx.repos.resource.delete(ctx.orgId, resourceId);
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
     return { success: true, data: true };
   } catch (error) {
     logger.error("Failed to delete resource", { error, resourceId });

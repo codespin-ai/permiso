@@ -1,12 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type {
-  OrganizationDbRow,
-  OrganizationWithProperties,
-} from "../../types.js";
-import { mapOrganizationFromDb } from "../../mappers.js";
-import { getOrganizationProperties } from "./get-organization-properties.js";
+import type { OrganizationWithProperties } from "../../types.js";
 
 const logger = createLogger("permiso-server:organizations");
 
@@ -15,30 +10,23 @@ export async function getOrganization(
   id: string,
 ): Promise<Result<OrganizationWithProperties | null>> {
   try {
-    // Use ROOT access for cross-organization queries
-    const rootDb = ctx.db.upgradeToRoot?.("Get organization by ID") || ctx.db;
+    const orgResult = await ctx.repos.organization.getById(id);
+    if (!orgResult.success) {
+      return orgResult;
+    }
 
-    const orgRow = await rootDb.oneOrNone<OrganizationDbRow>(
-      `SELECT * FROM organization WHERE id = $(id)`,
-      { id },
-    );
-
-    if (!orgRow) {
+    if (!orgResult.data) {
       return { success: true, data: null };
     }
 
-    // Use rootDb for getting properties too
-    const rootCtx = { ...ctx, db: rootDb };
-    const propsResult = await getOrganizationProperties(rootCtx, id, false);
+    const propsResult = await ctx.repos.organization.getProperties(id);
     if (!propsResult.success) {
-      throw propsResult.error;
+      return { success: false, error: propsResult.error };
     }
-    const properties = propsResult.data;
-    const org = mapOrganizationFromDb(orgRow);
 
     const result: OrganizationWithProperties = {
-      ...org,
-      properties: properties.reduce(
+      ...orgResult.data,
+      properties: propsResult.data.reduce(
         (acc, prop) => {
           acc[prop.name] = prop.value;
           return acc;

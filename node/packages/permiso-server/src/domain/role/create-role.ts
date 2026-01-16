@@ -1,10 +1,8 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type { Role, RoleDbRow } from "../../types.js";
+import type { Role } from "../../repositories/interfaces/index.js";
 import type { CreateRoleInput } from "../../generated/graphql.js";
-import { mapRoleFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:roles");
 
@@ -13,41 +11,32 @@ export async function createRole(
   input: CreateRoleInput,
 ): Promise<Result<Role>> {
   try {
-    const role = await ctx.db.tx(async (t) => {
-      const now = Date.now();
-      const params = {
-        id: input.id,
-        org_id: ctx.orgId,
-        name: input.name,
-        description: input.description ?? null,
-        created_at: now,
-        updated_at: now,
-      };
-
-      const roleRow = await t.one<RoleDbRow>(
-        `${sql.insert("role", params)} RETURNING *`,
-        params,
-      );
-
-      if (input.properties && input.properties.length > 0) {
-        const propertyValues = input.properties.map((p) => ({
-          parent_id: input.id,
-          org_id: ctx.orgId,
-          name: p.name,
-          value: p.value === undefined ? null : JSON.stringify(p.value),
-          hidden: p.hidden ?? false,
-          created_at: now,
-        }));
-
-        for (const prop of propertyValues) {
-          await t.none(sql.insert("role_property", prop), prop);
-        }
-      }
-
-      return roleRow;
+    const result = await ctx.repos.role.create(ctx.orgId, {
+      id: input.id,
+      name: input.name,
+      description: input.description ?? undefined,
+      properties: input.properties?.map((p) => ({
+        name: p.name,
+        value: p.value,
+        hidden: p.hidden ?? false,
+      })),
     });
 
-    return { success: true, data: mapRoleFromDb(role) };
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: result.data.id,
+        orgId: result.data.orgId,
+        name: result.data.name,
+        description: result.data.description,
+        createdAt: result.data.createdAt,
+        updatedAt: result.data.updatedAt,
+      },
+    };
   } catch (error) {
     logger.error("Failed to create role", { error, input });
     return { success: false, error: error as Error };

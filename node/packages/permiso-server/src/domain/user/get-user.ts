@@ -1,10 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { UserDbRow, UserWithProperties, Property } from "../../types.js";
-import { mapUserFromDb } from "../../mappers.js";
-import { getUserProperties } from "./get-user-properties.js";
-import { getUserRoles } from "./get-user-roles.js";
+import type { UserWithProperties, Property } from "../../types.js";
 
 const logger = createLogger("permiso-server:users");
 
@@ -13,29 +10,27 @@ export async function getUser(
   userId: string,
 ): Promise<Result<UserWithProperties | null>> {
   try {
-    const userRow = await ctx.db.oneOrNone<UserDbRow>(
-      `SELECT * FROM "user" WHERE id = $(userId)`,
-      { userId },
-    );
+    const userResult = await ctx.repos.user.getById(ctx.orgId, userId);
+    if (!userResult.success) {
+      return userResult;
+    }
 
-    if (!userRow) {
+    if (!userResult.data) {
       return { success: true, data: null };
     }
 
-    const [propertiesResult, roleIds] = await Promise.all([
-      getUserProperties(ctx, userId, false),
-      getUserRoles(ctx, userId),
+    const [propertiesResult, roleIdsResult] = await Promise.all([
+      ctx.repos.user.getProperties(ctx.orgId, userId),
+      ctx.repos.user.getRoleIds(ctx.orgId, userId),
     ]);
 
     if (!propertiesResult.success) {
-      throw propertiesResult.error;
+      return { success: false, error: propertiesResult.error };
     }
 
-    const user = mapUserFromDb(userRow);
-
     const result: UserWithProperties = {
-      ...user,
-      roleIds: roleIds.success ? roleIds.data : [],
+      ...userResult.data,
+      roleIds: roleIdsResult.success ? roleIdsResult.data : [],
       properties: propertiesResult.data.reduce(
         (acc: Record<string, unknown>, prop: Property) => {
           acc[prop.name] = prop.value;

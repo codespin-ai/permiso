@@ -1,14 +1,13 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { RoleDbRow, RoleWithProperties } from "../../types.js";
-import { mapRoleFromDb } from "../../mappers.js";
+import type { RoleWithProperties, Property } from "../../types.js";
 
 const logger = createLogger("permiso-server:roles");
 
 /**
- * ROOT-ONLY function to get roles from a specific organization
- * Used by organization field resolvers that run in unrestricted context
+ * Get roles from a specific organization
+ * Used by organization field resolvers
  */
 export async function getRolesByOrg(
   ctx: DataContext,
@@ -17,73 +16,73 @@ export async function getRolesByOrg(
     properties?: Array<{ name: string; value: unknown }>;
     ids?: string[];
   },
-  pagination?: { limit?: number; offset?: number },
+  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
 ): Promise<Result<RoleWithProperties[]>> {
   try {
-    let query: string;
-    const params: Record<string, unknown> = { orgId };
+    // Get roles from repository
+    const listResult = await ctx.repos.role.listByOrg(
+      orgId,
+      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
+    );
 
-    if (filter?.properties && filter.properties.length > 0) {
-      // Use a subquery to find roles that have ALL the requested properties
-      query = `
-        SELECT DISTINCT r.* 
-        FROM role r
-        WHERE r.org_id = $(orgId) AND r.id IN (
-            SELECT parent_id 
-            FROM role_property
-            WHERE (name, value) IN (
-      `;
-
-      const propConditions: string[] = [];
-      filter.properties.forEach((prop, index) => {
-        propConditions.push(`($(propName${index}), $(propValue${index}))`);
-        params[`propName${index}`] = prop.name;
-        params[`propValue${index}`] = JSON.stringify(prop.value);
-      });
-
-      query += propConditions.join(", ");
-      query += `)
-            GROUP BY parent_id
-            HAVING COUNT(DISTINCT name) = $(propCount)
-          )`;
-      params.propCount = filter.properties.length;
-
-      if (filter?.ids && filter.ids.length > 0) {
-        query += ` AND r.id = ANY($(ids))`;
-        params.ids = filter.ids;
-      }
-    } else {
-      // Simple query without property filtering
-      query = `SELECT * FROM role WHERE org_id = $(orgId)`;
-
-      // Apply filters if provided
-      if (filter?.ids && filter.ids.length > 0) {
-        query += ` AND id = ANY($(ids))`;
-        params.ids = filter.ids;
-      }
+    if (!listResult.success) {
+      return listResult;
     }
 
-    query += ` ORDER BY created_at DESC`;
+    let roles = listResult.data.nodes;
 
-    // Apply pagination
-    if (pagination?.limit) {
-      query += ` LIMIT $(limit)`;
-      params.limit = pagination.limit;
-    }
-    if (pagination?.offset) {
-      query += ` OFFSET $(offset)`;
-      params.offset = pagination.offset;
+    // Apply ID filter if provided
+    if (filter?.ids && filter.ids.length > 0) {
+      const idSet = new Set(filter.ids);
+      roles = roles.filter((role) => idSet.has(role.id));
     }
 
-    const rows = await ctx.db.manyOrNone<RoleDbRow>(query, params);
+    // Build result with properties
+    const result = await Promise.all(
+      roles.map(async (role) => {
+        const propertiesResult = await ctx.repos.role.getProperties(
+          orgId,
+          role.id,
+        );
 
-    // Map to domain objects (simplified - no properties for field resolver)
-    const roles: RoleWithProperties[] = rows.map((row) => ({
-      ...mapRoleFromDb(row),
-      properties: {},
-    }));
+        const properties = propertiesResult.success ? propertiesResult.data : [];
 
-    return { success: true, data: roles };
+        // Apply property filters if provided
+        if (filter?.properties && filter.properties.length > 0) {
+          const propMap = new Map(properties.map((p) => [p.name, p.value]));
+          const matches = filter.properties.every((f) => {
+            const propValue = propMap.get(f.name);
+            return JSON.stringify(propValue) === JSON.stringify(f.value);
+          });
+          if (!matches) {
+            return null;
+          }
+        }
+
+        return {
+          id: role.id,
+          orgId: role.orgId,
+          name: role.name,
+          description: role.description,
+          createdAt: role.createdAt,
+          updatedAt: role.updatedAt,
+          properties: properties.reduce(
+            (acc: Record<string, unknown>, prop: Property) => {
+              acc[prop.name] = prop.value;
+              return acc;
+            },
+            {} as Record<string, unknown>,
+          ),
+        };
+      }),
+    );
+
+    // Filter out nulls (roles that didn't match property filters)
+    const filteredResult = result.filter(
+      (role) => role !== null,
+    ) as RoleWithProperties[];
+
+    return { success: true, data: filteredResult };
   } catch (error) {
     logger.error("Failed to get roles by org", { error, orgId });
     return { success: false, error: error as Error };

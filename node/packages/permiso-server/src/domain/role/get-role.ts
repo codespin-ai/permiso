@@ -1,9 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { RoleDbRow, RoleWithProperties } from "../../types.js";
-import { mapRoleFromDb } from "../../mappers.js";
-import { getRoleProperties } from "./get-role-properties.js";
+import type { RoleWithProperties, Property } from "../../types.js";
 
 const logger = createLogger("permiso-server:roles");
 
@@ -12,26 +10,32 @@ export async function getRole(
   roleId: string,
 ): Promise<Result<RoleWithProperties | null>> {
   try {
-    const roleRow = await ctx.db.oneOrNone<RoleDbRow>(
-      `SELECT * FROM role WHERE id = $(roleId)`,
-      { roleId },
-    );
+    const roleResult = await ctx.repos.role.getById(ctx.orgId, roleId);
 
-    if (!roleRow) {
+    if (!roleResult.success) {
+      return { success: false, error: roleResult.error };
+    }
+
+    if (!roleResult.data) {
       return { success: true, data: null };
     }
 
-    const propertiesResult = await getRoleProperties(ctx, roleId, false);
-    if (!propertiesResult.success) {
-      throw propertiesResult.error;
-    }
+    const propertiesResult = await ctx.repos.role.getProperties(
+      ctx.orgId,
+      roleId,
+    );
 
-    const role = mapRoleFromDb(roleRow);
+    const properties = propertiesResult.success ? propertiesResult.data : [];
 
     const result: RoleWithProperties = {
-      ...role,
-      properties: propertiesResult.data.reduce(
-        (acc, prop) => {
+      id: roleResult.data.id,
+      orgId: roleResult.data.orgId,
+      name: roleResult.data.name,
+      description: roleResult.data.description,
+      createdAt: roleResult.data.createdAt,
+      updatedAt: roleResult.data.updatedAt,
+      properties: properties.reduce(
+        (acc: Record<string, unknown>, prop: Property) => {
           acc[prop.name] = prop.value;
           return acc;
         },

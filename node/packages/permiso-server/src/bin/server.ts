@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@as-integrations/express5";
-import { createLazyDb } from "@codespin/permiso-db";
 import { createLogger } from "@codespin/permiso-logger";
 import express, { Request, Response } from "express";
 import cors from "cors";
@@ -9,12 +8,27 @@ import { GraphQLError } from "graphql";
 import { getTypeDefs } from "../index.js";
 import { resolvers } from "../resolvers/index.js";
 import { getBearerAuthConfig, validateBearerToken } from "../auth/bearer.js";
+import {
+  initializeDatabaseConfig,
+  getDatabaseType,
+  getPostgresHealthCheckDb,
+  getSqliteHealthCheckDb,
+  closeDatabaseConnections,
+  createRequestRepositories,
+} from "../config/index.js";
 
 const logger = createLogger("GraphQLServer");
 
 async function startServer() {
-  // Initialize health check database
-  const healthCheckDb = createLazyDb();
+  // Initialize database configuration (validates env vars)
+  const dbConfig = await initializeDatabaseConfig();
+  logger.info(`Database type: ${dbConfig.type}`);
+
+  // For SQLite mode, warn that domain layer isn't fully migrated yet
+  if (dbConfig.type === "sqlite") {
+    logger.warn("SQLite mode: Domain layer uses repository pattern");
+    logger.warn("Some features may not be fully supported yet");
+  }
 
   // Get Bearer authentication configuration
   const bearerConfig = getBearerAuthConfig();
@@ -34,12 +48,29 @@ async function startServer() {
 
   // Health check endpoint (no auth required) - before GraphQL setup
   app.get("/health", async (_req: Request, res: Response) => {
-    const services: Record<string, string> = {};
+    const services: Record<string, string> = {
+      databaseType: getDatabaseType(),
+    };
 
-    // Check database connection
+    // Check database connection based on type
     try {
-      await healthCheckDb.one("SELECT 1 as ok");
-      services.database = "connected";
+      if (getDatabaseType() === "postgres") {
+        const pgDb = getPostgresHealthCheckDb();
+        if (pgDb) {
+          await pgDb.one("SELECT 1 as ok");
+          services.database = "connected";
+        } else {
+          services.database = "not-initialized";
+        }
+      } else {
+        const sqliteDb = getSqliteHealthCheckDb();
+        if (sqliteDb) {
+          sqliteDb.prepare("SELECT 1 as ok").get();
+          services.database = "connected";
+        } else {
+          services.database = "not-initialized";
+        }
+      }
     } catch (error) {
       services.database = "disconnected";
       logger.error("Database health check failed:", error);
@@ -81,19 +112,21 @@ async function startServer() {
         // Extract organization ID from header (optional)
         const orgId = req.headers["x-org-id"] as string | undefined;
 
-        // Create lazy database connection
-        // It will only connect when actually used
-        const db = createLazyDb(orgId);
+        // Create repositories based on configured database type
+        // For PostgreSQL: Uses RLS for tenant isolation
+        // For SQLite: Uses app-level filtering in repositories
+        const repos = await createRequestRepositories(orgId);
 
         return {
-          db,
-          orgId,
+          repos,
+          orgId: orgId ?? "",
         };
       },
     }),
   );
 
-  const port = parseInt(process.env.PERMISO_SERVER_PORT || "5001");
+  const port = parseInt(process.env.PERMISO_SERVER_PORT!);
+  const host = process.env.PERMISO_SERVER_HOST!;
 
   await new Promise<void>((resolve) => {
     app.listen(port, () => {
@@ -101,13 +134,21 @@ async function startServer() {
     });
   });
 
-  logger.info(`🚀 GraphQL server running at http://localhost:${port}/graphql`);
-  logger.info(
-    `💚 Health endpoint available at http://localhost:${port}/health`,
-  );
+  logger.info(`GraphQL server running at http://${host}:${port}/graphql`);
+  logger.info(`Health endpoint available at http://${host}:${port}/health`);
+
+  // Graceful shutdown handling
+  const shutdown = () => {
+    logger.info("Shutting down server...");
+    closeDatabaseConnections();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 startServer().catch((error) => {
-  logger.error("Failed to start server:", error);
+  logger.error("Failed to start server:", { message: error.message, stack: error.stack });
   process.exit(1);
 });

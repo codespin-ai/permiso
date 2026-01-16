@@ -1,10 +1,8 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type { Resource, ResourceDbRow } from "../../types.js";
+import type { Resource } from "../../repositories/interfaces/index.js";
 import type { CreateResourceInput } from "../../generated/graphql.js";
-import { mapResourceFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:resources");
 
@@ -13,22 +11,27 @@ export async function createResource(
   input: CreateResourceInput,
 ): Promise<Result<Resource>> {
   try {
-    const now = Date.now();
-    const params = {
+    const result = await ctx.repos.resource.create(ctx.orgId, {
       id: input.id,
-      org_id: ctx.orgId,
-      name: input.name ?? null,
-      description: input.description ?? null,
-      created_at: now,
-      updated_at: now,
+      name: input.name ?? undefined,
+      description: input.description ?? undefined,
+    });
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: result.data.id,
+        orgId: result.data.orgId,
+        name: result.data.name,
+        description: result.data.description,
+        createdAt: result.data.createdAt,
+        updatedAt: result.data.updatedAt,
+      },
     };
-
-    const row = await ctx.db.one<ResourceDbRow>(
-      `${sql.insert("resource", params)} RETURNING *`,
-      params,
-    );
-
-    return { success: true, data: mapResourceFromDb(row) };
   } catch (error) {
     logger.error("Failed to create resource", { error, input });
     return { success: false, error: error as Error };

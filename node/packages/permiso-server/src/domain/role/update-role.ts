@@ -1,10 +1,8 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type { Role, RoleDbRow } from "../../types.js";
+import type { Role } from "../../repositories/interfaces/index.js";
 import type { UpdateRoleInput } from "../../generated/graphql.js";
-import { mapRoleFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:roles");
 
@@ -14,31 +12,26 @@ export async function updateRole(
   input: UpdateRoleInput,
 ): Promise<Result<Role>> {
   try {
-    const updateParams: Record<string, unknown> = {};
+    const result = await ctx.repos.role.update(ctx.orgId, roleId, {
+      name: input.name ?? undefined,
+      description: input.description ?? undefined,
+    });
 
-    if (input.name !== undefined) {
-      updateParams.name = input.name;
+    if (!result.success) {
+      return { success: false, error: result.error };
     }
 
-    if (input.description !== undefined) {
-      updateParams.description = input.description;
-    }
-
-    updateParams.updated_at = Date.now();
-
-    const whereParams = {
-      role_id: roleId,
+    return {
+      success: true,
+      data: {
+        id: result.data.id,
+        orgId: result.data.orgId,
+        name: result.data.name,
+        description: result.data.description,
+        createdAt: result.data.createdAt,
+        updatedAt: result.data.updatedAt,
+      },
     };
-
-    const query = `
-      ${sql.update("role", updateParams)}
-      WHERE id = $(role_id)
-      RETURNING *
-    `;
-
-    const params = { ...updateParams, ...whereParams };
-    const row = await ctx.db.one<RoleDbRow>(query, params);
-    return { success: true, data: mapRoleFromDb(row) };
   } catch (error) {
     logger.error("Failed to update role", { error, roleId, input });
     return { success: false, error: error as Error };

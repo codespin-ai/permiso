@@ -1,10 +1,8 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
-import { sql } from "@codespin/permiso-db";
 import type { DataContext } from "../data-context.js";
-import type { Organization, OrganizationDbRow } from "../../types.js";
+import type { Organization } from "../../repositories/interfaces/index.js";
 import type { UpdateOrganizationInput } from "../../generated/graphql.js";
-import { mapOrganizationFromDb } from "../../mappers.js";
 
 const logger = createLogger("permiso-server:organizations");
 
@@ -14,29 +12,16 @@ export async function updateOrganization(
   input: UpdateOrganizationInput,
 ): Promise<Result<Organization>> {
   try {
-    // Use ROOT access for organization updates
-    const rootDb = ctx.db.upgradeToRoot?.("Update organization") || ctx.db;
-    const updateParams: Record<string, unknown> = {};
+    const result = await ctx.repos.organization.update(id, {
+      name: input.name ?? undefined,
+      description: input.description ?? undefined,
+    });
 
-    if (input.name !== undefined) {
-      updateParams.name = input.name;
+    if (!result.success) {
+      return result;
     }
 
-    if (input.description !== undefined) {
-      updateParams.description = input.description;
-    }
-
-    updateParams.updated_at = Date.now();
-
-    const query = `
-      ${sql.update("organization", updateParams)}
-      WHERE id = $(id)
-      RETURNING *
-    `;
-
-    const params = { ...updateParams, id };
-    const row = await rootDb.one<OrganizationDbRow>(query, params);
-    return { success: true, data: mapOrganizationFromDb(row) };
+    return { success: true, data: result.data };
   } catch (error) {
     logger.error("Failed to update organization", { error, id, input });
     return { success: false, error: error as Error };

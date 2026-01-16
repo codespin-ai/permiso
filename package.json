@@ -16,6 +16,10 @@
     "migrate:permiso:latest": "knex migrate:latest --knexfile database/permiso/knexfile.js",
     "migrate:permiso:rollback": "knex migrate:rollback --knexfile database/permiso/knexfile.js",
     "migrate:permiso:status": "knex migrate:status --knexfile database/permiso/knexfile.js",
+    "migrate:permiso:sqlite:make": "knex migrate:make --knexfile database/permiso/sqlite/knexfile.js",
+    "migrate:permiso:sqlite:latest": "knex migrate:latest --knexfile database/permiso/sqlite/knexfile.js",
+    "migrate:permiso:sqlite:rollback": "knex migrate:rollback --knexfile database/permiso/sqlite/knexfile.js",
+    "migrate:permiso:sqlite:status": "knex migrate:status --knexfile database/permiso/sqlite/knexfile.js",
     "db:dump-schema": "./scripts/dump-schema.sh",
     "test:grep": "(cd node/packages/permiso-integration-tests && npm run test:grep) ; (cd node/packages/permiso-client && npm run test:grep)",
     "test:integration:grep": "cd node/packages/permiso-integration-tests && npm run test:grep",
@@ -54,6 +58,7 @@
   "author": "Codespin",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
     "pg": "^8.16.3"
   }

@@ -1,10 +1,7 @@
 import { createLogger } from "@codespin/permiso-logger";
 import { Result } from "@codespin/permiso-core";
 import type { DataContext } from "../data-context.js";
-import type { UserDbRow, UserWithProperties, Property } from "../../types.js";
-import { mapUserFromDb } from "../../mappers.js";
-import { getUserProperties } from "./get-user-properties.js";
-import { getUserRoles } from "./get-user-roles.js";
+import type { UserWithProperties, Property } from "../../types.js";
 
 const logger = createLogger("permiso-server:users");
 
@@ -15,50 +12,47 @@ export async function getUsersByIdentity(
 ): Promise<Result<UserWithProperties[]>> {
   try {
     // This operation needs to search across all organizations
-    const rootDb = ctx.db.upgradeToRoot?.(
-      "Search users by identity across organizations",
-    );
-    if (!rootDb) {
-      throw new Error(
-        "Cross-organization user search requires administrative access",
-      );
+    // We use the user repository's getByIdentity method for each org
+    // For now, we need to list all orgs and search in each one
+
+    // Get all organizations
+    const orgsResult = await ctx.repos.organization.list();
+    if (!orgsResult.success) {
+      return { success: false, error: orgsResult.error };
     }
 
-    const rows = await rootDb.manyOrNone<UserDbRow>(
-      `SELECT * FROM "user" WHERE identity_provider = $(identityProvider) AND identity_provider_user_id = $(identityProviderUserId)`,
-      { identityProvider, identityProviderUserId },
-    );
+    const users: UserWithProperties[] = [];
 
-    const users = rows.map(mapUserFromDb);
+    for (const org of orgsResult.data.nodes) {
+      const userResult = await ctx.repos.user.getByIdentity(
+        org.id,
+        identityProvider,
+        identityProviderUserId,
+      );
 
-    // Use rootDb context for getting properties and roles
-    const rootCtx = { ...ctx, db: rootDb };
-    const result = await Promise.all(
-      users.map(async (user) => {
-        const [propertiesResult, roleIds] = await Promise.all([
-          getUserProperties(rootCtx, user.id, false),
-          getUserRoles(rootCtx, user.id),
+      if (userResult.success && userResult.data) {
+        const [propertiesResult, roleIdsResult] = await Promise.all([
+          ctx.repos.user.getProperties(org.id, userResult.data.id),
+          ctx.repos.user.getRoleIds(org.id, userResult.data.id),
         ]);
 
-        if (!propertiesResult.success) {
-          throw propertiesResult.error;
-        }
+        const properties = propertiesResult.success ? propertiesResult.data : [];
 
-        return {
-          ...user,
-          roleIds: roleIds.success ? roleIds.data : [],
-          properties: propertiesResult.data.reduce(
+        users.push({
+          ...userResult.data,
+          roleIds: roleIdsResult.success ? roleIdsResult.data : [],
+          properties: properties.reduce(
             (acc: Record<string, unknown>, prop: Property) => {
               acc[prop.name] = prop.value;
               return acc;
             },
             {} as Record<string, unknown>,
           ),
-        };
-      }),
-    );
+        });
+      }
+    }
 
-    return { success: true, data: result };
+    return { success: true, data: users };
   } catch (error) {
     logger.error("Failed to get users by identity", {
       error,
