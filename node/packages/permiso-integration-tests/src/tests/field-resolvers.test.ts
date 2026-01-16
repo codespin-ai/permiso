@@ -932,6 +932,8 @@ describe("Field Resolvers and Nested Queries", () => {
 
   describe("Complex Query Scenarios", () => {
     it("should handle mixed queries with multiple root fields", async () => {
+      // Use org client since root-level queries (users, roles, resources) require org context
+      const acmeClient = getAcmeClient();
       const query = gql`
         query ComplexMultiRootQuery($orgId: ID!) {
           organization(id: $orgId) {
@@ -970,7 +972,7 @@ describe("Field Resolvers and Nested Queries", () => {
         }
       `;
 
-      const result = await rootClient.query(query, { orgId: "acme-corp" });
+      const result = await acmeClient.query(query, { orgId: "acme-corp" });
 
       // Verify all root fields resolved
       expect(result.data?.organization?.id).to.equal("acme-corp");

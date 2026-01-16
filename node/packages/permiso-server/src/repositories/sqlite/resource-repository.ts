@@ -58,14 +58,17 @@ export function createResourceRepository(
         executeInsert(
           db,
           schema,
-          (q, p: {
-            id: string;
-            org_id: string;
-            name: string | null;
-            description: string | null;
-            created_at: number;
-            updated_at: number;
-          }) =>
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              name: string | null;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
             q.insertInto("resource").values({
               id: p.id,
               org_id: p.org_id,
@@ -89,12 +92,17 @@ export function createResourceRepository(
           db,
           schema,
           (q, p: { id: string; org_id: string }) =>
-            q.from("resource").where((r) => r.id === p.id && r.org_id === p.org_id),
+            q
+              .from("resource")
+              .where((r) => r.id === p.id && r.org_id === p.org_id),
           { id: input.id, org_id: inputOrgId },
         );
 
         if (!rows[0]) {
-          return { success: false, error: new Error("Resource not found after creation") };
+          return {
+            success: false,
+            error: new Error("Resource not found after creation"),
+          };
         }
 
         return { success: true, data: mapResourceFromDb(rows[0]) };
@@ -113,10 +121,15 @@ export function createResourceRepository(
           db,
           schema,
           (q, p: { resourceId: string; orgId: string }) =>
-            q.from("resource").where((r) => r.id === p.resourceId && r.org_id === p.orgId),
+            q
+              .from("resource")
+              .where((r) => r.id === p.resourceId && r.org_id === p.orgId),
           { resourceId, orgId: inputOrgId },
         );
-        return { success: true, data: rows[0] ? mapResourceFromDb(rows[0]) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapResourceFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get resource", { error, resourceId });
         return { success: false, error: error as Error };
@@ -167,7 +180,9 @@ export function createResourceRepository(
             nodes: rows.map(mapResourceFromDb),
             totalCount,
             pageInfo: {
-              hasNextPage: pagination?.first ? rows.length === pagination.first : false,
+              hasNextPage: pagination?.first
+                ? rows.length === pagination.first
+                : false,
               hasPreviousPage: false,
               startCursor: rows[0]?.id ?? null,
               endCursor: rows[rows.length - 1]?.id ?? null,
@@ -224,7 +239,11 @@ export function createResourceRepository(
 
         // Build partial update with raw SQL
         const updates: string[] = ["updated_at = @updated_at"];
-        const params: Record<string, unknown> = { resourceId, orgId: inputOrgId, updated_at: now };
+        const params: Record<string, unknown> = {
+          resourceId,
+          orgId: inputOrgId,
+          updated_at: now,
+        };
 
         if (input.name !== undefined) {
           updates.push("name = @name");
@@ -245,7 +264,9 @@ export function createResourceRepository(
           db,
           schema,
           (q, p: { resourceId: string; orgId: string }) =>
-            q.from("resource").where((r) => r.id === p.resourceId && r.org_id === p.orgId),
+            q
+              .from("resource")
+              .where((r) => r.id === p.resourceId && r.org_id === p.orgId),
           { resourceId, orgId: inputOrgId },
         );
 
@@ -270,25 +291,33 @@ export function createResourceRepository(
             db,
             schema,
             (q, p: { resourceId: string; orgId: string }) =>
-              q.deleteFrom("user_permission").where(
-                (up) => up.resource_id === p.resourceId && up.org_id === p.orgId,
-              ),
+              q
+                .deleteFrom("user_permission")
+                .where(
+                  (up) =>
+                    up.resource_id === p.resourceId && up.org_id === p.orgId,
+                ),
             { resourceId, orgId: inputOrgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { resourceId: string; orgId: string }) =>
-              q.deleteFrom("role_permission").where(
-                (rp) => rp.resource_id === p.resourceId && rp.org_id === p.orgId,
-              ),
+              q
+                .deleteFrom("role_permission")
+                .where(
+                  (rp) =>
+                    rp.resource_id === p.resourceId && rp.org_id === p.orgId,
+                ),
             { resourceId, orgId: inputOrgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { resourceId: string; orgId: string }) =>
-              q.deleteFrom("resource").where((r) => r.id === p.resourceId && r.org_id === p.orgId),
+              q
+                .deleteFrom("resource")
+                .where((r) => r.id === p.resourceId && r.org_id === p.orgId),
             { resourceId, orgId: inputOrgId },
           );
         });
@@ -326,18 +355,22 @@ export function createResourceRepository(
               db,
               schema,
               (q, p: { resId: string; orgId: string }) =>
-                q.deleteFrom("user_permission").where(
-                  (up) => up.resource_id === p.resId && up.org_id === p.orgId,
-                ),
+                q
+                  .deleteFrom("user_permission")
+                  .where(
+                    (up) => up.resource_id === p.resId && up.org_id === p.orgId,
+                  ),
               { resId: res.id, orgId: inputOrgId },
             );
             executeDelete(
               db,
               schema,
               (q, p: { resId: string; orgId: string }) =>
-                q.deleteFrom("role_permission").where(
-                  (rp) => rp.resource_id === p.resId && rp.org_id === p.orgId,
-                ),
+                q
+                  .deleteFrom("role_permission")
+                  .where(
+                    (rp) => rp.resource_id === p.resId && rp.org_id === p.orgId,
+                  ),
               { resId: res.id, orgId: inputOrgId },
             );
           }
@@ -356,7 +389,10 @@ export function createResourceRepository(
 
         return { success: true, data: result };
       } catch (error) {
-        logger.error("Failed to delete resources by prefix", { error, idPrefix });
+        logger.error("Failed to delete resources by prefix", {
+          error,
+          idPrefix,
+        });
         return { success: false, error: error as Error };
       }
     },

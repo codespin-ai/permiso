@@ -1,9 +1,18 @@
 /**
  * PostgreSQL Role Repository
+ *
+ * Uses Tinqer for type-safe queries with app-level tenant filtering.
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { sql, type Database } from "@codespin/permiso-db";
+import {
+  executeSelect,
+  executeInsert,
+  executeUpdate,
+  executeDelete,
+} from "@tinqerjs/pg-promise-adapter";
+import type { Database } from "@codespin/permiso-db";
+import { schema, type RoleRow } from "./tinqer-schema.js";
 import type {
   IRoleRepository,
   Role,
@@ -16,11 +25,17 @@ import type {
   Connection,
   Result,
 } from "../interfaces/index.js";
-import type { RoleDbRow, PropertyDbRow, UserRoleDbRow } from "../../types.js";
 
 const logger = createLogger("permiso-server:repos:postgres:role");
 
-function mapRoleFromDb(row: RoleDbRow): Role {
+function mapRoleFromDb(row: {
+  id: string;
+  org_id: string;
+  name: string;
+  description: string | null;
+  created_at: number;
+  updated_at: number;
+}): Role {
   return {
     id: row.id,
     orgId: row.org_id,
@@ -31,11 +46,16 @@ function mapRoleFromDb(row: RoleDbRow): Role {
   };
 }
 
-function mapPropertyFromDb(row: PropertyDbRow): Property {
+function mapPropertyFromDb(row: {
+  name: string;
+  value: string;
+  hidden: boolean;
+  created_at: number;
+}): Property {
   return {
     name: row.name,
-    value: row.value,
-    hidden: row.hidden,
+    value: typeof row.value === "string" ? JSON.parse(row.value) : row.value,
+    hidden: Boolean(row.hidden),
     createdAt: row.created_at,
   };
 }
@@ -50,41 +70,90 @@ export function createRoleRepository(
       input: CreateRoleInput,
     ): Promise<Result<Role>> {
       try {
-        const role = await db.tx(async (t) => {
-          const now = Date.now();
-          const params = {
+        const now = Date.now();
+
+        const roleRows = await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              name: string;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
+            q
+              .insertInto("role")
+              .values({
+                id: p.id,
+                org_id: p.org_id,
+                name: p.name,
+                description: p.description,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+              })
+              .returning((r) => r),
+          {
             id: input.id,
             org_id: inputOrgId,
             name: input.name,
             description: input.description ?? null,
             created_at: now,
             updated_at: now,
-          };
+          },
+        );
 
-          const roleRow = await t.one<RoleDbRow>(
-            `${sql.insert("role", params)} RETURNING *`,
-            params,
-          );
-
-          if (input.properties && input.properties.length > 0) {
-            for (const prop of input.properties) {
-              const propParams = {
+        if (input.properties && input.properties.length > 0) {
+          for (const prop of input.properties) {
+            await executeInsert(
+              db,
+              schema,
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  org_id: string;
+                  name: string;
+                  value: string;
+                  hidden: boolean;
+                  created_at: number;
+                },
+              ) =>
+                q.insertInto("role_property").values({
+                  parent_id: p.parent_id,
+                  org_id: p.org_id,
+                  name: p.name,
+                  value: p.value,
+                  hidden: p.hidden,
+                  created_at: p.created_at,
+                }),
+              {
                 parent_id: input.id,
                 org_id: inputOrgId,
                 name: prop.name,
                 value:
-                  prop.value === undefined ? null : JSON.stringify(prop.value),
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ?? false,
                 created_at: now,
-              };
-              await t.none(sql.insert("role_property", propParams), propParams);
-            }
+              },
+            );
           }
+        }
 
-          return roleRow;
-        });
+        if (!roleRows[0]) {
+          return {
+            success: false,
+            error: new Error("Role not found after creation"),
+          };
+        }
 
-        return { success: true, data: mapRoleFromDb(role) };
+        return { success: true, data: mapRoleFromDb(roleRows[0]) };
       } catch (error) {
         logger.error("Failed to create role", { error, input });
         return { success: false, error: error as Error };
@@ -96,11 +165,16 @@ export function createRoleRepository(
       roleId: string,
     ): Promise<Result<Role | null>> {
       try {
-        const row = await db.oneOrNone<RoleDbRow>(
-          `SELECT * FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .from("role")
+              .where((r) => r.id === p.roleId && r.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
-        return { success: true, data: row ? mapRoleFromDb(row) : null };
+        return { success: true, data: rows[0] ? mapRoleFromDb(rows[0]) : null };
       } catch (error) {
         logger.error("Failed to get role", { error, roleId });
         return { success: false, error: error as Error };
@@ -113,27 +187,81 @@ export function createRoleRepository(
       pagination?: PaginationInput,
     ): Promise<Result<Connection<Role>>> {
       try {
-        let whereClause = "WHERE org_id = $(orgId)";
-        const params: Record<string, unknown> = { orgId: inputOrgId };
+        let totalCount: number;
+        let rows: RoleRow[];
 
         if (filter?.name) {
-          whereClause += " AND name ILIKE $(name)";
-          params.name = `%${filter.name}%`;
+          // Filtered queries - with name filter
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; namePattern: string }) =>
+              q
+                .from("role")
+                .where(
+                  (r) => r.org_id === p.orgId && r.name.includes(p.namePattern),
+                )
+                .count(),
+            { orgId: inputOrgId, namePattern: filter.name },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (
+              q,
+              p: {
+                orgId: string;
+                namePattern: string;
+                first: number;
+                offset: number;
+              },
+            ) =>
+              q
+                .from("role")
+                .where(
+                  (r) => r.org_id === p.orgId && r.name.includes(p.namePattern),
+                )
+                .orderBy((r) => r.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              namePattern: filter.name,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
+        } else {
+          // Non-filtered queries
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string }) =>
+              q
+                .from("role")
+                .where((r) => r.org_id === p.orgId)
+                .count(),
+            { orgId: inputOrgId },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; first: number; offset: number }) =>
+              q
+                .from("role")
+                .where((r) => r.org_id === p.orgId)
+                .orderBy((r) => r.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
         }
-
-        const countResult = await db.one<{ count: string }>(
-          `SELECT COUNT(*) as count FROM role ${whereClause}`,
-          params,
-        );
-        const totalCount = parseInt(countResult.count, 10);
-
-        let query = `SELECT * FROM role ${whereClause} ORDER BY created_at DESC`;
-        if (pagination?.first) {
-          query += ` LIMIT $(limit)`;
-          params.limit = pagination.first;
-        }
-
-        const rows = await db.manyOrNone<RoleDbRow>(query, params);
 
         return {
           success: true,
@@ -170,21 +298,43 @@ export function createRoleRepository(
     ): Promise<Result<Role>> {
       try {
         const now = Date.now();
-        const updateParams: Record<string, unknown> = { updated_at: now };
 
-        if (input.name !== undefined) {
-          updateParams.name = input.name;
-        }
-        if (input.description !== undefined) {
-          updateParams.description = input.description;
-        }
-
-        const row = await db.one<RoleDbRow>(
-          `${sql.update("role", updateParams)} WHERE id = $(roleId) AND org_id = $(orgId) RETURNING *`,
-          { ...updateParams, roleId, orgId: inputOrgId },
+        const rows = await executeUpdate(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              roleId: string;
+              orgId: string;
+              updated_at: number;
+              name: string | undefined;
+              description: string | null | undefined;
+            },
+          ) =>
+            q
+              .update("role")
+              .set({
+                updated_at: p.updated_at,
+                name: p.name,
+                description: p.description,
+              })
+              .where((r) => r.id === p.roleId && r.org_id === p.orgId)
+              .returning((r) => r),
+          {
+            roleId,
+            orgId: inputOrgId,
+            updated_at: now,
+            name: input.name,
+            description: input.description,
+          },
         );
 
-        return { success: true, data: mapRoleFromDb(row) };
+        if (!rows[0]) {
+          return { success: false, error: new Error("Role not found") };
+        }
+
+        return { success: true, data: mapRoleFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to update role", { error, roleId });
         return { success: false, error: error as Error };
@@ -193,24 +343,48 @@ export function createRoleRepository(
 
     async delete(inputOrgId: string, roleId: string): Promise<Result<boolean>> {
       try {
-        await db.tx(async (t) => {
-          await t.none(
-            `DELETE FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId)`,
-            { roleId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM role_permission WHERE role_id = $(roleId) AND org_id = $(orgId)`,
-            { roleId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM user_role WHERE role_id = $(roleId) AND org_id = $(orgId)`,
-            { roleId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM role WHERE id = $(roleId) AND org_id = $(orgId)`,
-            { roleId, orgId: inputOrgId },
-          );
-        });
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("role_property")
+              .where(
+                (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
+              ),
+          { roleId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("role_permission")
+              .where((rp) => rp.role_id === p.roleId && rp.org_id === p.orgId),
+          { roleId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_role")
+              .where((ur) => ur.role_id === p.roleId && ur.org_id === p.orgId),
+          { roleId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("role")
+              .where((r) => r.id === p.roleId && r.org_id === p.orgId),
+          { roleId, orgId: inputOrgId },
+        );
+
         return { success: true, data: true };
       } catch (error) {
         logger.error("Failed to delete role", { error, roleId });
@@ -223,8 +397,13 @@ export function createRoleRepository(
       roleId: string,
     ): Promise<Result<string[]>> {
       try {
-        const rows = await db.manyOrNone<UserRoleDbRow>(
-          `SELECT * FROM user_role WHERE role_id = $(roleId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .from("user_role")
+              .where((ur) => ur.role_id === p.roleId && ur.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map((r) => r.user_id) };
@@ -239,8 +418,15 @@ export function createRoleRepository(
       roleId: string,
     ): Promise<Result<Property[]>> {
       try {
-        const rows = await db.manyOrNone<PropertyDbRow>(
-          `SELECT * FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .from("role_property")
+              .where(
+                (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
+              ),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -256,11 +442,24 @@ export function createRoleRepository(
       name: string,
     ): Promise<Result<Property | null>> {
       try {
-        const row = await db.oneOrNone<PropertyDbRow>(
-          `SELECT * FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string; name: string }) =>
+            q
+              .from("role_property")
+              .where(
+                (rp) =>
+                  rp.parent_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.name === p.name,
+              ),
           { roleId, orgId: inputOrgId, name },
         );
-        return { success: true, data: row ? mapPropertyFromDb(row) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get role property", { error, roleId, name });
         return { success: false, error: error as Error };
@@ -274,24 +473,55 @@ export function createRoleRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        const params = {
-          parent_id: roleId,
-          org_id: inputOrgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? null
-              : JSON.stringify(property.value),
-          hidden: property.hidden ?? false,
-          created_at: now,
-        };
+        // Delete existing property if it exists, then insert new one
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string; name: string }) =>
+            q
+              .deleteFrom("role_property")
+              .where(
+                (rp) =>
+                  rp.parent_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.name === p.name,
+              ),
+          { roleId, orgId: inputOrgId, name: property.name },
+        );
 
-        await db.none(
-          `INSERT INTO role_property (parent_id, org_id, name, value, hidden, created_at)
-           VALUES ($(parent_id), $(org_id), $(name), $(value), $(hidden), $(created_at))
-           ON CONFLICT (parent_id, org_id, name)
-           DO UPDATE SET value = $(value), hidden = $(hidden)`,
-          params,
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parent_id: string;
+              org_id: string;
+              name: string;
+              value: string;
+              hidden: boolean;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("role_property").values({
+              parent_id: p.parent_id,
+              org_id: p.org_id,
+              name: p.name,
+              value: p.value,
+              hidden: p.hidden,
+              created_at: p.created_at,
+            }),
+          {
+            parent_id: roleId,
+            org_id: inputOrgId,
+            name: property.name,
+            value:
+              property.value === undefined
+                ? "null"
+                : JSON.stringify(property.value),
+            hidden: property.hidden ?? false,
+            created_at: now,
+          },
         );
 
         return {
@@ -319,11 +549,21 @@ export function createRoleRepository(
       name: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.none(
-          `DELETE FROM role_property WHERE parent_id = $(roleId) AND org_id = $(orgId) AND name = $(name)`,
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string; name: string }) =>
+            q
+              .deleteFrom("role_property")
+              .where(
+                (rp) =>
+                  rp.parent_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.name === p.name,
+              ),
           { roleId, orgId: inputOrgId, name },
         );
-        return { success: true, data: true };
+        return { success: true, data: rowCount > 0 };
       } catch (error) {
         logger.error("Failed to delete role property", { error, roleId, name });
         return { success: false, error: error as Error };

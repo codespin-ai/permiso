@@ -8,9 +8,11 @@ const logger = createLogger("permiso-server:roles");
 export async function getRole(
   ctx: DataContext,
   roleId: string,
+  orgId?: string,
 ): Promise<Result<RoleWithProperties | null>> {
   try {
-    const roleResult = await ctx.repos.role.getById(ctx.orgId, roleId);
+    const effectiveOrgId = orgId || ctx.orgId;
+    const roleResult = await ctx.repos.role.getById(effectiveOrgId, roleId);
 
     if (!roleResult.success) {
       return { success: false, error: roleResult.error };
@@ -21,7 +23,7 @@ export async function getRole(
     }
 
     const propertiesResult = await ctx.repos.role.getProperties(
-      ctx.orgId,
+      effectiveOrgId,
       roleId,
     );
 

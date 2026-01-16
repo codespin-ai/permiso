@@ -1,12 +1,18 @@
 /**
  * PostgreSQL User Repository
  *
- * Uses RLS for tenant isolation. The org_id is set via SET LOCAL at the start
- * of each transaction by the RLS database wrapper.
+ * Uses Tinqer for type-safe queries with app-level tenant filtering.
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { sql, type Database } from "@codespin/permiso-db";
+import {
+  executeSelect,
+  executeInsert,
+  executeUpdate,
+  executeDelete,
+} from "@tinqerjs/pg-promise-adapter";
+import type { Database } from "@codespin/permiso-db";
+import { schema, type UserRow } from "./tinqer-schema.js";
 import type {
   IUserRepository,
   User,
@@ -19,11 +25,17 @@ import type {
   Connection,
   Result,
 } from "../interfaces/index.js";
-import type { UserDbRow, PropertyDbRow, UserRoleDbRow } from "../../types.js";
 
 const logger = createLogger("permiso-server:repos:postgres:user");
 
-function mapUserFromDb(row: UserDbRow): User {
+function mapUserFromDb(row: {
+  id: string;
+  org_id: string;
+  identity_provider: string;
+  identity_provider_user_id: string;
+  created_at: number;
+  updated_at: number;
+}): User {
   return {
     id: row.id,
     orgId: row.org_id,
@@ -34,18 +46,23 @@ function mapUserFromDb(row: UserDbRow): User {
   };
 }
 
-function mapPropertyFromDb(row: PropertyDbRow): Property {
+function mapPropertyFromDb(row: {
+  name: string;
+  value: string;
+  hidden: boolean;
+  created_at: number;
+}): Property {
   return {
     name: row.name,
-    value: row.value,
-    hidden: row.hidden,
+    value: typeof row.value === "string" ? JSON.parse(row.value) : row.value,
+    hidden: Boolean(row.hidden),
     createdAt: row.created_at,
   };
 }
 
 export function createUserRepository(
   db: Database,
-  orgId: string,
+  _orgId: string,
 ): IUserRepository {
   return {
     async create(
@@ -53,53 +70,123 @@ export function createUserRepository(
       input: CreateUserInput,
     ): Promise<Result<User>> {
       try {
-        const user = await db.tx(async (t) => {
-          const now = Date.now();
-          const params = {
+        const now = Date.now();
+
+        // Insert user and get back the row
+        const userRows = await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              identity_provider: string;
+              identity_provider_user_id: string;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
+            q
+              .insertInto("user")
+              .values({
+                id: p.id,
+                org_id: p.org_id,
+                identity_provider: p.identity_provider,
+                identity_provider_user_id: p.identity_provider_user_id,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+              })
+              .returning((u) => u),
+          {
             id: input.id,
             org_id: inputOrgId,
             identity_provider: input.identityProvider,
             identity_provider_user_id: input.identityProviderUserId,
             created_at: now,
             updated_at: now,
-          };
+          },
+        );
 
-          const userRow = await t.one<UserDbRow>(
-            `${sql.insert('"user"', params)} RETURNING *`,
-            params,
-          );
-
-          if (input.properties && input.properties.length > 0) {
-            for (const prop of input.properties) {
-              const propParams = {
+        // Handle properties if provided
+        if (input.properties && input.properties.length > 0) {
+          for (const prop of input.properties) {
+            await executeInsert(
+              db,
+              schema,
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  org_id: string;
+                  name: string;
+                  value: string;
+                  hidden: boolean;
+                  created_at: number;
+                },
+              ) =>
+                q.insertInto("user_property").values({
+                  parent_id: p.parent_id,
+                  org_id: p.org_id,
+                  name: p.name,
+                  value: p.value,
+                  hidden: p.hidden,
+                  created_at: p.created_at,
+                }),
+              {
                 parent_id: input.id,
                 org_id: inputOrgId,
                 name: prop.name,
                 value:
-                  prop.value === undefined ? null : JSON.stringify(prop.value),
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ?? false,
                 created_at: now,
-              };
-              await t.none(sql.insert("user_property", propParams), propParams);
-            }
+              },
+            );
           }
+        }
 
-          if (input.roleIds && input.roleIds.length > 0) {
-            for (const roleId of input.roleIds) {
-              const roleParams = {
+        // Handle role assignments if provided
+        if (input.roleIds && input.roleIds.length > 0) {
+          for (const roleId of input.roleIds) {
+            await executeInsert(
+              db,
+              schema,
+              (
+                q,
+                p: {
+                  user_id: string;
+                  role_id: string;
+                  org_id: string;
+                  created_at: number;
+                },
+              ) =>
+                q.insertInto("user_role").values({
+                  user_id: p.user_id,
+                  role_id: p.role_id,
+                  org_id: p.org_id,
+                  created_at: p.created_at,
+                }),
+              {
                 user_id: input.id,
                 role_id: roleId,
                 org_id: inputOrgId,
                 created_at: now,
-              };
-              await t.none(sql.insert("user_role", roleParams), roleParams);
-            }
+              },
+            );
           }
+        }
 
-          return userRow;
-        });
+        if (!userRows[0]) {
+          return {
+            success: false,
+            error: new Error("User not found after creation"),
+          };
+        }
 
-        return { success: true, data: mapUserFromDb(user) };
+        return { success: true, data: mapUserFromDb(userRows[0]) };
       } catch (error) {
         logger.error("Failed to create user", { error, input });
         return { success: false, error: error as Error };
@@ -111,13 +198,18 @@ export function createUserRepository(
       userId: string,
     ): Promise<Result<User | null>> {
       try {
-        const row = await db.oneOrNone<UserDbRow>(
-          `SELECT * FROM "user" WHERE id = $(userId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user")
+              .where((u) => u.id === p.userId && u.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
-        return { success: true, data: row ? mapUserFromDb(row) : null };
+        return { success: true, data: rows[0] ? mapUserFromDb(rows[0]) : null };
       } catch (error) {
-        logger.error("Failed to get user by id", { error, userId });
+        logger.error("Failed to get user", { error, userId });
         return { success: false, error: error as Error };
       }
     },
@@ -128,18 +220,33 @@ export function createUserRepository(
       identityProviderUserId: string,
     ): Promise<Result<User | null>> {
       try {
-        const row = await db.oneOrNone<UserDbRow>(
-          `SELECT * FROM "user"
-           WHERE org_id = $(orgId)
-           AND identity_provider = $(identityProvider)
-           AND identity_provider_user_id = $(identityProviderUserId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              orgId: string;
+              identityProvider: string;
+              identityProviderUserId: string;
+            },
+          ) =>
+            q
+              .from("user")
+              .where(
+                (u) =>
+                  u.org_id === p.orgId &&
+                  u.identity_provider === p.identityProvider &&
+                  u.identity_provider_user_id === p.identityProviderUserId,
+              ),
           { orgId: inputOrgId, identityProvider, identityProviderUserId },
         );
-        return { success: true, data: row ? mapUserFromDb(row) : null };
+        return { success: true, data: rows[0] ? mapUserFromDb(rows[0]) : null };
       } catch (error) {
         logger.error("Failed to get user by identity", {
           error,
           identityProvider,
+          identityProviderUserId,
         });
         return { success: false, error: error as Error };
       }
@@ -151,29 +258,85 @@ export function createUserRepository(
       pagination?: PaginationInput,
     ): Promise<Result<Connection<User>>> {
       try {
-        let whereClause = "WHERE org_id = $(orgId)";
-        const params: Record<string, unknown> = { orgId: inputOrgId };
+        let totalCount: number;
+        let rows: UserRow[];
 
         if (filter?.identityProvider) {
-          whereClause += " AND identity_provider = $(identityProvider)";
-          params.identityProvider = filter.identityProvider;
+          // Filtered queries - with identityProvider filter
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; identityProvider: string }) =>
+              q
+                .from("user")
+                .where(
+                  (u) =>
+                    u.org_id === p.orgId &&
+                    u.identity_provider === p.identityProvider,
+                )
+                .count(),
+            { orgId: inputOrgId, identityProvider: filter.identityProvider },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (
+              q,
+              p: {
+                orgId: string;
+                identityProvider: string;
+                first: number;
+                offset: number;
+              },
+            ) =>
+              q
+                .from("user")
+                .where(
+                  (u) =>
+                    u.org_id === p.orgId &&
+                    u.identity_provider === p.identityProvider,
+                )
+                .orderBy((u) => u.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              identityProvider: filter.identityProvider,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
+        } else {
+          // Non-filtered queries
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string }) =>
+              q
+                .from("user")
+                .where((u) => u.org_id === p.orgId)
+                .count(),
+            { orgId: inputOrgId },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; first: number; offset: number }) =>
+              q
+                .from("user")
+                .where((u) => u.org_id === p.orgId)
+                .orderBy((u) => u.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
         }
-
-        // Get total count
-        const countResult = await db.one<{ count: string }>(
-          `SELECT COUNT(*) as count FROM "user" ${whereClause}`,
-          params,
-        );
-        const totalCount = parseInt(countResult.count, 10);
-
-        // Get nodes with pagination
-        let query = `SELECT * FROM "user" ${whereClause} ORDER BY created_at DESC`;
-        if (pagination?.first) {
-          query += ` LIMIT $(limit)`;
-          params.limit = pagination.first;
-        }
-
-        const rows = await db.manyOrNone<UserDbRow>(query, params);
 
         return {
           success: true,
@@ -210,21 +373,43 @@ export function createUserRepository(
     ): Promise<Result<User>> {
       try {
         const now = Date.now();
-        const updateParams: Record<string, unknown> = { updated_at: now };
 
-        if (input.identityProvider !== undefined) {
-          updateParams.identity_provider = input.identityProvider;
-        }
-        if (input.identityProviderUserId !== undefined) {
-          updateParams.identity_provider_user_id = input.identityProviderUserId;
-        }
-
-        const row = await db.one<UserDbRow>(
-          `${sql.update('"user"', updateParams)} WHERE id = $(userId) AND org_id = $(orgId) RETURNING *`,
-          { ...updateParams, userId, orgId: inputOrgId },
+        const rows = await executeUpdate(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              userId: string;
+              orgId: string;
+              updated_at: number;
+              identity_provider: string | undefined;
+              identity_provider_user_id: string | undefined;
+            },
+          ) =>
+            q
+              .update("user")
+              .set({
+                updated_at: p.updated_at,
+                identity_provider: p.identity_provider,
+                identity_provider_user_id: p.identity_provider_user_id,
+              })
+              .where((u) => u.id === p.userId && u.org_id === p.orgId)
+              .returning((u) => u),
+          {
+            userId,
+            orgId: inputOrgId,
+            updated_at: now,
+            identity_provider: input.identityProvider,
+            identity_provider_user_id: input.identityProviderUserId,
+          },
         );
 
-        return { success: true, data: mapUserFromDb(row) };
+        if (!rows[0]) {
+          return { success: false, error: new Error("User not found") };
+        }
+
+        return { success: true, data: mapUserFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to update user", { error, userId });
         return { success: false, error: error as Error };
@@ -233,25 +418,49 @@ export function createUserRepository(
 
     async delete(inputOrgId: string, userId: string): Promise<Result<boolean>> {
       try {
-        await db.tx(async (t) => {
-          // Delete related data first
-          await t.none(
-            `DELETE FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId)`,
-            { userId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
-            { userId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM user_permission WHERE user_id = $(userId) AND org_id = $(orgId)`,
-            { userId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM "user" WHERE id = $(userId) AND org_id = $(orgId)`,
-            { userId, orgId: inputOrgId },
-          );
-        });
+        // Delete related data first
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_property")
+              .where(
+                (up) => up.parent_id === p.userId && up.org_id === p.orgId,
+              ),
+          { userId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
+          { userId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
+          { userId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .deleteFrom("user")
+              .where((u) => u.id === p.userId && u.org_id === p.orgId),
+          { userId, orgId: inputOrgId },
+        );
+
         return { success: true, data: true };
       } catch (error) {
         logger.error("Failed to delete user", { error, userId });
@@ -265,13 +474,49 @@ export function createUserRepository(
       roleId: string,
     ): Promise<Result<void>> {
       try {
-        const params = {
-          user_id: userId,
-          role_id: roleId,
-          org_id: inputOrgId,
-          created_at: Date.now(),
-        };
-        await db.none(sql.insert("user_role", params), params);
+        const now = Date.now();
+        // Delete existing assignment if it exists, then insert
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_role")
+              .where(
+                (ur) =>
+                  ur.user_id === p.userId &&
+                  ur.role_id === p.roleId &&
+                  ur.org_id === p.orgId,
+              ),
+          { userId, roleId, orgId: inputOrgId },
+        );
+
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              user_id: string;
+              role_id: string;
+              org_id: string;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("user_role").values({
+              user_id: p.user_id,
+              role_id: p.role_id,
+              org_id: p.org_id,
+              created_at: p.created_at,
+            }),
+          {
+            user_id: userId,
+            role_id: roleId,
+            org_id: inputOrgId,
+            created_at: now,
+          },
+        );
+
         return { success: true, data: undefined };
       } catch (error) {
         logger.error("Failed to assign role", { error, userId, roleId });
@@ -285,8 +530,18 @@ export function createUserRepository(
       roleId: string,
     ): Promise<Result<void>> {
       try {
-        await db.none(
-          `DELETE FROM user_role WHERE user_id = $(userId) AND role_id = $(roleId) AND org_id = $(orgId)`,
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; roleId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_role")
+              .where(
+                (ur) =>
+                  ur.user_id === p.userId &&
+                  ur.role_id === p.roleId &&
+                  ur.org_id === p.orgId,
+              ),
           { userId, roleId, orgId: inputOrgId },
         );
         return { success: true, data: undefined };
@@ -301,8 +556,13 @@ export function createUserRepository(
       userId: string,
     ): Promise<Result<string[]>> {
       try {
-        const rows = await db.manyOrNone<UserRoleDbRow>(
-          `SELECT * FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map((r) => r.role_id) };
@@ -317,8 +577,15 @@ export function createUserRepository(
       userId: string,
     ): Promise<Result<Property[]>> {
       try {
-        const rows = await db.manyOrNone<PropertyDbRow>(
-          `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user_property")
+              .where(
+                (up) => up.parent_id === p.userId && up.org_id === p.orgId,
+              ),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -334,11 +601,24 @@ export function createUserRepository(
       name: string,
     ): Promise<Result<Property | null>> {
       try {
-        const row = await db.oneOrNone<PropertyDbRow>(
-          `SELECT * FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string; name: string }) =>
+            q
+              .from("user_property")
+              .where(
+                (up) =>
+                  up.parent_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.name === p.name,
+              ),
           { userId, orgId: inputOrgId, name },
         );
-        return { success: true, data: row ? mapPropertyFromDb(row) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get user property", { error, userId, name });
         return { success: false, error: error as Error };
@@ -352,25 +632,55 @@ export function createUserRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        const params = {
-          parent_id: userId,
-          org_id: inputOrgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? null
-              : JSON.stringify(property.value),
-          hidden: property.hidden ?? false,
-          created_at: now,
-        };
+        // Delete existing property if it exists, then insert new one
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string; name: string }) =>
+            q
+              .deleteFrom("user_property")
+              .where(
+                (up) =>
+                  up.parent_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.name === p.name,
+              ),
+          { userId, orgId: inputOrgId, name: property.name },
+        );
 
-        // Upsert
-        await db.none(
-          `INSERT INTO user_property (parent_id, org_id, name, value, hidden, created_at)
-           VALUES ($(parent_id), $(org_id), $(name), $(value), $(hidden), $(created_at))
-           ON CONFLICT (parent_id, org_id, name)
-           DO UPDATE SET value = $(value), hidden = $(hidden)`,
-          params,
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parent_id: string;
+              org_id: string;
+              name: string;
+              value: string;
+              hidden: boolean;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("user_property").values({
+              parent_id: p.parent_id,
+              org_id: p.org_id,
+              name: p.name,
+              value: p.value,
+              hidden: p.hidden,
+              created_at: p.created_at,
+            }),
+          {
+            parent_id: userId,
+            org_id: inputOrgId,
+            name: property.name,
+            value:
+              property.value === undefined
+                ? "null"
+                : JSON.stringify(property.value),
+            hidden: property.hidden ?? false,
+            created_at: now,
+          },
         );
 
         return {
@@ -398,11 +708,21 @@ export function createUserRepository(
       name: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.none(
-          `DELETE FROM user_property WHERE parent_id = $(userId) AND org_id = $(orgId) AND name = $(name)`,
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string; name: string }) =>
+            q
+              .deleteFrom("user_property")
+              .where(
+                (up) =>
+                  up.parent_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.name === p.name,
+              ),
           { userId, orgId: inputOrgId, name },
         );
-        return { success: true, data: true };
+        return { success: true, data: rowCount > 0 };
       } catch (error) {
         logger.error("Failed to delete user property", { error, userId, name });
         return { success: false, error: error as Error };

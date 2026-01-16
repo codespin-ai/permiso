@@ -11,7 +11,7 @@ import {
   executeDelete,
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
-import { schema } from "../tinqer-schema.js";
+import { schema } from "./tinqer-schema.js";
 import type {
   IRoleRepository,
   Role,
@@ -74,14 +74,17 @@ export function createRoleRepository(
         executeInsert(
           db,
           schema,
-          (q, p: {
-            id: string;
-            org_id: string;
-            name: string;
-            description: string | null;
-            created_at: number;
-            updated_at: number;
-          }) =>
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              name: string;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
             q.insertInto("role").values({
               id: p.id,
               org_id: p.org_id,
@@ -106,14 +109,17 @@ export function createRoleRepository(
             executeInsert(
               db,
               schema,
-              (q, p: {
-                parent_id: string;
-                org_id: string;
-                name: string;
-                value: string;
-                hidden: number;
-                created_at: number;
-              }) =>
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  org_id: string;
+                  name: string;
+                  value: string;
+                  hidden: number;
+                  created_at: number;
+                },
+              ) =>
                 q.insertInto("role_property").values({
                   parent_id: p.parent_id,
                   org_id: p.org_id,
@@ -126,7 +132,10 @@ export function createRoleRepository(
                 parent_id: input.id,
                 org_id: inputOrgId,
                 name: prop.name,
-                value: prop.value === undefined ? "null" : JSON.stringify(prop.value),
+                value:
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ? 1 : 0,
                 created_at: now,
               },
@@ -144,7 +153,10 @@ export function createRoleRepository(
         );
 
         if (!rows[0]) {
-          return { success: false, error: new Error("Role not found after creation") };
+          return {
+            success: false,
+            error: new Error("Role not found after creation"),
+          };
         }
 
         return { success: true, data: mapRoleFromDb(rows[0]) };
@@ -163,7 +175,9 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string }) =>
-            q.from("role").where((r) => r.id === p.roleId && r.org_id === p.orgId),
+            q
+              .from("role")
+              .where((r) => r.id === p.roleId && r.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows[0] ? mapRoleFromDb(rows[0]) : null };
@@ -217,7 +231,9 @@ export function createRoleRepository(
             nodes: rows.map(mapRoleFromDb),
             totalCount,
             pageInfo: {
-              hasNextPage: pagination?.first ? rows.length === pagination.first : false,
+              hasNextPage: pagination?.first
+                ? rows.length === pagination.first
+                : false,
               hasPreviousPage: false,
               startCursor: rows[0]?.id ?? null,
               endCursor: rows[rows.length - 1]?.id ?? null,
@@ -247,7 +263,11 @@ export function createRoleRepository(
 
         // Build partial update with raw SQL
         const updates: string[] = ["updated_at = @updated_at"];
-        const params: Record<string, unknown> = { roleId, orgId: inputOrgId, updated_at: now };
+        const params: Record<string, unknown> = {
+          roleId,
+          orgId: inputOrgId,
+          updated_at: now,
+        };
 
         if (input.name !== undefined) {
           updates.push("name = @name");
@@ -268,7 +288,9 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string }) =>
-            q.from("role").where((r) => r.id === p.roleId && r.org_id === p.orgId),
+            q
+              .from("role")
+              .where((r) => r.id === p.roleId && r.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
 
@@ -290,34 +312,42 @@ export function createRoleRepository(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.deleteFrom("role_property").where(
-                (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
-              ),
+              q
+                .deleteFrom("role_property")
+                .where(
+                  (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
+                ),
             { roleId, orgId: inputOrgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.deleteFrom("role_permission").where(
-                (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
-              ),
+              q
+                .deleteFrom("role_permission")
+                .where(
+                  (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
+                ),
             { roleId, orgId: inputOrgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.deleteFrom("user_role").where(
-                (ur) => ur.role_id === p.roleId && ur.org_id === p.orgId,
-              ),
+              q
+                .deleteFrom("user_role")
+                .where(
+                  (ur) => ur.role_id === p.roleId && ur.org_id === p.orgId,
+                ),
             { roleId, orgId: inputOrgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.deleteFrom("role").where((r) => r.id === p.roleId && r.org_id === p.orgId),
+              q
+                .deleteFrom("role")
+                .where((r) => r.id === p.roleId && r.org_id === p.orgId),
             { roleId, orgId: inputOrgId },
           );
         });
@@ -339,9 +369,9 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string }) =>
-            q.from("user_role").where(
-              (ur) => ur.role_id === p.roleId && ur.org_id === p.orgId,
-            ),
+            q
+              .from("user_role")
+              .where((ur) => ur.role_id === p.roleId && ur.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map((r) => r.user_id) };
@@ -360,9 +390,11 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string }) =>
-            q.from("role_property").where(
-              (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
-            ),
+            q
+              .from("role_property")
+              .where(
+                (rp) => rp.parent_id === p.roleId && rp.org_id === p.orgId,
+              ),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -382,15 +414,20 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string; name: string }) =>
-            q.from("role_property").where(
-              (rp) =>
-                rp.parent_id === p.roleId &&
-                rp.org_id === p.orgId &&
-                rp.name === p.name,
-            ),
+            q
+              .from("role_property")
+              .where(
+                (rp) =>
+                  rp.parent_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.name === p.name,
+              ),
           { roleId, orgId: inputOrgId, name },
         );
-        return { success: true, data: rows[0] ? mapPropertyFromDb(rows[0]) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get role property", { error, roleId, name });
         return { success: false, error: error as Error };
@@ -415,7 +452,10 @@ export function createRoleRepository(
           parent_id: roleId,
           org_id: inputOrgId,
           name: property.name,
-          value: property.value === undefined ? "null" : JSON.stringify(property.value),
+          value:
+            property.value === undefined
+              ? "null"
+              : JSON.stringify(property.value),
           hidden: property.hidden ? 1 : 0,
           created_at: now,
         });
@@ -430,7 +470,11 @@ export function createRoleRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to set role property", { error, roleId, property });
+        logger.error("Failed to set role property", {
+          error,
+          roleId,
+          property,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -445,12 +489,14 @@ export function createRoleRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string; name: string }) =>
-            q.deleteFrom("role_property").where(
-              (rp) =>
-                rp.parent_id === p.roleId &&
-                rp.org_id === p.orgId &&
-                rp.name === p.name,
-            ),
+            q
+              .deleteFrom("role_property")
+              .where(
+                (rp) =>
+                  rp.parent_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.name === p.name,
+              ),
           { roleId, orgId: inputOrgId, name },
         );
         return { success: true, data: true };

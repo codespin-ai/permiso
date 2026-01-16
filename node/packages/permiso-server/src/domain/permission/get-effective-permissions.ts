@@ -10,10 +10,12 @@ export async function getEffectivePermissions(
   userId: string,
   resourceId?: string,
   action?: string,
+  orgId?: string,
 ): Promise<Result<EffectivePermission[]>> {
   try {
+    const effectiveOrgId = orgId || ctx.orgId;
     const result = await ctx.repos.permission.getEffectivePermissions(
-      ctx.orgId,
+      effectiveOrgId,
       userId,
       resourceId,
       action,

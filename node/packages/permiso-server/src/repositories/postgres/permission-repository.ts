@@ -1,12 +1,18 @@
 /**
  * PostgreSQL Permission Repository
  *
- * Handles both user permissions and role permissions.
- * Includes wildcard matching for resource paths (e.g., /india/* matches /india/data)
+ * Uses Tinqer for type-safe queries where possible.
+ * Complex wildcard and EXISTS queries use raw SQL.
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { sql, type Database } from "@codespin/permiso-db";
+import {
+  executeSelect,
+  executeInsert,
+  executeDelete,
+} from "@tinqerjs/pg-promise-adapter";
+import type { Database } from "@codespin/permiso-db";
+import { schema } from "./tinqer-schema.js";
 import type {
   IPermissionRepository,
   UserPermission,
@@ -23,7 +29,13 @@ import type {
 
 const logger = createLogger("permiso-server:repos:postgres:permission");
 
-function mapUserPermissionFromDb(row: UserPermissionDbRow): UserPermission {
+function mapUserPermissionFromDb(row: {
+  user_id: string;
+  org_id: string;
+  resource_id: string;
+  action: string;
+  created_at: number;
+}): UserPermission {
   return {
     userId: row.user_id,
     orgId: row.org_id,
@@ -33,7 +45,13 @@ function mapUserPermissionFromDb(row: UserPermissionDbRow): UserPermission {
   };
 }
 
-function mapRolePermissionFromDb(row: RolePermissionDbRow): RolePermission {
+function mapRolePermissionFromDb(row: {
+  role_id: string;
+  org_id: string;
+  resource_id: string;
+  action: string;
+  created_at: number;
+}): RolePermission {
   return {
     roleId: row.role_id,
     orgId: row.org_id,
@@ -55,20 +73,64 @@ export function createPermissionRepository(
     ): Promise<Result<UserPermission>> {
       try {
         const now = Date.now();
-        const params = {
-          user_id: userId,
-          org_id: inputOrgId,
-          resource_id: input.resourceId,
-          action: input.action,
-          created_at: now,
-        };
 
-        // Upsert - if permission exists, just return it
-        await db.none(
-          `INSERT INTO user_permission (user_id, org_id, resource_id, action, created_at)
-           VALUES ($(user_id), $(org_id), $(resource_id), $(action), $(created_at))
-           ON CONFLICT (user_id, org_id, resource_id, action) DO NOTHING`,
-          params,
+        // Delete existing permission if it exists, then insert
+        await executeDelete(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              userId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+            },
+          ) =>
+            q
+              .deleteFrom("user_permission")
+              .where(
+                (up) =>
+                  up.user_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.resource_id === p.resourceId &&
+                  up.action === p.action,
+              ),
+          {
+            userId,
+            orgId: inputOrgId,
+            resourceId: input.resourceId,
+            action: input.action,
+          },
+        );
+
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              user_id: string;
+              org_id: string;
+              resource_id: string;
+              action: string;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("user_permission").values({
+              user_id: p.user_id,
+              org_id: p.org_id,
+              resource_id: p.resource_id,
+              action: p.action,
+              created_at: p.created_at,
+            }),
+          {
+            user_id: userId,
+            org_id: inputOrgId,
+            resource_id: input.resourceId,
+            action: input.action,
+            created_at: now,
+          },
         );
 
         return {
@@ -98,13 +160,30 @@ export function createPermissionRepository(
       action: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.none(
-          `DELETE FROM user_permission
-           WHERE user_id = $(userId) AND org_id = $(orgId)
-           AND resource_id = $(resourceId) AND action = $(action)`,
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              userId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+            },
+          ) =>
+            q
+              .deleteFrom("user_permission")
+              .where(
+                (up) =>
+                  up.user_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.resource_id === p.resourceId &&
+                  up.action === p.action,
+              ),
           { userId, orgId: inputOrgId, resourceId, action },
         );
-        return { success: true, data: true };
+        return { success: true, data: rowCount > 0 };
       } catch (error) {
         logger.error("Failed to revoke user permission", {
           error,
@@ -121,8 +200,13 @@ export function createPermissionRepository(
       userId: string,
     ): Promise<Result<UserPermission[]>> {
       try {
-        const rows = await db.manyOrNone<UserPermissionDbRow>(
-          `SELECT * FROM user_permission WHERE user_id = $(userId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapUserPermissionFromDb) };
@@ -139,19 +223,64 @@ export function createPermissionRepository(
     ): Promise<Result<RolePermission>> {
       try {
         const now = Date.now();
-        const params = {
-          role_id: roleId,
-          org_id: inputOrgId,
-          resource_id: input.resourceId,
-          action: input.action,
-          created_at: now,
-        };
 
-        await db.none(
-          `INSERT INTO role_permission (role_id, org_id, resource_id, action, created_at)
-           VALUES ($(role_id), $(org_id), $(resource_id), $(action), $(created_at))
-           ON CONFLICT (role_id, org_id, resource_id, action) DO NOTHING`,
-          params,
+        // Delete existing permission if it exists, then insert
+        await executeDelete(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              roleId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+            },
+          ) =>
+            q
+              .deleteFrom("role_permission")
+              .where(
+                (rp) =>
+                  rp.role_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.resource_id === p.resourceId &&
+                  rp.action === p.action,
+              ),
+          {
+            roleId,
+            orgId: inputOrgId,
+            resourceId: input.resourceId,
+            action: input.action,
+          },
+        );
+
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              role_id: string;
+              org_id: string;
+              resource_id: string;
+              action: string;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("role_permission").values({
+              role_id: p.role_id,
+              org_id: p.org_id,
+              resource_id: p.resource_id,
+              action: p.action,
+              created_at: p.created_at,
+            }),
+          {
+            role_id: roleId,
+            org_id: inputOrgId,
+            resource_id: input.resourceId,
+            action: input.action,
+            created_at: now,
+          },
         );
 
         return {
@@ -181,13 +310,30 @@ export function createPermissionRepository(
       action: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.none(
-          `DELETE FROM role_permission
-           WHERE role_id = $(roleId) AND org_id = $(orgId)
-           AND resource_id = $(resourceId) AND action = $(action)`,
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              roleId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+            },
+          ) =>
+            q
+              .deleteFrom("role_permission")
+              .where(
+                (rp) =>
+                  rp.role_id === p.roleId &&
+                  rp.org_id === p.orgId &&
+                  rp.resource_id === p.resourceId &&
+                  rp.action === p.action,
+              ),
           { roleId, orgId: inputOrgId, resourceId, action },
         );
-        return { success: true, data: true };
+        return { success: true, data: rowCount > 0 };
       } catch (error) {
         logger.error("Failed to revoke role permission", {
           error,
@@ -204,8 +350,13 @@ export function createPermissionRepository(
       roleId: string,
     ): Promise<Result<RolePermission[]>> {
       try {
-        const rows = await db.manyOrNone<RolePermissionDbRow>(
-          `SELECT * FROM role_permission WHERE role_id = $(roleId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { roleId: string; orgId: string }) =>
+            q
+              .from("role_permission")
+              .where((rp) => rp.role_id === p.roleId && rp.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapRolePermissionFromDb) };
@@ -226,12 +377,28 @@ export function createPermissionRepository(
     > {
       try {
         const [userRows, roleRows] = await Promise.all([
-          db.manyOrNone<UserPermissionDbRow>(
-            `SELECT * FROM user_permission WHERE resource_id = $(resourceId) AND org_id = $(orgId)`,
+          executeSelect(
+            db,
+            schema,
+            (q, p: { resourceId: string; orgId: string }) =>
+              q
+                .from("user_permission")
+                .where(
+                  (up) =>
+                    up.resource_id === p.resourceId && up.org_id === p.orgId,
+                ),
             { resourceId, orgId: inputOrgId },
           ),
-          db.manyOrNone<RolePermissionDbRow>(
-            `SELECT * FROM role_permission WHERE resource_id = $(resourceId) AND org_id = $(orgId)`,
+          executeSelect(
+            db,
+            schema,
+            (q, p: { resourceId: string; orgId: string }) =>
+              q
+                .from("role_permission")
+                .where(
+                  (rp) =>
+                    rp.resource_id === p.resourceId && rp.org_id === p.orgId,
+                ),
             { resourceId, orgId: inputOrgId },
           ),
         ]);
@@ -259,16 +426,21 @@ export function createPermissionRepository(
       action?: string,
     ): Promise<Result<EffectivePermission[]>> {
       try {
-        // Get user's role IDs
-        const userRoles = await db.manyOrNone<UserRoleDbRow>(
-          `SELECT * FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
+        // Get user's role IDs using Tinqer
+        const userRoles = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         const roleIds = userRoles.map((r) => r.role_id);
 
         const permissions: EffectivePermission[] = [];
 
-        // Build filter conditions
+        // Build filter conditions - complex wildcard queries need raw SQL
         let resourceFilter = "";
         let actionFilter = "";
         const params: Record<string, unknown> = {
@@ -278,7 +450,6 @@ export function createPermissionRepository(
         };
 
         if (resourceId) {
-          // Match exact resource or wildcard patterns
           resourceFilter = `AND (
             resource_id = $(resourceId)
             OR $(resourceId) LIKE REPLACE(resource_id, '*', '') || '%'
@@ -344,7 +515,7 @@ export function createPermissionRepository(
       action: string,
     ): Promise<Result<boolean>> {
       try {
-        // Check direct user permission (including wildcards)
+        // Complex EXISTS + wildcard queries need raw SQL
         const userPerm = await db.oneOrNone<{ exists: boolean }>(
           `SELECT EXISTS(
             SELECT 1 FROM user_permission
@@ -393,9 +564,14 @@ export function createPermissionRepository(
       resourceIdPrefix: string,
     ): Promise<Result<EffectivePermission[]>> {
       try {
-        // Get user's role IDs
-        const userRoles = await db.manyOrNone<UserRoleDbRow>(
-          `SELECT * FROM user_role WHERE user_id = $(userId) AND org_id = $(orgId)`,
+        // Get user's role IDs using Tinqer
+        const userRoles = await executeSelect(
+          db,
+          schema,
+          (q, p: { userId: string; orgId: string }) =>
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         const roleIds = userRoles.map((r) => r.role_id);
@@ -408,7 +584,7 @@ export function createPermissionRepository(
           prefix: `${resourceIdPrefix}%`,
         };
 
-        // Get direct user permissions matching prefix
+        // LIKE queries with array parameters need raw SQL
         const userPerms = await db.manyOrNone<UserPermissionDbRow>(
           `SELECT * FROM user_permission
            WHERE user_id = $(userId) AND org_id = $(orgId)
@@ -426,7 +602,6 @@ export function createPermissionRepository(
           });
         }
 
-        // Get role permissions matching prefix
         if (roleIds.length > 0) {
           const rolePerms = await db.manyOrNone<
             RolePermissionDbRow & { role_id: string }

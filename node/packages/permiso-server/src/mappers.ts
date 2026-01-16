@@ -86,12 +86,9 @@ export function mapRoleFromDb(row: RoleDbRow): Role {
   return {
     ...typeUtils.toCamelCase(row),
     __typename: "Role",
-    // These will be populated by GraphQL resolvers
-    organization: {} as Organization,
-    permissions: [],
-    properties: [],
-    users: [],
-  };
+    // organization, permissions, properties, users
+    // are NOT set here - they must be populated by GraphQL field resolvers
+  } as Role;
 }
 
 // User mappers
@@ -99,13 +96,9 @@ export function mapUserFromDb(row: UserDbRow): User {
   return {
     ...typeUtils.toCamelCase(row),
     __typename: "User",
-    // These will be populated by GraphQL resolvers
-    organization: {} as Organization,
-    roles: [],
-    permissions: [],
-    properties: [],
-    effectivePermissions: [],
-  };
+    // organization, roles, permissions, properties, effectivePermissions
+    // are NOT set here - they must be populated by GraphQL field resolvers
+  } as User;
 }
 
 // Resource mappers
@@ -113,10 +106,9 @@ export function mapResourceFromDb(row: ResourceDbRow): Resource {
   return {
     ...typeUtils.toCamelCase(row),
     __typename: "Resource",
-    // These will be populated by GraphQL resolvers
-    organization: {} as Organization,
-    permissions: [],
-  };
+    // organization, permissions
+    // are NOT set here - they must be populated by GraphQL field resolvers
+  } as Resource;
 }
 
 // User Role mappers

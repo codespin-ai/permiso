@@ -41,9 +41,12 @@ export const userFieldResolvers = {
         return [];
       }
 
-      const result = await getRoles(context, {
-        ids: parent.roleIds,
-      });
+      const result = await getRoles(
+        context,
+        { ids: parent.roleIds },
+        undefined,
+        parent.orgId,
+      );
       if (!result.success) {
         throw result.error;
       }
@@ -55,7 +58,13 @@ export const userFieldResolvers = {
       _: unknown,
       context: DataContext,
     ) => {
-      const result = await getUserPermissions(context, parent.id);
+      const result = await getUserPermissions(
+        context,
+        parent.id,
+        undefined,
+        undefined,
+        parent.orgId,
+      );
       if (!result.success) {
         throw result.error;
       }
@@ -72,6 +81,7 @@ export const userFieldResolvers = {
         parent.id,
         args.resourceId,
         args.action,
+        parent.orgId,
       );
       if (!result.success) {
         throw result.error;

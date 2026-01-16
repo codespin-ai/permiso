@@ -1,12 +1,12 @@
 /**
- * Tinqer Schema for Permiso
+ * Tinqer Schema for PostgreSQL
  *
- * Defines the database schema for type-safe query building.
+ * PostgreSQL uses native boolean values.
  */
 
 import { createSchema } from "@tinqerjs/tinqer";
 
-// Database row types (match the actual table schemas)
+// Database row types (match PostgreSQL table schemas)
 export type OrganizationRow = {
   id: string;
   name: string;
@@ -19,7 +19,7 @@ export type OrganizationPropertyRow = {
   parent_id: string;
   name: string;
   value: string; // JSON stringified
-  hidden: number | boolean; // SQLite: 0/1, PostgreSQL: true/false
+  hidden: boolean; // PostgreSQL native boolean
   created_at: number;
 };
 
@@ -37,7 +37,7 @@ export type UserPropertyRow = {
   org_id: string;
   name: string;
   value: string; // JSON stringified
-  hidden: number | boolean; // SQLite: 0/1, PostgreSQL: true/false
+  hidden: boolean; // PostgreSQL native boolean
   created_at: number;
 };
 
@@ -55,7 +55,7 @@ export type RolePropertyRow = {
   org_id: string;
   name: string;
   value: string; // JSON stringified
-  hidden: number | boolean; // SQLite: 0/1, PostgreSQL: true/false
+  hidden: boolean; // PostgreSQL native boolean
   created_at: number;
 };
 

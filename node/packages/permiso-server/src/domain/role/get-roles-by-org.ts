@@ -16,13 +16,23 @@ export async function getRolesByOrg(
     properties?: Array<{ name: string; value: unknown }>;
     ids?: string[];
   },
-  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
+  pagination?: {
+    limit?: number;
+    offset?: number;
+    sortDirection?: "ASC" | "DESC";
+  },
 ): Promise<Result<RoleWithProperties[]>> {
   try {
     // Get roles from repository
     const listResult = await ctx.repos.role.listByOrg(
       orgId,
-      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
+      pagination
+        ? {
+            first: pagination.limit,
+            offset: pagination.offset,
+            sortDirection: pagination.sortDirection,
+          }
+        : undefined,
     );
 
     if (!listResult.success) {
@@ -45,7 +55,9 @@ export async function getRolesByOrg(
           role.id,
         );
 
-        const properties = propertiesResult.success ? propertiesResult.data : [];
+        const properties = propertiesResult.success
+          ? propertiesResult.data
+          : [];
 
         // Apply property filters if provided
         if (filter?.properties && filter.properties.length > 0) {

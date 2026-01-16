@@ -11,7 +11,7 @@ import {
   executeDelete,
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
-import { schema } from "../tinqer-schema.js";
+import { schema } from "./tinqer-schema.js";
 import type {
   IOrganizationRepository,
   Organization,
@@ -70,13 +70,16 @@ export function createOrganizationRepository(
         executeInsert(
           db,
           schema,
-          (q, p: {
-            id: string;
-            name: string;
-            description: string | null;
-            created_at: number;
-            updated_at: number;
-          }) =>
+          (
+            q,
+            p: {
+              id: string;
+              name: string;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
             q.insertInto("organization").values({
               id: p.id,
               name: p.name,
@@ -99,13 +102,16 @@ export function createOrganizationRepository(
             executeInsert(
               db,
               schema,
-              (q, p: {
-                parent_id: string;
-                name: string;
-                value: string;
-                hidden: number;
-                created_at: number;
-              }) =>
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  name: string;
+                  value: string;
+                  hidden: number;
+                  created_at: number;
+                },
+              ) =>
                 q.insertInto("organization_property").values({
                   parent_id: p.parent_id,
                   name: p.name,
@@ -116,7 +122,10 @@ export function createOrganizationRepository(
               {
                 parent_id: input.id,
                 name: prop.name,
-                value: prop.value === undefined ? "null" : JSON.stringify(prop.value),
+                value:
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ? 1 : 0,
                 created_at: now,
               },
@@ -134,7 +143,10 @@ export function createOrganizationRepository(
         );
 
         if (!rows[0]) {
-          return { success: false, error: new Error("Organization not found after creation") };
+          return {
+            success: false,
+            error: new Error("Organization not found after creation"),
+          };
         }
 
         return { success: true, data: mapOrganizationFromDb(rows[0]) };
@@ -153,7 +165,10 @@ export function createOrganizationRepository(
             q.from("organization").where((o) => o.id === p.orgId),
           { orgId },
         );
-        return { success: true, data: rows[0] ? mapOrganizationFromDb(rows[0]) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapOrganizationFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get organization", { error, orgId });
         return { success: false, error: error as Error };
@@ -201,7 +216,9 @@ export function createOrganizationRepository(
             nodes: rows.map(mapOrganizationFromDb),
             totalCount,
             pageInfo: {
-              hasNextPage: pagination?.first ? rows.length === pagination.first : false,
+              hasNextPage: pagination?.first
+                ? rows.length === pagination.first
+                : false,
               hasPreviousPage: false,
               startCursor: rows[0]?.id ?? null,
               endCursor: rows[rows.length - 1]?.id ?? null,
@@ -267,35 +284,45 @@ export function createOrganizationRepository(
             db,
             schema,
             (q, p: { orgId: string }) =>
-              q.deleteFrom("organization_property").where((op) => op.parent_id === p.orgId),
+              q
+                .deleteFrom("organization_property")
+                .where((op) => op.parent_id === p.orgId),
             { orgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { orgId: string }) =>
-              q.deleteFrom("user_permission").where((up) => up.org_id === p.orgId),
+              q
+                .deleteFrom("user_permission")
+                .where((up) => up.org_id === p.orgId),
             { orgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { orgId: string }) =>
-              q.deleteFrom("role_permission").where((rp) => rp.org_id === p.orgId),
+              q
+                .deleteFrom("role_permission")
+                .where((rp) => rp.org_id === p.orgId),
             { orgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { orgId: string }) =>
-              q.deleteFrom("user_property").where((up) => up.org_id === p.orgId),
+              q
+                .deleteFrom("user_property")
+                .where((up) => up.org_id === p.orgId),
             { orgId },
           );
           executeDelete(
             db,
             schema,
             (q, p: { orgId: string }) =>
-              q.deleteFrom("role_property").where((rp) => rp.org_id === p.orgId),
+              q
+                .deleteFrom("role_property")
+                .where((rp) => rp.org_id === p.orgId),
             { orgId },
           );
           executeDelete(
@@ -349,7 +376,9 @@ export function createOrganizationRepository(
           db,
           schema,
           (q, p: { orgId: string }) =>
-            q.from("organization_property").where((op) => op.parent_id === p.orgId),
+            q
+              .from("organization_property")
+              .where((op) => op.parent_id === p.orgId),
           { orgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -368,14 +397,21 @@ export function createOrganizationRepository(
           db,
           schema,
           (q, p: { orgId: string; name: string }) =>
-            q.from("organization_property").where(
-              (op) => op.parent_id === p.orgId && op.name === p.name,
-            ),
+            q
+              .from("organization_property")
+              .where((op) => op.parent_id === p.orgId && op.name === p.name),
           { orgId, name },
         );
-        return { success: true, data: rows[0] ? mapPropertyFromDb(rows[0]) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
-        logger.error("Failed to get organization property", { error, orgId, name });
+        logger.error("Failed to get organization property", {
+          error,
+          orgId,
+          name,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -396,7 +432,10 @@ export function createOrganizationRepository(
         stmt.run({
           parent_id: orgId,
           name: property.name,
-          value: property.value === undefined ? "null" : JSON.stringify(property.value),
+          value:
+            property.value === undefined
+              ? "null"
+              : JSON.stringify(property.value),
           hidden: property.hidden ? 1 : 0,
           created_at: now,
         });
@@ -411,7 +450,11 @@ export function createOrganizationRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to set organization property", { error, orgId, property });
+        logger.error("Failed to set organization property", {
+          error,
+          orgId,
+          property,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -428,7 +471,11 @@ export function createOrganizationRepository(
         const result = stmt.run({ orgId, name });
         return { success: true, data: result.changes > 0 };
       } catch (error) {
-        logger.error("Failed to delete organization property", { error, orgId, name });
+        logger.error("Failed to delete organization property", {
+          error,
+          orgId,
+          name,
+        });
         return { success: false, error: error as Error };
       }
     },

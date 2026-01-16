@@ -8,9 +8,11 @@ const logger = createLogger("permiso-server:resources");
 export async function getResource(
   ctx: DataContext,
   resourceId: string,
+  orgId?: string,
 ): Promise<Result<Resource | null>> {
   try {
-    const result = await ctx.repos.resource.getById(ctx.orgId, resourceId);
+    const effectiveOrgId = orgId || ctx.orgId;
+    const result = await ctx.repos.resource.getById(effectiveOrgId, resourceId);
 
     if (!result.success) {
       return { success: false, error: result.error };
