@@ -443,12 +443,34 @@ export function createUserRepository(
     ): Promise<Result<void>> {
       try {
         const now = Date.now();
-        // Use INSERT OR IGNORE for SQLite
-        const stmt = db.prepare(
-          `INSERT OR IGNORE INTO user_role (user_id, role_id, org_id, created_at)
-           VALUES (@userId, @roleId, @orgId, @createdAt)`,
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              userId: string;
+              roleId: string;
+              orgId: string;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("user_role")
+              .values({
+                user_id: p.userId,
+                role_id: p.roleId,
+                org_id: p.orgId,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (ur) => ur.user_id,
+                (ur) => ur.role_id,
+                (ur) => ur.org_id,
+              )
+              .doNothing(),
+          { userId, roleId, orgId: inputOrgId, createdAt: now },
         );
-        stmt.run({ userId, roleId, orgId: inputOrgId, createdAt: now });
         return { success: true, data: undefined };
       } catch (error) {
         logger.error("Failed to assign role", { error, userId, roleId });
@@ -564,24 +586,54 @@ export function createUserRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Use INSERT OR REPLACE for upsert in SQLite
-        const stmt = db.prepare(
-          `INSERT INTO user_property (parent_id, org_id, name, value, hidden, created_at)
-           VALUES (@parent_id, @org_id, @name, @value, @hidden, @created_at)
-           ON CONFLICT (parent_id, org_id, name)
-           DO UPDATE SET value = @value, hidden = @hidden`,
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenInt = property.hidden ? 1 : 0;
+
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parentId: string;
+              orgId: string;
+              name: string;
+              value: string;
+              hidden: number;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("user_property")
+              .values({
+                parent_id: p.parentId,
+                org_id: p.orgId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (up) => up.parent_id,
+                (up) => up.org_id,
+                (up) => up.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
+          {
+            parentId: userId,
+            orgId: inputOrgId,
+            name: property.name,
+            value: valueStr,
+            hidden: hiddenInt,
+            createdAt: now,
+          },
         );
-        stmt.run({
-          parent_id: userId,
-          org_id: inputOrgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? "null"
-              : JSON.stringify(property.value),
-          hidden: property.hidden ? 1 : 0,
-          created_at: now,
-        });
 
         return {
           success: true,

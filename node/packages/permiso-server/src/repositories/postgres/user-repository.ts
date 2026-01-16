@@ -475,46 +475,33 @@ export function createUserRepository(
     ): Promise<Result<void>> {
       try {
         const now = Date.now();
-        // Delete existing assignment if it exists, then insert
-        await executeDelete(
-          db,
-          schema,
-          (q, p: { userId: string; roleId: string; orgId: string }) =>
-            q
-              .deleteFrom("user_role")
-              .where(
-                (ur) =>
-                  ur.user_id === p.userId &&
-                  ur.role_id === p.roleId &&
-                  ur.org_id === p.orgId,
-              ),
-          { userId, roleId, orgId: inputOrgId },
-        );
-
         await executeInsert(
           db,
           schema,
           (
             q,
             p: {
-              user_id: string;
-              role_id: string;
-              org_id: string;
-              created_at: number;
+              userId: string;
+              roleId: string;
+              orgId: string;
+              createdAt: number;
             },
           ) =>
-            q.insertInto("user_role").values({
-              user_id: p.user_id,
-              role_id: p.role_id,
-              org_id: p.org_id,
-              created_at: p.created_at,
-            }),
-          {
-            user_id: userId,
-            role_id: roleId,
-            org_id: inputOrgId,
-            created_at: now,
-          },
+            q
+              .insertInto("user_role")
+              .values({
+                user_id: p.userId,
+                role_id: p.roleId,
+                org_id: p.orgId,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (ur) => ur.user_id,
+                (ur) => ur.role_id,
+                (ur) => ur.org_id,
+              )
+              .doNothing(),
+          { userId, roleId, orgId: inputOrgId, createdAt: now },
         );
 
         return { success: true, data: undefined };
@@ -632,21 +619,11 @@ export function createUserRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Delete existing property if it exists, then insert new one
-        await executeDelete(
-          db,
-          schema,
-          (q, p: { userId: string; orgId: string; name: string }) =>
-            q
-              .deleteFrom("user_property")
-              .where(
-                (up) =>
-                  up.parent_id === p.userId &&
-                  up.org_id === p.orgId &&
-                  up.name === p.name,
-              ),
-          { userId, orgId: inputOrgId, name: property.name },
-        );
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenBool = property.hidden ?? false;
 
         await executeInsert(
           db,
@@ -654,32 +631,40 @@ export function createUserRepository(
           (
             q,
             p: {
-              parent_id: string;
-              org_id: string;
+              parentId: string;
+              orgId: string;
               name: string;
               value: string;
               hidden: boolean;
-              created_at: number;
+              createdAt: number;
             },
           ) =>
-            q.insertInto("user_property").values({
-              parent_id: p.parent_id,
-              org_id: p.org_id,
-              name: p.name,
-              value: p.value,
-              hidden: p.hidden,
-              created_at: p.created_at,
-            }),
+            q
+              .insertInto("user_property")
+              .values({
+                parent_id: p.parentId,
+                org_id: p.orgId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (up) => up.parent_id,
+                (up) => up.org_id,
+                (up) => up.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
           {
-            parent_id: userId,
-            org_id: inputOrgId,
+            parentId: userId,
+            orgId: inputOrgId,
             name: property.name,
-            value:
-              property.value === undefined
-                ? "null"
-                : JSON.stringify(property.value),
-            hidden: property.hidden ?? false,
-            created_at: now,
+            value: valueStr,
+            hidden: hiddenBool,
+            createdAt: now,
           },
         );
 
@@ -688,7 +673,7 @@ export function createUserRepository(
           data: {
             name: property.name,
             value: property.value,
-            hidden: property.hidden ?? false,
+            hidden: hiddenBool,
             createdAt: now,
           },
         };

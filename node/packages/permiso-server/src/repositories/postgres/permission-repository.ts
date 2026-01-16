@@ -74,8 +74,7 @@ export function createPermissionRepository(
       try {
         const now = Date.now();
 
-        // Delete existing permission if it exists, then insert
-        await executeDelete(
+        await executeInsert(
           db,
           schema,
           (
@@ -85,51 +84,31 @@ export function createPermissionRepository(
               orgId: string;
               resourceId: string;
               action: string;
+              createdAt: number;
             },
           ) =>
             q
-              .deleteFrom("user_permission")
-              .where(
-                (up) =>
-                  up.user_id === p.userId &&
-                  up.org_id === p.orgId &&
-                  up.resource_id === p.resourceId &&
-                  up.action === p.action,
-              ),
+              .insertInto("user_permission")
+              .values({
+                user_id: p.userId,
+                org_id: p.orgId,
+                resource_id: p.resourceId,
+                action: p.action,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (up) => up.user_id,
+                (up) => up.org_id,
+                (up) => up.resource_id,
+                (up) => up.action,
+              )
+              .doNothing(),
           {
             userId,
             orgId: inputOrgId,
             resourceId: input.resourceId,
             action: input.action,
-          },
-        );
-
-        await executeInsert(
-          db,
-          schema,
-          (
-            q,
-            p: {
-              user_id: string;
-              org_id: string;
-              resource_id: string;
-              action: string;
-              created_at: number;
-            },
-          ) =>
-            q.insertInto("user_permission").values({
-              user_id: p.user_id,
-              org_id: p.org_id,
-              resource_id: p.resource_id,
-              action: p.action,
-              created_at: p.created_at,
-            }),
-          {
-            user_id: userId,
-            org_id: inputOrgId,
-            resource_id: input.resourceId,
-            action: input.action,
-            created_at: now,
+            createdAt: now,
           },
         );
 
@@ -224,8 +203,7 @@ export function createPermissionRepository(
       try {
         const now = Date.now();
 
-        // Delete existing permission if it exists, then insert
-        await executeDelete(
+        await executeInsert(
           db,
           schema,
           (
@@ -235,51 +213,31 @@ export function createPermissionRepository(
               orgId: string;
               resourceId: string;
               action: string;
+              createdAt: number;
             },
           ) =>
             q
-              .deleteFrom("role_permission")
-              .where(
-                (rp) =>
-                  rp.role_id === p.roleId &&
-                  rp.org_id === p.orgId &&
-                  rp.resource_id === p.resourceId &&
-                  rp.action === p.action,
-              ),
+              .insertInto("role_permission")
+              .values({
+                role_id: p.roleId,
+                org_id: p.orgId,
+                resource_id: p.resourceId,
+                action: p.action,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (rp) => rp.role_id,
+                (rp) => rp.org_id,
+                (rp) => rp.resource_id,
+                (rp) => rp.action,
+              )
+              .doNothing(),
           {
             roleId,
             orgId: inputOrgId,
             resourceId: input.resourceId,
             action: input.action,
-          },
-        );
-
-        await executeInsert(
-          db,
-          schema,
-          (
-            q,
-            p: {
-              role_id: string;
-              org_id: string;
-              resource_id: string;
-              action: string;
-              created_at: number;
-            },
-          ) =>
-            q.insertInto("role_permission").values({
-              role_id: p.role_id,
-              org_id: p.org_id,
-              resource_id: p.resource_id,
-              action: p.action,
-              created_at: p.created_at,
-            }),
-          {
-            role_id: roleId,
-            org_id: inputOrgId,
-            resource_id: input.resourceId,
-            action: input.action,
-            created_at: now,
+            createdAt: now,
           },
         );
 

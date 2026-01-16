@@ -23,6 +23,9 @@ export type {
   TransactionContext,
 } from "./types.js";
 
+// Utility functions
+export { normalizeDbError } from "./types.js";
+
 // User repository
 export type {
   User,

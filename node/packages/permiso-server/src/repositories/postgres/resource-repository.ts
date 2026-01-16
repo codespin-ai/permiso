@@ -13,15 +13,16 @@ import {
 } from "@tinqerjs/pg-promise-adapter";
 import type { Database } from "@codespin/permiso-db";
 import { schema, type ResourceRow } from "./tinqer-schema.js";
-import type {
-  IResourceRepository,
-  Resource,
-  ResourceFilter,
-  CreateResourceInput,
-  UpdateResourceInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IResourceRepository,
+  type Resource,
+  type ResourceFilter,
+  type CreateResourceInput,
+  type UpdateResourceInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:postgres:resource");
@@ -101,7 +102,7 @@ export function createResourceRepository(
         return { success: true, data: mapResourceFromDb(resourceRows[0]) };
       } catch (error) {
         logger.error("Failed to create resource", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 

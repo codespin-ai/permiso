@@ -12,17 +12,18 @@ import {
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
 import { schema } from "./tinqer-schema.js";
-import type {
-  IOrganizationRepository,
-  Organization,
-  OrganizationFilter,
-  CreateOrganizationInput,
-  UpdateOrganizationInput,
-  Property,
-  PropertyInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IOrganizationRepository,
+  type Organization,
+  type OrganizationFilter,
+  type CreateOrganizationInput,
+  type UpdateOrganizationInput,
+  type Property,
+  type PropertyInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:sqlite:organization");
@@ -152,7 +153,7 @@ export function createOrganizationRepository(
         return { success: true, data: mapOrganizationFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to create organization", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 
@@ -422,23 +423,50 @@ export function createOrganizationRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Use INSERT OR REPLACE for upsert
-        const stmt = db.prepare(
-          `INSERT INTO organization_property (parent_id, name, value, hidden, created_at)
-           VALUES (@parent_id, @name, @value, @hidden, @created_at)
-           ON CONFLICT (parent_id, name)
-           DO UPDATE SET value = @value, hidden = @hidden`,
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenInt = property.hidden ? 1 : 0;
+
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parentId: string;
+              name: string;
+              value: string;
+              hidden: number;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("organization_property")
+              .values({
+                parent_id: p.parentId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (op) => op.parent_id,
+                (op) => op.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
+          {
+            parentId: orgId,
+            name: property.name,
+            value: valueStr,
+            hidden: hiddenInt,
+            createdAt: now,
+          },
         );
-        stmt.run({
-          parent_id: orgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? "null"
-              : JSON.stringify(property.value),
-          hidden: property.hidden ? 1 : 0,
-          created_at: now,
-        });
 
         return {
           success: true,

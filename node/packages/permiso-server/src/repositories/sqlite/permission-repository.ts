@@ -7,7 +7,11 @@
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { executeSelect, executeDelete } from "@tinqerjs/better-sqlite3-adapter";
+import {
+  executeSelect,
+  executeDelete,
+  executeInsert,
+} from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
 import { schema } from "../tinqer-schema.js";
 import type {
@@ -77,18 +81,43 @@ export function createPermissionRepository(
     ): Promise<Result<UserPermission>> {
       try {
         const now = Date.now();
-        // Use raw SQL for INSERT OR IGNORE
-        const stmt = db.prepare(
-          `INSERT OR IGNORE INTO user_permission (user_id, org_id, resource_id, action, created_at)
-           VALUES (@user_id, @org_id, @resource_id, @action, @created_at)`,
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              userId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("user_permission")
+              .values({
+                user_id: p.userId,
+                org_id: p.orgId,
+                resource_id: p.resourceId,
+                action: p.action,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (up) => up.user_id,
+                (up) => up.org_id,
+                (up) => up.resource_id,
+                (up) => up.action,
+              )
+              .doNothing(),
+          {
+            userId,
+            orgId: inputOrgId,
+            resourceId: input.resourceId,
+            action: input.action,
+            createdAt: now,
+          },
         );
-        stmt.run({
-          user_id: userId,
-          org_id: inputOrgId,
-          resource_id: input.resourceId,
-          action: input.action,
-          created_at: now,
-        });
 
         return {
           success: true,
@@ -180,18 +209,43 @@ export function createPermissionRepository(
     ): Promise<Result<RolePermission>> {
       try {
         const now = Date.now();
-        // Use raw SQL for INSERT OR IGNORE
-        const stmt = db.prepare(
-          `INSERT OR IGNORE INTO role_permission (role_id, org_id, resource_id, action, created_at)
-           VALUES (@role_id, @org_id, @resource_id, @action, @created_at)`,
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              roleId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("role_permission")
+              .values({
+                role_id: p.roleId,
+                org_id: p.orgId,
+                resource_id: p.resourceId,
+                action: p.action,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (rp) => rp.role_id,
+                (rp) => rp.org_id,
+                (rp) => rp.resource_id,
+                (rp) => rp.action,
+              )
+              .doNothing(),
+          {
+            roleId,
+            orgId: inputOrgId,
+            resourceId: input.resourceId,
+            action: input.action,
+            createdAt: now,
+          },
         );
-        stmt.run({
-          role_id: roleId,
-          org_id: inputOrgId,
-          resource_id: input.resourceId,
-          action: input.action,
-          created_at: now,
-        });
 
         return {
           success: true,
