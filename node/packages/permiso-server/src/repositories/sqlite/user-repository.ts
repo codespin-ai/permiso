@@ -12,7 +12,7 @@ import {
   executeDelete,
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
-import { schema } from "../tinqer-schema.js";
+import { schema } from "./tinqer-schema.js";
 import type {
   IUserRepository,
   User,
@@ -75,14 +75,17 @@ export function createUserRepository(
         executeInsert(
           db,
           schema,
-          (q, p: {
-            id: string;
-            org_id: string;
-            identity_provider: string;
-            identity_provider_user_id: string;
-            created_at: number;
-            updated_at: number;
-          }) =>
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              identity_provider: string;
+              identity_provider_user_id: string;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
             q.insertInto("user").values({
               id: p.id,
               org_id: p.org_id,
@@ -107,14 +110,17 @@ export function createUserRepository(
             executeInsert(
               db,
               schema,
-              (q, p: {
-                parent_id: string;
-                org_id: string;
-                name: string;
-                value: string;
-                hidden: number;
-                created_at: number;
-              }) =>
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  org_id: string;
+                  name: string;
+                  value: string;
+                  hidden: number;
+                  created_at: number;
+                },
+              ) =>
                 q.insertInto("user_property").values({
                   parent_id: p.parent_id,
                   org_id: p.org_id,
@@ -127,7 +133,10 @@ export function createUserRepository(
                 parent_id: input.id,
                 org_id: inputOrgId,
                 name: prop.name,
-                value: prop.value === undefined ? "null" : JSON.stringify(prop.value),
+                value:
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ? 1 : 0,
                 created_at: now,
               },
@@ -141,12 +150,15 @@ export function createUserRepository(
             executeInsert(
               db,
               schema,
-              (q, p: {
-                user_id: string;
-                role_id: string;
-                org_id: string;
-                created_at: number;
-              }) =>
+              (
+                q,
+                p: {
+                  user_id: string;
+                  role_id: string;
+                  org_id: string;
+                  created_at: number;
+                },
+              ) =>
                 q.insertInto("user_role").values({
                   user_id: p.user_id,
                   role_id: p.role_id,
@@ -173,7 +185,10 @@ export function createUserRepository(
         );
 
         if (!rows[0]) {
-          return { success: false, error: new Error("User not found after creation") };
+          return {
+            success: false,
+            error: new Error("User not found after creation"),
+          };
         }
 
         return { success: true, data: mapUserFromDb(rows[0]) };
@@ -192,7 +207,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user").where((u) => u.id === p.userId && u.org_id === p.orgId),
+            q
+              .from("user")
+              .where((u) => u.id === p.userId && u.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows[0] ? mapUserFromDb(rows[0]) : null };
@@ -211,13 +228,22 @@ export function createUserRepository(
         const rows = executeSelect(
           db,
           schema,
-          (q, p: { orgId: string; identityProvider: string; identityProviderUserId: string }) =>
-            q.from("user").where(
-              (u) =>
-                u.org_id === p.orgId &&
-                u.identity_provider === p.identityProvider &&
-                u.identity_provider_user_id === p.identityProviderUserId,
-            ),
+          (
+            q,
+            p: {
+              orgId: string;
+              identityProvider: string;
+              identityProviderUserId: string;
+            },
+          ) =>
+            q
+              .from("user")
+              .where(
+                (u) =>
+                  u.org_id === p.orgId &&
+                  u.identity_provider === p.identityProvider &&
+                  u.identity_provider_user_id === p.identityProviderUserId,
+              ),
           { orgId: inputOrgId, identityProvider, identityProviderUserId },
         );
         return { success: true, data: rows[0] ? mapUserFromDb(rows[0]) : null };
@@ -245,7 +271,9 @@ export function createUserRepository(
         );
         const countResult = countStmt.get({
           orgId: inputOrgId,
-          ...(filter?.identityProvider ? { identityProvider: filter.identityProvider } : {}),
+          ...(filter?.identityProvider
+            ? { identityProvider: filter.identityProvider }
+            : {}),
         }) as { count: number };
         const totalCount = countResult.count;
 
@@ -253,12 +281,16 @@ export function createUserRepository(
         const sortDir = pagination?.sortDirection === "DESC" ? "DESC" : "ASC";
         const stmt = db.prepare(
           `SELECT * FROM "user" WHERE org_id = @orgId${
-            filter?.identityProvider ? " AND identity_provider = @identityProvider" : ""
+            filter?.identityProvider
+              ? " AND identity_provider = @identityProvider"
+              : ""
           } ORDER BY id ${sortDir}${pagination?.first ? " LIMIT @limit" : ""}${pagination?.offset ? " OFFSET @offset" : ""}`,
         );
         const rows = stmt.all({
           orgId: inputOrgId,
-          ...(filter?.identityProvider ? { identityProvider: filter.identityProvider } : {}),
+          ...(filter?.identityProvider
+            ? { identityProvider: filter.identityProvider }
+            : {}),
           ...(pagination?.first ? { limit: pagination.first } : {}),
           ...(pagination?.offset ? { offset: pagination.offset } : {}),
         }) as Array<{
@@ -276,7 +308,9 @@ export function createUserRepository(
             nodes: rows.map(mapUserFromDb),
             totalCount,
             pageInfo: {
-              hasNextPage: pagination?.first ? rows.length === pagination.first : false,
+              hasNextPage: pagination?.first
+                ? rows.length === pagination.first
+                : false,
               hasPreviousPage: false,
               startCursor: rows[0]?.id ?? null,
               endCursor: rows[rows.length - 1]?.id ?? null,
@@ -306,14 +340,20 @@ export function createUserRepository(
 
         // Build update - Tinqer update requires all fields, so we do partial update with raw SQL
         const updates: string[] = ["updated_at = @updated_at"];
-        const params: Record<string, unknown> = { userId, orgId: inputOrgId, updated_at: now };
+        const params: Record<string, unknown> = {
+          userId,
+          orgId: inputOrgId,
+          updated_at: now,
+        };
 
         if (input.identityProvider !== undefined) {
           updates.push("identity_provider = @identity_provider");
           params.identity_provider = input.identityProvider;
         }
         if (input.identityProviderUserId !== undefined) {
-          updates.push("identity_provider_user_id = @identity_provider_user_id");
+          updates.push(
+            "identity_provider_user_id = @identity_provider_user_id",
+          );
           params.identity_provider_user_id = input.identityProviderUserId;
         }
 
@@ -327,7 +367,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user").where((u) => u.id === p.userId && u.org_id === p.orgId),
+            q
+              .from("user")
+              .where((u) => u.id === p.userId && u.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -349,9 +391,11 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.deleteFrom("user_property").where(
-              (up) => up.parent_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .deleteFrom("user_property")
+              .where(
+                (up) => up.parent_id === p.userId && up.org_id === p.orgId,
+              ),
           { userId, orgId: inputOrgId },
         );
 
@@ -359,9 +403,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.deleteFrom("user_role").where(
-              (ur) => ur.user_id === p.userId && ur.org_id === p.orgId,
-            ),
+            q
+              .deleteFrom("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -369,9 +413,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.deleteFrom("user_permission").where(
-              (up) => up.user_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .deleteFrom("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -379,7 +423,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.deleteFrom("user").where((u) => u.id === p.userId && u.org_id === p.orgId),
+            q
+              .deleteFrom("user")
+              .where((u) => u.id === p.userId && u.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -420,12 +466,14 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; roleId: string; orgId: string }) =>
-            q.deleteFrom("user_role").where(
-              (ur) =>
-                ur.user_id === p.userId &&
-                ur.role_id === p.roleId &&
-                ur.org_id === p.orgId,
-            ),
+            q
+              .deleteFrom("user_role")
+              .where(
+                (ur) =>
+                  ur.user_id === p.userId &&
+                  ur.role_id === p.roleId &&
+                  ur.org_id === p.orgId,
+              ),
           { userId, roleId, orgId: inputOrgId },
         );
         return { success: true, data: undefined };
@@ -444,9 +492,9 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_role").where(
-              (ur) => ur.user_id === p.userId && ur.org_id === p.orgId,
-            ),
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map((r) => r.role_id) };
@@ -465,9 +513,11 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_property").where(
-              (up) => up.parent_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .from("user_property")
+              .where(
+                (up) => up.parent_id === p.userId && up.org_id === p.orgId,
+              ),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -487,15 +537,20 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string; name: string }) =>
-            q.from("user_property").where(
-              (up) =>
-                up.parent_id === p.userId &&
-                up.org_id === p.orgId &&
-                up.name === p.name,
-            ),
+            q
+              .from("user_property")
+              .where(
+                (up) =>
+                  up.parent_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.name === p.name,
+              ),
           { userId, orgId: inputOrgId, name },
         );
-        return { success: true, data: rows[0] ? mapPropertyFromDb(rows[0]) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get user property", { error, userId, name });
         return { success: false, error: error as Error };
@@ -520,7 +575,10 @@ export function createUserRepository(
           parent_id: userId,
           org_id: inputOrgId,
           name: property.name,
-          value: property.value === undefined ? "null" : JSON.stringify(property.value),
+          value:
+            property.value === undefined
+              ? "null"
+              : JSON.stringify(property.value),
           hidden: property.hidden ? 1 : 0,
           created_at: now,
         });
@@ -535,7 +593,11 @@ export function createUserRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to set user property", { error, userId, property });
+        logger.error("Failed to set user property", {
+          error,
+          userId,
+          property,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -550,12 +612,14 @@ export function createUserRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string; name: string }) =>
-            q.deleteFrom("user_property").where(
-              (up) =>
-                up.parent_id === p.userId &&
-                up.org_id === p.orgId &&
-                up.name === p.name,
-            ),
+            q
+              .deleteFrom("user_property")
+              .where(
+                (up) =>
+                  up.parent_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.name === p.name,
+              ),
           { userId, orgId: inputOrgId, name },
         );
         return { success: true, data: true };

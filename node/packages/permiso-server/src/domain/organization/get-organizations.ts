@@ -12,13 +12,29 @@ export async function getOrganizations(
     ids?: string[];
     properties?: PropertyFilter[];
   },
-  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
+  pagination?: {
+    limit?: number;
+    offset?: number;
+    sortDirection?: "ASC" | "DESC";
+  },
 ): Promise<Result<OrganizationWithProperties[]>> {
   try {
-    // Get organizations with optional name filter
+    // When property filters are provided, we need to fetch all orgs first,
+    // apply filters, then paginate. Otherwise pagination breaks.
+    const needsFullFetch = filters?.properties && filters.properties.length > 0;
+
+    // Get organizations - fetch all if we need to filter by properties
     const listResult = await ctx.repos.organization.list(
       undefined, // no name filter in current interface
-      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
+      !needsFullFetch && pagination
+        ? {
+            first: pagination.limit,
+            offset: pagination.offset,
+            sortDirection: pagination.sortDirection,
+          }
+        : pagination?.sortDirection
+          ? { sortDirection: pagination.sortDirection }
+          : undefined,
     );
 
     if (!listResult.success) {
@@ -65,9 +81,20 @@ export async function getOrganizations(
     );
 
     // Filter out nulls (orgs that didn't match property filters)
-    const filteredResult = result.filter(
+    let filteredResult = result.filter(
       (org) => org !== null,
     ) as OrganizationWithProperties[];
+
+    // Apply pagination after filtering if we did a full fetch
+    if (needsFullFetch && pagination) {
+      const offset = pagination.offset || 0;
+      const limit = pagination.limit;
+      if (limit !== undefined) {
+        filteredResult = filteredResult.slice(offset, offset + limit);
+      } else if (offset > 0) {
+        filteredResult = filteredResult.slice(offset);
+      }
+    }
 
     return { success: true, data: filteredResult };
   } catch (error) {

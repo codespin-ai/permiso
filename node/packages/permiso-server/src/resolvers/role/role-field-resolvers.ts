@@ -38,7 +38,11 @@ export const roleFieldResolvers = {
       context: DataContext,
     ) => {
       // Use parent.orgId instead of context.orgId to work with ROOT queries
-      const userIdsResult = await getRoleUsersByOrg(context, parent.orgId, parent.id);
+      const userIdsResult = await getRoleUsersByOrg(
+        context,
+        parent.orgId,
+        parent.id,
+      );
       if (!userIdsResult.success) {
         throw userIdsResult.error;
       }
@@ -65,6 +69,8 @@ export const roleFieldResolvers = {
         context,
         parent.id,
         args.resourcePath,
+        undefined,
+        parent.orgId,
       );
       if (!result.success) {
         throw result.error;

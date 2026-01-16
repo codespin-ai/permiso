@@ -10,12 +10,16 @@ export async function getRolePermissions(
   roleId?: string,
   resourceId?: string,
   action?: string,
+  orgId?: string,
 ): Promise<Result<RolePermissionWithOrgId[]>> {
   try {
+    // Use explicit orgId if provided, otherwise fall back to ctx.orgId
+    const effectiveOrgId = orgId || ctx.orgId;
+
     // If roleId is provided, get permissions for that role
     if (roleId) {
       const result = await ctx.repos.permission.getRolePermissions(
-        ctx.orgId,
+        effectiveOrgId,
         roleId,
       );
 
@@ -38,7 +42,7 @@ export async function getRolePermissions(
     // If resourceId is provided without roleId, get by resource
     if (resourceId) {
       const result = await ctx.repos.permission.getPermissionsByResource(
-        ctx.orgId,
+        effectiveOrgId,
         resourceId,
       );
 

@@ -1,9 +1,18 @@
 /**
  * PostgreSQL Resource Repository
+ *
+ * Uses Tinqer for type-safe queries with app-level tenant filtering.
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { sql, type Database } from "@codespin/permiso-db";
+import {
+  executeSelect,
+  executeInsert,
+  executeUpdate,
+  executeDelete,
+} from "@tinqerjs/pg-promise-adapter";
+import type { Database } from "@codespin/permiso-db";
+import { schema, type ResourceRow } from "./tinqer-schema.js";
 import type {
   IResourceRepository,
   Resource,
@@ -14,11 +23,17 @@ import type {
   Connection,
   Result,
 } from "../interfaces/index.js";
-import type { ResourceDbRow } from "../../types.js";
 
 const logger = createLogger("permiso-server:repos:postgres:resource");
 
-function mapResourceFromDb(row: ResourceDbRow): Resource {
+function mapResourceFromDb(row: {
+  id: string;
+  org_id: string;
+  name: string | null;
+  description: string | null;
+  created_at: number;
+  updated_at: number;
+}): Resource {
   return {
     id: row.id,
     orgId: row.org_id,
@@ -40,21 +55,50 @@ export function createResourceRepository(
     ): Promise<Result<Resource>> {
       try {
         const now = Date.now();
-        const params = {
-          id: input.id,
-          org_id: inputOrgId,
-          name: input.name ?? null,
-          description: input.description ?? null,
-          created_at: now,
-          updated_at: now,
-        };
 
-        const row = await db.one<ResourceDbRow>(
-          `${sql.insert("resource", params)} RETURNING *`,
-          params,
+        const resourceRows = await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              id: string;
+              org_id: string;
+              name: string | null;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
+            q
+              .insertInto("resource")
+              .values({
+                id: p.id,
+                org_id: p.org_id,
+                name: p.name,
+                description: p.description,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+              })
+              .returning((r) => r),
+          {
+            id: input.id,
+            org_id: inputOrgId,
+            name: input.name ?? null,
+            description: input.description ?? null,
+            created_at: now,
+            updated_at: now,
+          },
         );
 
-        return { success: true, data: mapResourceFromDb(row) };
+        if (!resourceRows[0]) {
+          return {
+            success: false,
+            error: new Error("Resource not found after creation"),
+          };
+        }
+
+        return { success: true, data: mapResourceFromDb(resourceRows[0]) };
       } catch (error) {
         logger.error("Failed to create resource", { error, input });
         return { success: false, error: error as Error };
@@ -66,11 +110,19 @@ export function createResourceRepository(
       resourceId: string,
     ): Promise<Result<Resource | null>> {
       try {
-        const row = await db.oneOrNone<ResourceDbRow>(
-          `SELECT * FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { resourceId: string; orgId: string }) =>
+            q
+              .from("resource")
+              .where((r) => r.id === p.resourceId && r.org_id === p.orgId),
           { resourceId, orgId: inputOrgId },
         );
-        return { success: true, data: row ? mapResourceFromDb(row) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapResourceFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get resource", { error, resourceId });
         return { success: false, error: error as Error };
@@ -83,27 +135,81 @@ export function createResourceRepository(
       pagination?: PaginationInput,
     ): Promise<Result<Connection<Resource>>> {
       try {
-        let whereClause = "WHERE org_id = $(orgId)";
-        const params: Record<string, unknown> = { orgId: inputOrgId };
+        let totalCount: number;
+        let rows: ResourceRow[];
 
         if (filter?.idPrefix) {
-          whereClause += " AND id LIKE $(idPrefix)";
-          params.idPrefix = `${filter.idPrefix}%`;
+          // Filtered queries - with idPrefix filter
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; idPrefix: string }) =>
+              q
+                .from("resource")
+                .where(
+                  (r) => r.org_id === p.orgId && r.id.startsWith(p.idPrefix),
+                )
+                .count(),
+            { orgId: inputOrgId, idPrefix: filter.idPrefix },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (
+              q,
+              p: {
+                orgId: string;
+                idPrefix: string;
+                first: number;
+                offset: number;
+              },
+            ) =>
+              q
+                .from("resource")
+                .where(
+                  (r) => r.org_id === p.orgId && r.id.startsWith(p.idPrefix),
+                )
+                .orderBy((r) => r.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              idPrefix: filter.idPrefix,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
+        } else {
+          // Non-filtered queries
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string }) =>
+              q
+                .from("resource")
+                .where((r) => r.org_id === p.orgId)
+                .count(),
+            { orgId: inputOrgId },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (q, p: { orgId: string; first: number; offset: number }) =>
+              q
+                .from("resource")
+                .where((r) => r.org_id === p.orgId)
+                .orderBy((r) => r.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              orgId: inputOrgId,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
         }
-
-        const countResult = await db.one<{ count: string }>(
-          `SELECT COUNT(*) as count FROM resource ${whereClause}`,
-          params,
-        );
-        const totalCount = parseInt(countResult.count, 10);
-
-        let query = `SELECT * FROM resource ${whereClause} ORDER BY id ASC`;
-        if (pagination?.first) {
-          query += ` LIMIT $(limit)`;
-          params.limit = pagination.first;
-        }
-
-        const rows = await db.manyOrNone<ResourceDbRow>(query, params);
 
         return {
           success: true,
@@ -138,9 +244,15 @@ export function createResourceRepository(
       idPrefix: string,
     ): Promise<Result<Resource[]>> {
       try {
-        const rows = await db.manyOrNone<ResourceDbRow>(
-          `SELECT * FROM resource WHERE org_id = $(orgId) AND id LIKE $(idPrefix) ORDER BY id ASC`,
-          { orgId: inputOrgId, idPrefix: `${idPrefix}%` },
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { orgId: string; idPrefix: string }) =>
+            q
+              .from("resource")
+              .where((r) => r.org_id === p.orgId && r.id.startsWith(p.idPrefix))
+              .orderBy((r) => r.id),
+          { orgId: inputOrgId, idPrefix },
         );
         return { success: true, data: rows.map(mapResourceFromDb) };
       } catch (error) {
@@ -156,21 +268,43 @@ export function createResourceRepository(
     ): Promise<Result<Resource>> {
       try {
         const now = Date.now();
-        const updateParams: Record<string, unknown> = { updated_at: now };
 
-        if (input.name !== undefined) {
-          updateParams.name = input.name;
-        }
-        if (input.description !== undefined) {
-          updateParams.description = input.description;
-        }
-
-        const row = await db.one<ResourceDbRow>(
-          `${sql.update("resource", updateParams)} WHERE id = $(resourceId) AND org_id = $(orgId) RETURNING *`,
-          { ...updateParams, resourceId, orgId: inputOrgId },
+        const rows = await executeUpdate(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              resourceId: string;
+              orgId: string;
+              updated_at: number;
+              name: string | null | undefined;
+              description: string | null | undefined;
+            },
+          ) =>
+            q
+              .update("resource")
+              .set({
+                updated_at: p.updated_at,
+                name: p.name,
+                description: p.description,
+              })
+              .where((r) => r.id === p.resourceId && r.org_id === p.orgId)
+              .returning((r) => r),
+          {
+            resourceId,
+            orgId: inputOrgId,
+            updated_at: now,
+            name: input.name,
+            description: input.description,
+          },
         );
 
-        return { success: true, data: mapResourceFromDb(row) };
+        if (!rows[0]) {
+          return { success: false, error: new Error("Resource not found") };
+        }
+
+        return { success: true, data: mapResourceFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to update resource", { error, resourceId });
         return { success: false, error: error as Error };
@@ -182,21 +316,43 @@ export function createResourceRepository(
       resourceId: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.tx(async (t) => {
-          // Delete related permissions first
-          await t.none(
-            `DELETE FROM user_permission WHERE resource_id = $(resourceId) AND org_id = $(orgId)`,
-            { resourceId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM role_permission WHERE resource_id = $(resourceId) AND org_id = $(orgId)`,
-            { resourceId, orgId: inputOrgId },
-          );
-          await t.none(
-            `DELETE FROM resource WHERE id = $(resourceId) AND org_id = $(orgId)`,
-            { resourceId, orgId: inputOrgId },
-          );
-        });
+        // Delete related permissions first
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { resourceId: string; orgId: string }) =>
+            q
+              .deleteFrom("user_permission")
+              .where(
+                (up) =>
+                  up.resource_id === p.resourceId && up.org_id === p.orgId,
+              ),
+          { resourceId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { resourceId: string; orgId: string }) =>
+            q
+              .deleteFrom("role_permission")
+              .where(
+                (rp) =>
+                  rp.resource_id === p.resourceId && rp.org_id === p.orgId,
+              ),
+          { resourceId, orgId: inputOrgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { resourceId: string; orgId: string }) =>
+            q
+              .deleteFrom("resource")
+              .where((r) => r.id === p.resourceId && r.org_id === p.orgId),
+          { resourceId, orgId: inputOrgId },
+        );
+
         return { success: true, data: true };
       } catch (error) {
         logger.error("Failed to delete resource", { error, resourceId });
@@ -209,39 +365,65 @@ export function createResourceRepository(
       idPrefix: string,
     ): Promise<Result<number>> {
       try {
-        const result = await db.tx(async (t) => {
-          // Get all resource IDs matching the prefix
-          const resources = await t.manyOrNone<{ id: string }>(
-            `SELECT id FROM resource WHERE org_id = $(orgId) AND id LIKE $(idPrefix)`,
-            { orgId: inputOrgId, idPrefix: `${idPrefix}%` },
+        // Get all resource IDs matching the prefix
+        const resources = await executeSelect(
+          db,
+          schema,
+          (q, p: { orgId: string; idPrefix: string }) =>
+            q
+              .from("resource")
+              .where((r) => r.org_id === p.orgId && r.id.startsWith(p.idPrefix))
+              .select((r) => ({ id: r.id })),
+          { orgId: inputOrgId, idPrefix },
+        );
+
+        if (resources.length === 0) {
+          return { success: true, data: 0 };
+        }
+
+        // Delete related permissions for each resource
+        for (const resource of resources) {
+          await executeDelete(
+            db,
+            schema,
+            (q, p: { resourceId: string; orgId: string }) =>
+              q
+                .deleteFrom("user_permission")
+                .where(
+                  (up) =>
+                    up.resource_id === p.resourceId && up.org_id === p.orgId,
+                ),
+            { resourceId: resource.id, orgId: inputOrgId },
           );
 
-          if (resources.length === 0) {
-            return 0;
-          }
-
-          const resourceIds = resources.map((r) => r.id);
-
-          // Delete related permissions
-          await t.none(
-            `DELETE FROM user_permission WHERE org_id = $(orgId) AND resource_id = ANY($(resourceIds))`,
-            { orgId: inputOrgId, resourceIds },
+          await executeDelete(
+            db,
+            schema,
+            (q, p: { resourceId: string; orgId: string }) =>
+              q
+                .deleteFrom("role_permission")
+                .where(
+                  (rp) =>
+                    rp.resource_id === p.resourceId && rp.org_id === p.orgId,
+                ),
+            { resourceId: resource.id, orgId: inputOrgId },
           );
-          await t.none(
-            `DELETE FROM role_permission WHERE org_id = $(orgId) AND resource_id = ANY($(resourceIds))`,
-            { orgId: inputOrgId, resourceIds },
-          );
+        }
 
-          // Delete resources
-          const deleteResult = await t.result(
-            `DELETE FROM resource WHERE org_id = $(orgId) AND id LIKE $(idPrefix)`,
-            { orgId: inputOrgId, idPrefix: `${idPrefix}%` },
-          );
+        // Delete resources matching the prefix
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string; idPrefix: string }) =>
+            q
+              .deleteFrom("resource")
+              .where(
+                (r) => r.org_id === p.orgId && r.id.startsWith(p.idPrefix),
+              ),
+          { orgId: inputOrgId, idPrefix },
+        );
 
-          return deleteResult.rowCount;
-        });
-
-        return { success: true, data: result };
+        return { success: true, data: rowCount };
       } catch (error) {
         logger.error("Failed to delete resources by prefix", {
           error,

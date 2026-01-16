@@ -11,14 +11,28 @@ export async function getRoles(
     ids?: string[];
     properties?: Array<{ name: string; value: unknown }>;
   },
-  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
+  pagination?: {
+    limit?: number;
+    offset?: number;
+    sortDirection?: "ASC" | "DESC";
+  },
+  orgId?: string,
 ): Promise<Result<RoleWithProperties[]>> {
   try {
+    // Use explicit orgId if provided, otherwise fall back to ctx.orgId
+    const effectiveOrgId = orgId || ctx.orgId;
+
     // Get roles from repository
     const listResult = await ctx.repos.role.list(
-      ctx.orgId,
+      effectiveOrgId,
       undefined,
-      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
+      pagination
+        ? {
+            first: pagination.limit,
+            offset: pagination.offset,
+            sortDirection: pagination.sortDirection,
+          }
+        : undefined,
     );
 
     if (!listResult.success) {
@@ -37,11 +51,13 @@ export async function getRoles(
     const result = await Promise.all(
       roles.map(async (role) => {
         const propertiesResult = await ctx.repos.role.getProperties(
-          ctx.orgId,
+          effectiveOrgId,
           role.id,
         );
 
-        const properties = propertiesResult.success ? propertiesResult.data : [];
+        const properties = propertiesResult.success
+          ? propertiesResult.data
+          : [];
 
         // Apply property filters if provided
         if (filters?.properties && filters.properties.length > 0) {

@@ -1,11 +1,18 @@
 /**
  * PostgreSQL Organization Repository
  *
- * Organizations are not RLS-protected - they are globally accessible.
+ * Uses Tinqer for type-safe queries. Organizations are not RLS-protected.
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import { sql, type Database } from "@codespin/permiso-db";
+import {
+  executeSelect,
+  executeInsert,
+  executeUpdate,
+  executeDelete,
+} from "@tinqerjs/pg-promise-adapter";
+import type { Database } from "@codespin/permiso-db";
+import { schema, type OrganizationRow } from "./tinqer-schema.js";
 import type {
   IOrganizationRepository,
   Organization,
@@ -18,11 +25,16 @@ import type {
   Connection,
   Result,
 } from "../interfaces/index.js";
-import type { OrganizationDbRow, PropertyDbRow } from "../../types.js";
 
 const logger = createLogger("permiso-server:repos:postgres:organization");
 
-function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
+function mapOrganizationFromDb(row: {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: number;
+  updated_at: number;
+}): Organization {
   return {
     id: row.id,
     name: row.name,
@@ -32,11 +44,16 @@ function mapOrganizationFromDb(row: OrganizationDbRow): Organization {
   };
 }
 
-function mapPropertyFromDb(row: PropertyDbRow): Property {
+function mapPropertyFromDb(row: {
+  name: string;
+  value: string;
+  hidden: boolean;
+  created_at: number;
+}): Property {
   return {
     name: row.name,
-    value: row.value,
-    hidden: row.hidden,
+    value: typeof row.value === "string" ? JSON.parse(row.value) : row.value,
+    hidden: Boolean(row.hidden),
     createdAt: row.created_at,
   };
 }
@@ -49,42 +66,84 @@ export function createOrganizationRepository(
       input: CreateOrganizationInput,
     ): Promise<Result<Organization>> {
       try {
-        const org = await db.tx(async (t) => {
-          const now = Date.now();
-          const params = {
+        const now = Date.now();
+
+        const orgRows = await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              id: string;
+              name: string;
+              description: string | null;
+              created_at: number;
+              updated_at: number;
+            },
+          ) =>
+            q
+              .insertInto("organization")
+              .values({
+                id: p.id,
+                name: p.name,
+                description: p.description,
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+              })
+              .returning((o) => o),
+          {
             id: input.id,
             name: input.name,
             description: input.description ?? null,
             created_at: now,
             updated_at: now,
-          };
+          },
+        );
 
-          const orgRow = await t.one<OrganizationDbRow>(
-            `${sql.insert("organization", params)} RETURNING *`,
-            params,
-          );
-
-          if (input.properties && input.properties.length > 0) {
-            for (const prop of input.properties) {
-              const propParams = {
+        if (input.properties && input.properties.length > 0) {
+          for (const prop of input.properties) {
+            await executeInsert(
+              db,
+              schema,
+              (
+                q,
+                p: {
+                  parent_id: string;
+                  name: string;
+                  value: string;
+                  hidden: boolean;
+                  created_at: number;
+                },
+              ) =>
+                q.insertInto("organization_property").values({
+                  parent_id: p.parent_id,
+                  name: p.name,
+                  value: p.value,
+                  hidden: p.hidden,
+                  created_at: p.created_at,
+                }),
+              {
                 parent_id: input.id,
                 name: prop.name,
                 value:
-                  prop.value === undefined ? null : JSON.stringify(prop.value),
+                  prop.value === undefined
+                    ? "null"
+                    : JSON.stringify(prop.value),
                 hidden: prop.hidden ?? false,
                 created_at: now,
-              };
-              await t.none(
-                sql.insert("organization_property", propParams),
-                propParams,
-              );
-            }
+              },
+            );
           }
+        }
 
-          return orgRow;
-        });
+        if (!orgRows[0]) {
+          return {
+            success: false,
+            error: new Error("Organization not found after creation"),
+          };
+        }
 
-        return { success: true, data: mapOrganizationFromDb(org) };
+        return { success: true, data: mapOrganizationFromDb(orgRows[0]) };
       } catch (error) {
         logger.error("Failed to create organization", { error, input });
         return { success: false, error: error as Error };
@@ -93,11 +152,17 @@ export function createOrganizationRepository(
 
     async getById(orgId: string): Promise<Result<Organization | null>> {
       try {
-        const row = await db.oneOrNone<OrganizationDbRow>(
-          `SELECT * FROM organization WHERE id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.from("organization").where((o) => o.id === p.orgId),
           { orgId },
         );
-        return { success: true, data: row ? mapOrganizationFromDb(row) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapOrganizationFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get organization", { error, orgId });
         return { success: false, error: error as Error };
@@ -109,27 +174,62 @@ export function createOrganizationRepository(
       pagination?: PaginationInput,
     ): Promise<Result<Connection<Organization>>> {
       try {
-        let whereClause = "";
-        const params: Record<string, unknown> = {};
+        let totalCount: number;
+        let rows: OrganizationRow[];
 
         if (filter?.name) {
-          whereClause = "WHERE name ILIKE $(name)";
-          params.name = `%${filter.name}%`;
+          // Filtered queries
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q, p: { namePattern: string }) =>
+              q
+                .from("organization")
+                .where((o) => o.name.includes(p.namePattern))
+                .count(),
+            { namePattern: filter.name },
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (q, p: { namePattern: string; first: number; offset: number }) =>
+              q
+                .from("organization")
+                .where((o) => o.name.includes(p.namePattern))
+                .orderBy((o) => o.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              namePattern: filter.name,
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
+        } else {
+          // Non-filtered queries
+          totalCount = (await executeSelect(
+            db,
+            schema,
+            (q) => q.from("organization").count(),
+            {},
+          )) as unknown as number;
+
+          rows = await executeSelect(
+            db,
+            schema,
+            (q, p: { first: number; offset: number }) =>
+              q
+                .from("organization")
+                .orderBy((o) => o.id)
+                .skip(p.offset)
+                .take(p.first),
+            {
+              first: pagination?.first ?? 100,
+              offset: pagination?.offset ?? 0,
+            },
+          );
         }
-
-        const countResult = await db.one<{ count: string }>(
-          `SELECT COUNT(*) as count FROM organization ${whereClause}`,
-          params,
-        );
-        const totalCount = parseInt(countResult.count, 10);
-
-        let query = `SELECT * FROM organization ${whereClause} ORDER BY created_at DESC`;
-        if (pagination?.first) {
-          query += ` LIMIT $(limit)`;
-          params.limit = pagination.first;
-        }
-
-        const rows = await db.manyOrNone<OrganizationDbRow>(query, params);
 
         return {
           success: true,
@@ -158,21 +258,42 @@ export function createOrganizationRepository(
     ): Promise<Result<Organization>> {
       try {
         const now = Date.now();
-        const updateParams: Record<string, unknown> = { updated_at: now };
 
-        if (input.name !== undefined) {
-          updateParams.name = input.name;
-        }
-        if (input.description !== undefined) {
-          updateParams.description = input.description;
-        }
-
-        const row = await db.one<OrganizationDbRow>(
-          `${sql.update("organization", updateParams)} WHERE id = $(orgId) RETURNING *`,
-          { ...updateParams, orgId },
+        // Build update with all fields - undefined values are skipped by Tinqer
+        const rows = await executeUpdate(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              orgId: string;
+              updated_at: number;
+              name: string | undefined;
+              description: string | null | undefined;
+            },
+          ) =>
+            q
+              .update("organization")
+              .set({
+                updated_at: p.updated_at,
+                name: p.name,
+                description: p.description,
+              })
+              .where((o) => o.id === p.orgId)
+              .returning((o) => o),
+          {
+            orgId,
+            updated_at: now,
+            name: input.name,
+            description: input.description,
+          },
         );
 
-        return { success: true, data: mapOrganizationFromDb(row) };
+        if (!rows[0]) {
+          return { success: false, error: new Error("Organization not found") };
+        }
+
+        return { success: true, data: mapOrganizationFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to update organization", { error, orgId });
         return { success: false, error: error as Error };
@@ -181,36 +302,93 @@ export function createOrganizationRepository(
 
     async delete(orgId: string): Promise<Result<boolean>> {
       try {
-        await db.tx(async (t) => {
-          // Delete all related data
-          await t.none(
-            `DELETE FROM organization_property WHERE parent_id = $(orgId)`,
-            { orgId },
-          );
-          await t.none(`DELETE FROM user_permission WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM role_permission WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM user_property WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM role_property WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM user_role WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM "user" WHERE org_id = $(orgId)`, { orgId });
-          await t.none(`DELETE FROM role WHERE org_id = $(orgId)`, { orgId });
-          await t.none(`DELETE FROM resource WHERE org_id = $(orgId)`, {
-            orgId,
-          });
-          await t.none(`DELETE FROM organization WHERE id = $(orgId)`, {
-            orgId,
-          });
-        });
+        // Delete all related data in order
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q
+              .deleteFrom("organization_property")
+              .where((op) => op.parent_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q
+              .deleteFrom("user_permission")
+              .where((up) => up.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q
+              .deleteFrom("role_permission")
+              .where((rp) => rp.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("user_property").where((up) => up.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("role_property").where((rp) => rp.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("user_role").where((ur) => ur.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("user").where((u) => u.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("role").where((r) => r.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("resource").where((r) => r.org_id === p.orgId),
+          { orgId },
+        );
+
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q.deleteFrom("organization").where((o) => o.id === p.orgId),
+          { orgId },
+        );
+
         return { success: true, data: true };
       } catch (error) {
         logger.error("Failed to delete organization", { error, orgId });
@@ -220,8 +398,13 @@ export function createOrganizationRepository(
 
     async getProperties(orgId: string): Promise<Result<Property[]>> {
       try {
-        const rows = await db.manyOrNone<PropertyDbRow>(
-          `SELECT * FROM organization_property WHERE parent_id = $(orgId)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { orgId: string }) =>
+            q
+              .from("organization_property")
+              .where((op) => op.parent_id === p.orgId),
           { orgId },
         );
         return { success: true, data: rows.map(mapPropertyFromDb) };
@@ -236,11 +419,19 @@ export function createOrganizationRepository(
       name: string,
     ): Promise<Result<Property | null>> {
       try {
-        const row = await db.oneOrNone<PropertyDbRow>(
-          `SELECT * FROM organization_property WHERE parent_id = $(orgId) AND name = $(name)`,
+        const rows = await executeSelect(
+          db,
+          schema,
+          (q, p: { orgId: string; name: string }) =>
+            q
+              .from("organization_property")
+              .where((op) => op.parent_id === p.orgId && op.name === p.name),
           { orgId, name },
         );
-        return { success: true, data: row ? mapPropertyFromDb(row) : null };
+        return {
+          success: true,
+          data: rows[0] ? mapPropertyFromDb(rows[0]) : null,
+        };
       } catch (error) {
         logger.error("Failed to get organization property", {
           error,
@@ -257,23 +448,47 @@ export function createOrganizationRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        const params = {
-          parent_id: orgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? null
-              : JSON.stringify(property.value),
-          hidden: property.hidden ?? false,
-          created_at: now,
-        };
+        // Delete existing property if it exists, then insert new one
+        await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string; name: string }) =>
+            q
+              .deleteFrom("organization_property")
+              .where((op) => op.parent_id === p.orgId && op.name === p.name),
+          { orgId, name: property.name },
+        );
 
-        await db.none(
-          `INSERT INTO organization_property (parent_id, name, value, hidden, created_at)
-           VALUES ($(parent_id), $(name), $(value), $(hidden), $(created_at))
-           ON CONFLICT (parent_id, name)
-           DO UPDATE SET value = $(value), hidden = $(hidden)`,
-          params,
+        await executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parent_id: string;
+              name: string;
+              value: string;
+              hidden: boolean;
+              created_at: number;
+            },
+          ) =>
+            q.insertInto("organization_property").values({
+              parent_id: p.parent_id,
+              name: p.name,
+              value: p.value,
+              hidden: p.hidden,
+              created_at: p.created_at,
+            }),
+          {
+            parent_id: orgId,
+            name: property.name,
+            value:
+              property.value === undefined
+                ? "null"
+                : JSON.stringify(property.value),
+            hidden: property.hidden ?? false,
+            created_at: now,
+          },
         );
 
         return {
@@ -300,11 +515,16 @@ export function createOrganizationRepository(
       name: string,
     ): Promise<Result<boolean>> {
       try {
-        await db.none(
-          `DELETE FROM organization_property WHERE parent_id = $(orgId) AND name = $(name)`,
+        const rowCount = await executeDelete(
+          db,
+          schema,
+          (q, p: { orgId: string; name: string }) =>
+            q
+              .deleteFrom("organization_property")
+              .where((op) => op.parent_id === p.orgId && op.name === p.name),
           { orgId, name },
         );
-        return { success: true, data: true };
+        return { success: true, data: rowCount > 0 };
       } catch (error) {
         logger.error("Failed to delete organization property", {
           error,

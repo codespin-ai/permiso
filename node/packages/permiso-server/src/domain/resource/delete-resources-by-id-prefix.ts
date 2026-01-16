@@ -9,10 +9,16 @@ export async function deleteResourcesByIdPrefix(
   idPrefix: string,
 ): Promise<Result<number>> {
   try {
-    const result = await ctx.repos.resource.deleteByIdPrefix(ctx.orgId, idPrefix);
+    const result = await ctx.repos.resource.deleteByIdPrefix(
+      ctx.orgId,
+      idPrefix,
+    );
     return result;
   } catch (error) {
-    logger.error("Failed to delete resources by id prefix", { error, idPrefix });
+    logger.error("Failed to delete resources by id prefix", {
+      error,
+      idPrefix,
+    });
     return { success: false, error: error as Error };
   }
 }

@@ -7,13 +7,23 @@ const logger = createLogger("permiso-server:resources");
 
 export async function getResources(
   ctx: DataContext,
-  pagination?: { limit?: number; offset?: number; sortDirection?: "ASC" | "DESC" },
+  pagination?: {
+    limit?: number;
+    offset?: number;
+    sortDirection?: "ASC" | "DESC";
+  },
 ): Promise<Result<Resource[]>> {
   try {
     const result = await ctx.repos.resource.list(
       ctx.orgId,
       undefined,
-      pagination ? { first: pagination.limit, offset: pagination.offset, sortDirection: pagination.sortDirection } : undefined,
+      pagination
+        ? {
+            first: pagination.limit,
+            offset: pagination.offset,
+            sortDirection: pagination.sortDirection,
+          }
+        : undefined,
     );
 
     if (!result.success) {

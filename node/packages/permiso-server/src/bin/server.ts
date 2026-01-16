@@ -149,6 +149,9 @@ async function startServer() {
 }
 
 startServer().catch((error) => {
-  logger.error("Failed to start server:", { message: error.message, stack: error.stack });
+  logger.error("Failed to start server:", {
+    message: error.message,
+    stack: error.stack,
+  });
   process.exit(1);
 });

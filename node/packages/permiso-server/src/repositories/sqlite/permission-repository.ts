@@ -7,10 +7,7 @@
  */
 
 import { createLogger } from "@codespin/permiso-logger";
-import {
-  executeSelect,
-  executeDelete,
-} from "@tinqerjs/better-sqlite3-adapter";
+import { executeSelect, executeDelete } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
 import { schema } from "../tinqer-schema.js";
 import type {
@@ -104,7 +101,11 @@ export function createPermissionRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to grant user permission", { error, userId, input });
+        logger.error("Failed to grant user permission", {
+          error,
+          userId,
+          input,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -119,19 +120,34 @@ export function createPermissionRepository(
         executeDelete(
           db,
           schema,
-          (q, p: { userId: string; orgId: string; resourceId: string; action: string }) =>
-            q.deleteFrom("user_permission").where(
-              (up) =>
-                up.user_id === p.userId &&
-                up.org_id === p.orgId &&
-                up.resource_id === p.resourceId &&
-                up.action === p.action,
-            ),
+          (
+            q,
+            p: {
+              userId: string;
+              orgId: string;
+              resourceId: string;
+              action: string;
+            },
+          ) =>
+            q
+              .deleteFrom("user_permission")
+              .where(
+                (up) =>
+                  up.user_id === p.userId &&
+                  up.org_id === p.orgId &&
+                  up.resource_id === p.resourceId &&
+                  up.action === p.action,
+              ),
           { userId, orgId: inputOrgId, resourceId, action },
         );
         return { success: true, data: true };
       } catch (error) {
-        logger.error("Failed to revoke user permission", { error, userId, resourceId, action });
+        logger.error("Failed to revoke user permission", {
+          error,
+          userId,
+          resourceId,
+          action,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -145,9 +161,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_permission").where(
-              (up) => up.user_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .from("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapUserPermissionFromDb) };
@@ -188,7 +204,11 @@ export function createPermissionRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to grant role permission", { error, roleId, input });
+        logger.error("Failed to grant role permission", {
+          error,
+          roleId,
+          input,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -204,10 +224,20 @@ export function createPermissionRepository(
         const stmt = db.prepare(
           `DELETE FROM role_permission WHERE role_id = @roleId AND org_id = @orgId AND resource_id = @resourceId AND action = @action`,
         );
-        const result = stmt.run({ roleId, orgId: inputOrgId, resourceId, action });
+        const result = stmt.run({
+          roleId,
+          orgId: inputOrgId,
+          resourceId,
+          action,
+        });
         return { success: true, data: result.changes > 0 };
       } catch (error) {
-        logger.error("Failed to revoke role permission", { error, roleId, resourceId, action });
+        logger.error("Failed to revoke role permission", {
+          error,
+          roleId,
+          resourceId,
+          action,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -221,9 +251,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { roleId: string; orgId: string }) =>
-            q.from("role_permission").where(
-              (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
-            ),
+            q
+              .from("role_permission")
+              .where((rp) => rp.role_id === p.roleId && rp.org_id === p.orgId),
           { roleId, orgId: inputOrgId },
         );
         return { success: true, data: rows.map(mapRolePermissionFromDb) };
@@ -247,18 +277,24 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { resourceId: string; orgId: string }) =>
-            q.from("user_permission").where(
-              (up) => up.resource_id === p.resourceId && up.org_id === p.orgId,
-            ),
+            q
+              .from("user_permission")
+              .where(
+                (up) =>
+                  up.resource_id === p.resourceId && up.org_id === p.orgId,
+              ),
           { resourceId, orgId: inputOrgId },
         );
         const roleRows = executeSelect(
           db,
           schema,
           (q, p: { resourceId: string; orgId: string }) =>
-            q.from("role_permission").where(
-              (rp) => rp.resource_id === p.resourceId && rp.org_id === p.orgId,
-            ),
+            q
+              .from("role_permission")
+              .where(
+                (rp) =>
+                  rp.resource_id === p.resourceId && rp.org_id === p.orgId,
+              ),
           { resourceId, orgId: inputOrgId },
         );
 
@@ -270,7 +306,10 @@ export function createPermissionRepository(
           },
         };
       } catch (error) {
-        logger.error("Failed to get permissions by resource", { error, resourceId });
+        logger.error("Failed to get permissions by resource", {
+          error,
+          resourceId,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -287,9 +326,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_role").where(
-              (ur) => ur.user_id === p.userId && ur.org_id === p.orgId,
-            ),
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         const roleIds = userRoles.map((r) => r.role_id);
@@ -301,9 +340,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_permission").where(
-              (up) => up.user_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .from("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -335,9 +374,11 @@ export function createPermissionRepository(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.from("role_permission").where(
-                (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
-              ),
+              q
+                .from("role_permission")
+                .where(
+                  (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
+                ),
             { roleId, orgId: inputOrgId },
           );
 
@@ -383,9 +424,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_permission").where(
-              (up) => up.user_id === p.userId && up.org_id === p.orgId,
-            ),
+            q
+              .from("user_permission")
+              .where((up) => up.user_id === p.userId && up.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
 
@@ -404,9 +445,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_role").where(
-              (ur) => ur.user_id === p.userId && ur.org_id === p.orgId,
-            ),
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         const roleIds = userRoles.map((r) => r.role_id);
@@ -417,9 +458,11 @@ export function createPermissionRepository(
             db,
             schema,
             (q, p: { roleId: string; orgId: string }) =>
-              q.from("role_permission").where(
-                (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
-              ),
+              q
+                .from("role_permission")
+                .where(
+                  (rp) => rp.role_id === p.roleId && rp.org_id === p.orgId,
+                ),
             { roleId, orgId: inputOrgId },
           );
 
@@ -436,7 +479,12 @@ export function createPermissionRepository(
 
         return { success: true, data: false };
       } catch (error) {
-        logger.error("Failed to check permission", { error, userId, resourceId, action });
+        logger.error("Failed to check permission", {
+          error,
+          userId,
+          resourceId,
+          action,
+        });
         return { success: false, error: error as Error };
       }
     },
@@ -452,9 +500,9 @@ export function createPermissionRepository(
           db,
           schema,
           (q, p: { userId: string; orgId: string }) =>
-            q.from("user_role").where(
-              (ur) => ur.user_id === p.userId && ur.org_id === p.orgId,
-            ),
+            q
+              .from("user_role")
+              .where((ur) => ur.user_id === p.userId && ur.org_id === p.orgId),
           { userId, orgId: inputOrgId },
         );
         const roleIds = userRoles.map((r) => r.role_id);
@@ -521,7 +569,11 @@ export function createPermissionRepository(
 
         return { success: true, data: permissions };
       } catch (error) {
-        logger.error("Failed to get permissions by prefix", { error, userId, resourceIdPrefix });
+        logger.error("Failed to get permissions by prefix", {
+          error,
+          userId,
+          resourceIdPrefix,
+        });
         return { success: false, error: error as Error };
       }
     },

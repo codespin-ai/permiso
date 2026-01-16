@@ -8,9 +8,11 @@ const logger = createLogger("permiso-server:users");
 export async function getUser(
   ctx: DataContext,
   userId: string,
+  orgId?: string,
 ): Promise<Result<UserWithProperties | null>> {
   try {
-    const userResult = await ctx.repos.user.getById(ctx.orgId, userId);
+    const effectiveOrgId = orgId || ctx.orgId;
+    const userResult = await ctx.repos.user.getById(effectiveOrgId, userId);
     if (!userResult.success) {
       return userResult;
     }
@@ -20,8 +22,8 @@ export async function getUser(
     }
 
     const [propertiesResult, roleIdsResult] = await Promise.all([
-      ctx.repos.user.getProperties(ctx.orgId, userId),
-      ctx.repos.user.getRoleIds(ctx.orgId, userId),
+      ctx.repos.user.getProperties(effectiveOrgId, userId),
+      ctx.repos.user.getRoleIds(effectiveOrgId, userId),
     ]);
 
     if (!propertiesResult.success) {

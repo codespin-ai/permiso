@@ -23,8 +23,16 @@ export async function getUsers(
     // Get users with optional identity provider filter
     const listResult = await ctx.repos.user.list(
       ctx.orgId,
-      filters?.identityProvider ? { identityProvider: filters.identityProvider } : undefined,
-      pagination ? { first: pagination.limit ?? undefined, offset: pagination.offset ?? undefined, sortDirection: pagination.sortDirection ?? undefined } : undefined,
+      filters?.identityProvider
+        ? { identityProvider: filters.identityProvider }
+        : undefined,
+      pagination
+        ? {
+            first: pagination.limit ?? undefined,
+            offset: pagination.offset ?? undefined,
+            sortDirection: pagination.sortDirection ?? undefined,
+          }
+        : undefined,
     );
 
     if (!listResult.success) {
@@ -42,7 +50,8 @@ export async function getUsers(
     // Apply identity provider user ID filter if provided
     if (filters?.identityProviderUserId) {
       users = users.filter(
-        (user) => user.identityProviderUserId === filters.identityProviderUserId,
+        (user) =>
+          user.identityProviderUserId === filters.identityProviderUserId,
       );
     }
 
@@ -54,7 +63,9 @@ export async function getUsers(
           ctx.repos.user.getRoleIds(ctx.orgId, user.id),
         ]);
 
-        const properties = propertiesResult.success ? propertiesResult.data : [];
+        const properties = propertiesResult.success
+          ? propertiesResult.data
+          : [];
 
         // Apply property filters if provided
         if (filters?.properties && filters.properties.length > 0) {

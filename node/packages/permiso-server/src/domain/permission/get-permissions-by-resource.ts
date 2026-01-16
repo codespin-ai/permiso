@@ -52,7 +52,10 @@ export async function getPermissionsByResource(
 
     return { success: true, data: permissions };
   } catch (error) {
-    logger.error("Failed to get permissions by resource", { error, resourceId });
+    logger.error("Failed to get permissions by resource", {
+      error,
+      resourceId,
+    });
     return { success: false, error: error as Error };
   }
 }

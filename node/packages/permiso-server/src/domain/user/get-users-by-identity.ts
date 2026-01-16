@@ -36,7 +36,9 @@ export async function getUsersByIdentity(
           ctx.repos.user.getRoleIds(org.id, userResult.data.id),
         ]);
 
-        const properties = propertiesResult.success ? propertiesResult.data : [];
+        const properties = propertiesResult.success
+          ? propertiesResult.data
+          : [];
 
         users.push({
           ...userResult.data,
