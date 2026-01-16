@@ -13,17 +13,18 @@ import {
 } from "@tinqerjs/pg-promise-adapter";
 import type { Database } from "@codespin/permiso-db";
 import { schema, type RoleRow } from "./tinqer-schema.js";
-import type {
-  IRoleRepository,
-  Role,
-  RoleFilter,
-  CreateRoleInput,
-  UpdateRoleInput,
-  Property,
-  PropertyInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IRoleRepository,
+  type Role,
+  type RoleFilter,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+  type Property,
+  type PropertyInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:postgres:role");
@@ -156,7 +157,7 @@ export function createRoleRepository(
         return { success: true, data: mapRoleFromDb(roleRows[0]) };
       } catch (error) {
         logger.error("Failed to create role", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 
@@ -473,21 +474,11 @@ export function createRoleRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Delete existing property if it exists, then insert new one
-        await executeDelete(
-          db,
-          schema,
-          (q, p: { roleId: string; orgId: string; name: string }) =>
-            q
-              .deleteFrom("role_property")
-              .where(
-                (rp) =>
-                  rp.parent_id === p.roleId &&
-                  rp.org_id === p.orgId &&
-                  rp.name === p.name,
-              ),
-          { roleId, orgId: inputOrgId, name: property.name },
-        );
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenBool = property.hidden ?? false;
 
         await executeInsert(
           db,
@@ -495,32 +486,40 @@ export function createRoleRepository(
           (
             q,
             p: {
-              parent_id: string;
-              org_id: string;
+              parentId: string;
+              orgId: string;
               name: string;
               value: string;
               hidden: boolean;
-              created_at: number;
+              createdAt: number;
             },
           ) =>
-            q.insertInto("role_property").values({
-              parent_id: p.parent_id,
-              org_id: p.org_id,
-              name: p.name,
-              value: p.value,
-              hidden: p.hidden,
-              created_at: p.created_at,
-            }),
+            q
+              .insertInto("role_property")
+              .values({
+                parent_id: p.parentId,
+                org_id: p.orgId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (rp) => rp.parent_id,
+                (rp) => rp.org_id,
+                (rp) => rp.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
           {
-            parent_id: roleId,
-            org_id: inputOrgId,
+            parentId: roleId,
+            orgId: inputOrgId,
             name: property.name,
-            value:
-              property.value === undefined
-                ? "null"
-                : JSON.stringify(property.value),
-            hidden: property.hidden ?? false,
-            created_at: now,
+            value: valueStr,
+            hidden: hiddenBool,
+            createdAt: now,
           },
         );
 
@@ -529,7 +528,7 @@ export function createRoleRepository(
           data: {
             name: property.name,
             value: property.value,
-            hidden: property.hidden ?? false,
+            hidden: hiddenBool,
             createdAt: now,
           },
         };

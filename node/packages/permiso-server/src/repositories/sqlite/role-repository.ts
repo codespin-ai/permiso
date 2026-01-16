@@ -12,17 +12,18 @@ import {
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
 import { schema } from "./tinqer-schema.js";
-import type {
-  IRoleRepository,
-  Role,
-  RoleFilter,
-  CreateRoleInput,
-  UpdateRoleInput,
-  Property,
-  PropertyInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IRoleRepository,
+  type Role,
+  type RoleFilter,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+  type Property,
+  type PropertyInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:sqlite:role");
@@ -162,7 +163,7 @@ export function createRoleRepository(
         return { success: true, data: mapRoleFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to create role", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 
@@ -441,24 +442,54 @@ export function createRoleRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Use INSERT OR REPLACE for upsert
-        const stmt = db.prepare(
-          `INSERT INTO role_property (parent_id, org_id, name, value, hidden, created_at)
-           VALUES (@parent_id, @org_id, @name, @value, @hidden, @created_at)
-           ON CONFLICT (parent_id, org_id, name)
-           DO UPDATE SET value = @value, hidden = @hidden`,
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenInt = property.hidden ? 1 : 0;
+
+        executeInsert(
+          db,
+          schema,
+          (
+            q,
+            p: {
+              parentId: string;
+              orgId: string;
+              name: string;
+              value: string;
+              hidden: number;
+              createdAt: number;
+            },
+          ) =>
+            q
+              .insertInto("role_property")
+              .values({
+                parent_id: p.parentId,
+                org_id: p.orgId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (rp) => rp.parent_id,
+                (rp) => rp.org_id,
+                (rp) => rp.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
+          {
+            parentId: roleId,
+            orgId: inputOrgId,
+            name: property.name,
+            value: valueStr,
+            hidden: hiddenInt,
+            createdAt: now,
+          },
         );
-        stmt.run({
-          parent_id: roleId,
-          org_id: inputOrgId,
-          name: property.name,
-          value:
-            property.value === undefined
-              ? "null"
-              : JSON.stringify(property.value),
-          hidden: property.hidden ? 1 : 0,
-          created_at: now,
-        });
 
         return {
           success: true,

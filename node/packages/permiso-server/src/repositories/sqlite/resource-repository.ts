@@ -12,15 +12,16 @@ import {
 } from "@tinqerjs/better-sqlite3-adapter";
 import type { Database } from "better-sqlite3";
 import { schema } from "../tinqer-schema.js";
-import type {
-  IResourceRepository,
-  Resource,
-  ResourceFilter,
-  CreateResourceInput,
-  UpdateResourceInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IResourceRepository,
+  type Resource,
+  type ResourceFilter,
+  type CreateResourceInput,
+  type UpdateResourceInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:sqlite:resource");
@@ -108,7 +109,7 @@ export function createResourceRepository(
         return { success: true, data: mapResourceFromDb(rows[0]) };
       } catch (error) {
         logger.error("Failed to create resource", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 

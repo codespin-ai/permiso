@@ -13,17 +13,18 @@ import {
 } from "@tinqerjs/pg-promise-adapter";
 import type { Database } from "@codespin/permiso-db";
 import { schema, type OrganizationRow } from "./tinqer-schema.js";
-import type {
-  IOrganizationRepository,
-  Organization,
-  OrganizationFilter,
-  CreateOrganizationInput,
-  UpdateOrganizationInput,
-  Property,
-  PropertyInput,
-  PaginationInput,
-  Connection,
-  Result,
+import {
+  normalizeDbError,
+  type IOrganizationRepository,
+  type Organization,
+  type OrganizationFilter,
+  type CreateOrganizationInput,
+  type UpdateOrganizationInput,
+  type Property,
+  type PropertyInput,
+  type PaginationInput,
+  type Connection,
+  type Result,
 } from "../interfaces/index.js";
 
 const logger = createLogger("permiso-server:repos:postgres:organization");
@@ -146,7 +147,7 @@ export function createOrganizationRepository(
         return { success: true, data: mapOrganizationFromDb(orgRows[0]) };
       } catch (error) {
         logger.error("Failed to create organization", { error, input });
-        return { success: false, error: error as Error };
+        return { success: false, error: normalizeDbError(error) };
       }
     },
 
@@ -448,16 +449,11 @@ export function createOrganizationRepository(
     ): Promise<Result<Property>> {
       try {
         const now = Date.now();
-        // Delete existing property if it exists, then insert new one
-        await executeDelete(
-          db,
-          schema,
-          (q, p: { orgId: string; name: string }) =>
-            q
-              .deleteFrom("organization_property")
-              .where((op) => op.parent_id === p.orgId && op.name === p.name),
-          { orgId, name: property.name },
-        );
+        const valueStr =
+          property.value === undefined
+            ? "null"
+            : JSON.stringify(property.value);
+        const hiddenBool = property.hidden ?? false;
 
         await executeInsert(
           db,
@@ -465,29 +461,36 @@ export function createOrganizationRepository(
           (
             q,
             p: {
-              parent_id: string;
+              parentId: string;
               name: string;
               value: string;
               hidden: boolean;
-              created_at: number;
+              createdAt: number;
             },
           ) =>
-            q.insertInto("organization_property").values({
-              parent_id: p.parent_id,
-              name: p.name,
-              value: p.value,
-              hidden: p.hidden,
-              created_at: p.created_at,
-            }),
+            q
+              .insertInto("organization_property")
+              .values({
+                parent_id: p.parentId,
+                name: p.name,
+                value: p.value,
+                hidden: p.hidden,
+                created_at: p.createdAt,
+              })
+              .onConflict(
+                (op) => op.parent_id,
+                (op) => op.name,
+              )
+              .doUpdateSet({
+                value: p.value,
+                hidden: p.hidden,
+              }),
           {
-            parent_id: orgId,
+            parentId: orgId,
             name: property.name,
-            value:
-              property.value === undefined
-                ? "null"
-                : JSON.stringify(property.value),
-            hidden: property.hidden ?? false,
-            created_at: now,
+            value: valueStr,
+            hidden: hiddenBool,
+            createdAt: now,
           },
         );
 
@@ -496,7 +499,7 @@ export function createOrganizationRepository(
           data: {
             name: property.name,
             value: property.value,
-            hidden: property.hidden ?? false,
+            hidden: hiddenBool,
             createdAt: now,
           },
         };
